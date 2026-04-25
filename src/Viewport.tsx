@@ -28,6 +28,10 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           for (let f = 0; f < floors; f++) {
             const t = f / Math.max(1, floors - 1);
             
+            // Calculate window settings from part data
+            const wSpacing = part.winSpacing || 2.5;
+            const wSize: [number, number] = [part.winWidth || 1.2, part.winHeight || 1.8];
+
             // Calculate twist interpolation
             let currentTwist = 0;
             if (twist) {
@@ -85,8 +89,9 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
                 >
                   <ProceduralWall 
                     width={len} height={floorHeight} thickness={wallThickness || 0.25} 
-                    windowSpacing={windowSpacing || 3} windowSize={[1.2, windowHeight || 1.6]} sillHeight={0.9} 
+                    windowSpacing={wSpacing} windowSize={wSize} sillHeight={0.9} 
                     isModern={isModern}
+                    floorIndex={f}
                   />
                 </group>
               );

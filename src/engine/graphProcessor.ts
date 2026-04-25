@@ -23,15 +23,21 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
         const splineData = inputs.find(i => i.handle === 'spline')?.data;
         const count = inputs.find(i => i.handle === 'param-count')?.data || node.data.params.count;
         const height = inputs.find(i => i.handle === 'param-height')?.data || node.data.params.height;
+        const winWidth = inputs.find(i => i.handle === 'param-winWidth')?.data || node.data.params.winWidth || 1.2;
+        const winHeight = inputs.find(i => i.handle === 'param-winHeight')?.data || node.data.params.winHeight || 1.8;
+        const winSpacing = inputs.find(i => i.handle === 'param-winSpacing')?.data || node.data.params.winSpacing || 2.5;
 
         if (!splineData) {
-          output = { count, height, showWindow: node.data.params.showWindow };
+          output = { count, height, winWidth, winHeight, winSpacing, showWindow: node.data.params.showWindow };
         } else {
           // If we have a spline, we generate the actual building geometry
           const buildingData = {
             spline: splineData.points,
             floors: count,
             floorHeight: height,
+            winWidth,
+            winHeight,
+            winSpacing,
             twist: splineData.twist,
             taper: splineData.taper,
             shear: splineData.shear,

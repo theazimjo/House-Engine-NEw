@@ -71,8 +71,14 @@ export default function App() {
             data: {
               ...node.data,
               onChange: updateNodeParams,
-              inputs: ['spline'], // Floors receives shape
-              outputs: ['mesh', 'window'] // Floors outputs geometry
+              inputs: ['spline'],
+              outputs: ['mesh', 'window'],
+              params: {
+                winWidth: 1.2,
+                winHeight: 1.8,
+                winSpacing: 2.5,
+                ...node.data.params,
+              }
             },
           };
         }
@@ -110,7 +116,14 @@ export default function App() {
     } else if (type === 'floors') {
       inputs = ['spline'];
       outputs = ['mesh', 'window'];
-      params = { count: 10, height: 3.5, showWindow: true };
+      params = { 
+        count: 5, 
+        height: 3.2, 
+        winWidth: 1.2, 
+        winHeight: 1.8, 
+        winSpacing: 2.5,
+        showWindow: true 
+      };
       label = 'Floors System';
     }
 
