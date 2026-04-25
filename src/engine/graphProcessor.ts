@@ -19,17 +19,33 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
     let output: any = null;
 
     switch (node.data.type) {
+      case 'floors':
+        output = {
+          count: node.data.params.count,
+          height: node.data.params.height,
+          showWindow: node.data.params.showWindow
+        };
+        break;
+
       case 'foundation':
         const getParam = (name: string) => {
           const input = inputs.find(i => i.handle === `param-${name}`);
           return input ? input.data : node.data.params[name];
         };
 
+        const floorsInput = inputs.find(i => i.handle === 'floors')?.data;
+        const floorsParamInput = inputs.find(i => i.handle === 'param-floors')?.data;
+        
+        // Priority: Direct 'floors' pin > 'param-floors' pin > local params
+        const floorsData = floorsInput || (floorsParamInput && typeof floorsParamInput === 'object' ? floorsParamInput : null);
+
         const width = getParam('width');
         const depth = getParam('depth');
         const foundationShape = getParam('foundationShape');
-        const floors = getParam('floors') || 1;
-        const floorHeight = getParam('floorHeight') || 3;
+        
+        const floors = floorsData ? floorsData.count : (getParam('floors') || 1);
+        const floorHeight = floorsData ? floorsData.height : (getParam('floorHeight') || 3);
+        
         const totalHeight = getParam('height');
         const twistBase = getParam('twistBase') || 0;
         const twistMid = getParam('twistMid') || 0;

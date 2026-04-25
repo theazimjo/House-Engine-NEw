@@ -5,6 +5,8 @@ export const PIN_COLORS: Record<PinType, string> = {
   mesh: '#3b82f6',   // Blue
   float: '#94a3b8',  // Grey
   mask: '#ef4444',   // Red
+  window: '#0ea5e9',
+  floors: '#ec4899',
 };
 
 export const NODE_HEADER_COLORS: Record<string, string> = {
@@ -19,4 +21,5 @@ export const NODE_HEADER_COLORS: Record<string, string> = {
   stairs: '#db2777',
   transform: '#8b5cf6',
   window: '#0ea5e9',
+  floors: '#ec4899', // Pink
 };

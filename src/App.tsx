@@ -62,7 +62,7 @@ export default function App() {
               ...node.data,
               onChange: updateNodeParams,
               inputs: [], // Foundation should have no inputs
-              outputs: ['spline', 'mesh', 'window'] // Ensure consistent outputs
+              outputs: ['spline', 'mesh', 'window']
             },
           };
         }
@@ -83,20 +83,33 @@ export default function App() {
     const id = `${type}-${Date.now()}`;
     
     let inputs: PinType[] = [];
-    let outputs: PinType[] = ['spline', 'mesh', 'window'];
-    let params: any = { 
-      width: 14, depth: 10, floors: 5, floorHeight: 3.2,
-      foundationShape: 'rectangle',
-      twistBase: 0, twistMid: 0, twistTop: 0,
-      taper: 1, shearX: 0, shearY: 0, jitter: 0
-    };
+    let outputs: PinType[] = [];
+    let params: any = {};
+    let label = '';
+
+    if (type === 'foundation') {
+      inputs = [];
+      outputs = ['spline', 'mesh', 'window'];
+      params = { 
+        width: 14, depth: 10, floors: 5, floorHeight: 3.2,
+        foundationShape: 'rectangle',
+        twistBase: 0, twistMid: 0, twistTop: 0,
+        taper: 1, shearX: 0, shearY: 0, jitter: 0
+      };
+      label = 'Foundation';
+    } else if (type === 'floors') {
+      inputs = [];
+      outputs = ['floors'];
+      params = { count: 10, height: 3.5, showWindow: true };
+      label = 'Floors System';
+    }
 
     const newNode: Node<NodeData> = {
       id,
       type: 'buildingNode',
       position: { x: 100, y: 100 },
       data: {
-        label: 'Foundation',
+        label,
         type,
         params,
         onChange: updateNodeParams,

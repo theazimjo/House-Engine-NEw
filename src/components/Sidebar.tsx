@@ -10,6 +10,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ onAddNode }) => {
   const nodeOptions: { type: NodeType; label: string }[] = [
     { type: 'foundation', label: 'Foundation' },
+    { type: 'floors', label: 'Floors System' },
   ];
 
   return (
