@@ -51,86 +51,76 @@ body {
 
 /* React Flow Custom Styles - Industrial Blueprint Design */
 .react-flow__node-buildingNode {
-  border: 1.5px solid #1a1a1a !important;
-  border-radius: 2px !important;
-  background: #e5e5e5 !important;
+  border: 1px solid #000 !important;
+  border-radius: 4px !important;
+  background: #2b2b2b !important;
   padding: 0 !important;
-  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.8) !important;
-  width: 240px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+  width: 200px !important;
 }
 
 .node-header {
-  padding: 8px 12px;
-  color: white;
-  font-weight: 900;
-  font-size: 0.9rem;
+  padding: 6px 10px;
+  color: #ddd;
+  font-weight: 700;
+  font-size: 0.75rem;
   letter-spacing: 0.05em;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1.5px solid #1a1a1a;
+  border-bottom: 1px solid #1a1a1a;
   text-transform: uppercase;
-  cursor: move; /* Drag handle indicator */
-}
-
-.node-header .node-id {
-  font-size: 0.6rem;
-  opacity: 0.8;
-  font-weight: 600;
+  cursor: move;
+  border-radius: 4px 4px 0 0;
 }
 
 /* Header Colors */
-.header-foundation { background-color: #c64321; }
-.header-extrude { background-color: #005682; }
-.header-scatter { background-color: #f2b705; color: #1a1a1a !important; }
-.header-output { background-color: #1a1a1a; }
-.header-split { background-color: #f97316; }   /* Orange */
-.header-merge { background-color: #6366f1; }   /* Indigo */
-.header-transform { background-color: #8b5cf6; } /* Violet */
-.header-balcony { background-color: #059669; } /* Green */
-.header-column { background-color: #7c3aed; }  /* Purple */
-.header-stairs { background-color: #db2777; }  /* Pink */
+.header-foundation { background-color: #7a2d1a; border-bottom: 1px solid #c64321; }
+.header-extrude { background-color: #003d5c; border-bottom: 1px solid #005682; }
+.header-scatter { background-color: #a67c00; border-bottom: 1px solid #f2b705; color: #fff !important; }
+.header-output { background-color: #111; border-bottom: 1px solid #333; }
 
 .node-body {
-  padding: 12px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  cursor: default; /* Prevent move cursor inside body */
+  gap: 4px;
+  cursor: default;
 }
 
 .input-group {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  height: 22px;
 }
 
 .input-label {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: #1a1a1a;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #999;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
+  flex: 1;
 }
 
 .node-input, .node-select {
-  width: 80px;
-  background: white;
-  border: 1.5px solid #1a1a1a;
-  padding: 4px 8px;
-  font-size: 0.8rem;
+  flex: 1;
+  min-width: 0;
+  background: #1e1e1e;
+  border: 1px solid #444;
+  padding: 2px 4px;
+  font-size: 0.7rem;
   font-weight: 600;
   text-align: right;
   outline: none;
-  color: #1a1a1a !important;
-  appearance: textfield; /* Hide spinners in Chrome/Safari/Edge */
-  -moz-appearance: textfield; /* Hide spinners in Firefox */
+  color: #eee !important;
+  border-radius: 2px;
 }
 
-.node-input::-webkit-outer-spin-button,
-.node-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+.node-input:focus, .node-select:focus {
+  border-color: #6366f1;
 }
 
 .input-with-unit {
@@ -138,26 +128,26 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
+  width: 70px;
+  flex-shrink: 0;
+  justify-content: flex-end;
 }
 
 .unit-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  opacity: 0.5;
-}
-
-.node-checkbox {
-  width: 18px;
-  height: 18px;
-  accent-color: #6366f1;
-  cursor: pointer;
-  margin: 4px 0;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #555;
+  width: 10px;
+  text-align: left;
+  flex-shrink: 0;
 }
 
 .node-select {
   text-align: left;
-  width: 120px;
+  width: 70px;
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  padding: 1px 4px;
 }
 
 .node-ports-left, .node-ports-right {

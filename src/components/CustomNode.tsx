@@ -109,22 +109,14 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
             key={`in-${i}`}
             type="target"
             position={Position.Left}
-            id={type}
+            id={`${type}-${i}`}
             style={getHandleStyle(i, false)}
           />
         ))}
       </div>
 
       <div className="node-ports-right">
-        {data.outputs?.map((type, i) => (
-          <Handle
-            key={`out-${i}`}
-            type="source"
-            position={Position.Right}
-            id={type}
-            style={getHandleStyle(i, true)}
-          />
-        ))}
+        {/* Output ports removed as requested */}
       </div>
     </>
   );

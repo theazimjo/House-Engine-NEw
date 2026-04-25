@@ -1,7 +1,7 @@
 import type { Node, Edge } from 'reactflow';
 
 export type NodeType = 'foundation';
-export type PinType = 'spline' | 'mesh' | 'float' | 'mask';
+export type PinType = 'spline' | 'mesh' | 'float' | 'mask' | 'window';
 
 export interface NodeData {
   label: string;

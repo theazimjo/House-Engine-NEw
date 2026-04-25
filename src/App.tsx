@@ -54,13 +54,26 @@ export default function App() {
 
   useEffect(() => {
     setNodes((nds) =>
-      nds.map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          onChange: updateNodeParams,
-        },
-      }))
+      nds.map((node) => {
+        if (node.data.type === 'foundation') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              onChange: updateNodeParams,
+              inputs: [], // Foundation should have no inputs
+              outputs: ['spline', 'mesh', 'window'] // Ensure consistent outputs
+            },
+          };
+        }
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            onChange: updateNodeParams,
+          },
+        };
+      })
     );
   }, [updateNodeParams, setNodes]);
 
