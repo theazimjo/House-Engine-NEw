@@ -15,11 +15,13 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
         if (!part) return null;
 
         const elements = [];
-        const { spline, floors, floorHeight, windowSpacing, windowHeight, wallThickness } = part;
+        const { spline, floors, floorHeight, windowSpacing, windowHeight, wallThickness, style, offset = [0, 0, 0] } = part;
+        const [ox, oy, oz] = offset;
+        const isModern = style === 'modern';
 
-        if (part.detailed) {
+        if (part.detailed && spline) {
           for (let f = 0; f < floors; f++) {
-            const y = f * floorHeight;
+            const y = f * floorHeight + oy;
             spline.forEach((p: any, i: number) => {
               const next = spline[(i + 1) % spline.length];
               const dx = next[0] - p[0];
@@ -28,10 +30,11 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
               const angle = Math.atan2(dx, dz);
 
               elements.push(
-                <group key={`wall-${idx}-${f}-${i}`} position={[p[0] + dx/2, y, p[1] + dz/2]} rotation={[0, angle + Math.PI/2, 0]}>
+                <group key={`wall-${idx}-${f}-${i}`} position={[p[0] + dx/2 + ox, y, p[1] + dz/2 + oz]} rotation={[0, angle + Math.PI/2, 0]}>
                   <ProceduralWall 
                     width={len} height={floorHeight} thickness={wallThickness || 0.25} 
                     windowSpacing={windowSpacing || 3} windowSize={[1.2, windowHeight || 1.6]} sillHeight={0.9} 
+                    isModern={isModern}
                   />
                 </group>
               );
@@ -39,31 +42,49 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           }
         }
 
-        if (part.roof) {
-          const roofY = floors * floorHeight;
+        if (part.roof && spline) {
+          const roofY = floors * floorHeight + oy;
           const { roofType } = part;
+
+          const roofShape = new THREE.Shape();
+          roofShape.moveTo(spline[0][0], spline[0][1]);
+          spline.slice(1).forEach((p: any) => roofShape.lineTo(p[0], p[1]));
+
           if (roofType === 'pitched') {
             elements.push(
-              <mesh key={`roof-${idx}`} position={[0, roofY + 1, 0]} rotation={[0, Math.PI/4, 0]} castShadow>
-                <coneGeometry args={[Math.max(12, 12) * 0.7, 2.5, 4]} />
-                <meshStandardMaterial color="#7f1d1d" roughness={0.4} />
+              <mesh key={`roof-${idx}`} position={[ox, roofY, oz]} rotation={[Math.PI/2, 0, 0]} castShadow>
+                {/* Positive bevel with negative offset keeps it aligned but slanted upwards */}
+                <extrudeGeometry args={[roofShape, { 
+                  depth: 0.1, 
+                  bevelEnabled: true, 
+                  bevelThickness: 1.2, 
+                  bevelSize: 0.6, 
+                  bevelOffset: -0.6, 
+                  bevelSegments: 1 
+                }]} />
+                <meshStandardMaterial color="#8e2b2b" roughness={0.4} metalness={0.2} />
               </mesh>
             );
-          } else if (roofType === 'dome') {
-             elements.push(
-               <mesh key={`roof-${idx}`} position={[0, roofY, 0]} castShadow>
-                 <sphereGeometry args={[6, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-                 <meshStandardMaterial color="#1e3a8a" roughness={0.3} metalness={0.5} />
-               </mesh>
-             );
           } else {
              elements.push(
-               <mesh key={`roof-flat-${idx}`} position={[0, roofY, 0]} rotation={[-Math.PI/2, 0, 0]}>
-                 <planeGeometry args={[14, 12]} />
+               <mesh key={`roof-flat-${idx}`} position={[ox, roofY, oz]} rotation={[-Math.PI/2, 0, 0]}>
+                 <extrudeGeometry args={[roofShape, { depth: 0.15, bevelEnabled: false }]} />
                  <meshStandardMaterial color="#2a2a30" />
                </mesh>
              );
           }
+        }
+
+        if (part.type === 'column' && spline) {
+           const { columnRadius = 0.2, columnSpacing = 3 } = part;
+           spline.forEach((p: any, i: number) => {
+             elements.push(
+               <mesh key={`col-${idx}-${i}`} position={[p[0] + ox, oy + (floors * floorHeight)/2, p[1] + oz]}>
+                 <cylinderGeometry args={[columnRadius, columnRadius, floors * floorHeight, 16]} />
+                 <meshStandardMaterial color="#fff" />
+               </mesh>
+             );
+           });
         }
 
         if ((part.type === 'full_volume' || part.detailed || part.type === 'foundation_slab') && Array.isArray(spline) && spline.length > 0) {
@@ -72,9 +93,9 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
            spline.slice(1).forEach((p: any) => slabShape.lineTo(p[0], p[1]));
            
            elements.push(
-             <mesh key={`slab-${idx}`} position={[0, 0, 0]} rotation={[-Math.PI/2, 0, 0]}>
+             <mesh key={`slab-${idx}`} position={[ox, oy, oz]} rotation={[-Math.PI/2, 0, 0]}>
                <extrudeGeometry args={[slabShape, { depth: 0.1, bevelEnabled: false }]} />
-               <meshStandardMaterial color={part.type === 'foundation_slab' ? "#1e1e24" : "#222"} roughness={0.8} />
+               <meshStandardMaterial color={isModern ? "#fff" : (part.type === 'foundation_slab' ? "#1e1e24" : "#222")} roughness={0.8} />
              </mesh>
            );
         }

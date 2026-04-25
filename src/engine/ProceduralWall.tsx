@@ -21,22 +21,20 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
     s.lineTo(-width / 2, height);
     s.closePath();
 
-    // Create window holes
-    const windowCount = Math.floor(width / windowSpacing);
-    if (windowCount > 0) {
-      const startX = -(windowCount - 1) * windowSpacing / 2;
+    const wCount = Math.floor(width / windowSpacing);
+    const w = windowSize[0];
+    const h = windowSize[1];
+    const sHeight = sillHeight;
 
-      for (let i = 0; i < windowCount; i++) {
-        const hole = new THREE.Path();
+    if (wCount > 0) {
+      const startX = -(wCount - 1) * windowSpacing / 2;
+      for (let i = 0; i < wCount; i++) {
         const x = startX + i * windowSpacing;
-        const y = sillHeight;
-        const w = windowSize[0];
-        const h = windowSize[1];
-        
-        hole.moveTo(x - w / 2, y);
-        hole.lineTo(x + w / 2, y);
-        hole.lineTo(x + w / 2, y + h);
-        hole.lineTo(x - w / 2, y + h);
+        const hole = new THREE.Path();
+        hole.moveTo(x - w / 2, sHeight);
+        hole.lineTo(x + w / 2, sHeight);
+        hole.lineTo(x + w / 2, sHeight + h);
+        hole.lineTo(x - w / 2, sHeight + h);
         hole.closePath();
         s.holes.push(hole);
       }
@@ -45,9 +43,16 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
   }, [width, height, windowSpacing, windowSize, sillHeight]);
 
   return (
-    <mesh castShadow receiveShadow>
-      <extrudeGeometry args={[shape, { depth: thickness, bevelEnabled: false }]} />
-      <meshStandardMaterial color="#45454b" roughness={0.7} metalness={0.1} />
-    </mesh>
+    <group>
+      <mesh castShadow receiveShadow position={[0, 0, -thickness/2]}>
+        <extrudeGeometry args={[shape, { depth: thickness, bevelEnabled: false }]} />
+        <meshStandardMaterial color="#f0f0f0" roughness={0.8} />
+      </mesh>
+      {/* Simple black window frames */}
+      <mesh position={[0, 0, 0]}>
+        <planeGeometry args={[width, height]} />
+        <meshStandardMaterial color="#111" transparent opacity={0.3} />
+      </mesh>
+    </group>
   );
 };

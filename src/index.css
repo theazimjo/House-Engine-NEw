@@ -147,6 +147,14 @@ body {
   opacity: 0.5;
 }
 
+.node-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #6366f1;
+  cursor: pointer;
+  margin: 4px 0;
+}
+
 .node-select {
   text-align: left;
   width: 120px;

@@ -49,17 +49,25 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
         }
         break;
 
+      case 'transform':
+        const meshToMove = inputs.find(i => i.handle === 'mesh')?.data;
+        if (meshToMove) {
+          const { x = 0, y = 0, z = 0 } = node.data.params;
+          output = { ...meshToMove, offset: [x, y, z] };
+        }
+        break;
+
       case 'scatter':
         const sideInput = inputs.find(i => i.handle === 'mesh')?.data;
         if (sideInput) {
-          output = { ...sideInput, detailed: true, ...node.data.params };
+          output = { ...sideInput, detailed: true, ...node.data.params, style: node.data.params.modern ? 'modern' : 'classic' };
         }
         break;
 
       case 'output':
         const topInput = inputs.find(i => i.handle === 'mesh')?.data;
         if (topInput) {
-          output = { ...topInput, roof: true, ...node.data.params };
+          output = { ...topInput, roof: true, ...node.data.params, style: node.data.params.modern ? 'modern' : 'classic' };
         }
         break;
 
