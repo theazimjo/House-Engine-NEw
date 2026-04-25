@@ -77,6 +77,10 @@ export default function App() {
                 winWidth: 1.2,
                 winHeight: 1.8,
                 winSpacing: 2.5,
+                doorWidth: 1.8,
+                doorHeight: 2.4,
+                doorOffset: 0,
+                doorSide: 'front',
                 ...node.data.params,
               }
             },
@@ -122,6 +126,10 @@ export default function App() {
         winWidth: 1.2, 
         winHeight: 1.8, 
         winSpacing: 2.5,
+        doorWidth: 1.8,
+        doorHeight: 2.4,
+        doorOffset: 0,
+        doorSide: 'front',
         showWindow: true 
       };
       label = 'Floors System';

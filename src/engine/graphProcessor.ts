@@ -26,9 +26,18 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
         const winWidth = inputs.find(i => i.handle === 'param-winWidth')?.data || node.data.params.winWidth || 1.2;
         const winHeight = inputs.find(i => i.handle === 'param-winHeight')?.data || node.data.params.winHeight || 1.8;
         const winSpacing = inputs.find(i => i.handle === 'param-winSpacing')?.data || node.data.params.winSpacing || 2.5;
+        
+        const doorWidth = inputs.find(i => i.handle === 'param-doorWidth')?.data || node.data.params.doorWidth || 1.8;
+        const doorHeight = inputs.find(i => i.handle === 'param-doorHeight')?.data || node.data.params.doorHeight || 2.4;
+        const doorOffset = inputs.find(i => i.handle === 'param-doorOffset')?.data || node.data.params.doorOffset || 0;
+        const doorSide = inputs.find(i => i.handle === 'param-doorSide')?.data || node.data.params.doorSide || 'front';
 
         if (!splineData) {
-          output = { count, height, winWidth, winHeight, winSpacing, showWindow: node.data.params.showWindow };
+          output = { 
+            count, height, winWidth, winHeight, winSpacing, 
+            doorWidth, doorHeight, doorOffset, doorSide,
+            showWindow: node.data.params.showWindow 
+          };
         } else {
           // If we have a spline, we generate the actual building geometry
           const buildingData = {
@@ -38,6 +47,10 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
             winWidth,
             winHeight,
             winSpacing,
+            doorWidth,
+            doorHeight,
+            doorOffset,
+            doorSide,
             twist: splineData.twist,
             taper: splineData.taper,
             shear: splineData.shear,

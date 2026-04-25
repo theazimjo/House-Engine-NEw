@@ -57,6 +57,16 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
             spline.forEach((p: any, i: number) => {
               const next = spline[(i + 1) % spline.length];
               
+              // Decide if this wall should have a door based on side index
+              let shouldHaveDoor = false;
+              if (f === 0) {
+                const side = part.doorSide || 'front';
+                if (side === 'all') shouldHaveDoor = true;
+                else if (side === 'front' && i === 0) shouldHaveDoor = true;
+                else if (side === 'frontback' && (i === 0 || i === Math.floor(spline.length / 2))) shouldHaveDoor = true;
+                else if (side === 'sides' && (i === Math.floor(spline.length / 4) || i === Math.floor(spline.length * 3 / 4))) shouldHaveDoor = true;
+              }
+
               // Rotate and scale points for this floor
               const rotatePoint = (pt: [number, number]): [number, number] => {
                 const s = Math.sin(rotationRad);
@@ -92,6 +102,10 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
                     windowSpacing={wSpacing} windowSize={wSize} sillHeight={0.9} 
                     isModern={isModern}
                     floorIndex={f}
+                    hasDoor={shouldHaveDoor}
+                    doorWidth={part.doorWidth || 1.8}
+                    doorHeight={part.doorHeight || 2.4}
+                    doorOffset={part.doorOffset || 0}
                   />
                 </group>
               );
