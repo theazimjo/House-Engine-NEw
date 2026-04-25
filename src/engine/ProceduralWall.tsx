@@ -8,10 +8,11 @@ interface ProceduralWallProps {
   windowSpacing: number;
   windowSize: [number, number];
   sillHeight: number;
+  isModern?: boolean;
 }
 
 export const ProceduralWall: React.FC<ProceduralWallProps> = ({ 
-  width, height, thickness, windowSpacing, windowSize, sillHeight 
+  width, height, thickness, windowSpacing, windowSize, sillHeight, isModern 
 }) => {
   const shape = React.useMemo(() => {
     const s = new THREE.Shape();

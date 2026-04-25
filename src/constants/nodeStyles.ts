@@ -18,4 +18,5 @@ export const NODE_HEADER_COLORS: Record<string, string> = {
   column: '#7c3aed',
   stairs: '#db2777',
   transform: '#8b5cf6',
+  window: '#0ea5e9',
 };

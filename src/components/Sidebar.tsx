@@ -24,6 +24,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onAddNode, onApplyPreset }) =>
     { type: 'transform', label: 'Transform' },
     { type: 'balcony', label: 'Balcony' },
     { type: 'column', label: 'Column' },
+    { type: 'window', label: 'Window System' },
   ];
 
   return (

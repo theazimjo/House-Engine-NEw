@@ -1,6 +1,6 @@
 import type { Node, Edge } from 'reactflow';
 
-export type NodeType = 'foundation' | 'extrude' | 'split' | 'merge' | 'scatter' | 'output' | 'balcony' | 'column' | 'stairs' | 'transform';
+export type NodeType = 'foundation' | 'extrude' | 'split' | 'merge' | 'scatter' | 'output' | 'balcony' | 'column' | 'stairs' | 'transform' | 'window';
 export type PinType = 'spline' | 'mesh' | 'float' | 'mask';
 
 export interface NodeData {
@@ -20,15 +20,23 @@ export interface ViewportProps {
 export interface BuildingParams {
   width: number;
   depth: number;
-  floors: number;
-  floorHeight: number;
   wallThickness: number;
   windowSpacing: number;
   windowSize: [number, number];
   windowHeight: number;
   sillHeight: number;
   roofType: 'flat' | 'pitched' | 'dome';
-  foundationShape: 'rectangle' | 'L-shape';
+  foundationShape: 'rectangle' | 'circle' | 'hexagon' | 'L-shape' | 'U-shape' | 'C-shape' | 'X-shape' | 'custom';
+  floors: number;
+  floorHeight: number;
+  twistBase: number;
+  twistMid: number;
+  twistTop: number;
+  taper: number;
+  shearX: number;
+  shearY: number;
+  jitter: number;
+  height: number;
   balconyDepth: number;
   columnRadius: number;
   columnSpacing: number;

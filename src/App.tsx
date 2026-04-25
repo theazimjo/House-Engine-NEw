@@ -15,7 +15,7 @@ import './index.css';
 import { CustomNode } from './components/CustomNode';
 import { Viewport } from './Viewport';
 import { Sidebar } from './components/Sidebar';
-import type { NodeData, NodeType } from './types';
+import type { NodeData, NodeType, PinType } from './types';
 import { Play, Download } from 'lucide-react';
 
 
@@ -76,8 +76,13 @@ export default function App() {
     switch (type) {
       case 'foundation':
         inputs = [];
-        outputs = ['spline'];
-        params = { width: 10, depth: 8, foundationShape: 'rectangle' };
+        outputs = ['spline', 'mesh', 'window'];
+        params = { 
+          width: 14, depth: 10, floors: 5, floorHeight: 3.2,
+          foundationShape: 'rectangle',
+          twistBase: 0, twistMid: 0, twistTop: 0,
+          taper: 1, shearX: 0, shearY: 0, jitter: 0
+        };
         break;
       case 'extrude':
         inputs = ['spline'];
@@ -107,6 +112,11 @@ export default function App() {
         break;
       case 'column':
         params = { columnRadius: 0.2, columnSpacing: 3 };
+        break;
+      case 'window':
+        inputs = ['mesh'];
+        outputs = ['mesh'];
+        params = { windowSpacing: 2.5, windowHeight: 1.6, wallThickness: 0.3 };
         break;
     }
 

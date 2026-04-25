@@ -15,22 +15,74 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
         if (!part) return null;
 
         const elements = [];
-        const { spline, floors, floorHeight, windowSpacing, windowHeight, wallThickness, style, offset = [0, 0, 0] } = part;
+        const { 
+          spline, floors = 1, floorHeight = 3, 
+          windowSpacing, windowHeight, wallThickness, 
+          style, offset = [0, 0, 0],
+          twist, taper = 1, shear, jitter = 0
+        } = part;
         const [ox, oy, oz] = offset;
         const isModern = style === 'modern';
 
         if (part.detailed && spline) {
           for (let f = 0; f < floors; f++) {
-            const y = f * floorHeight + oy;
+            const t = f / Math.max(1, floors - 1);
+            
+            // Calculate twist interpolation
+            let currentTwist = 0;
+            if (twist) {
+              if (t < 0.5) {
+                currentTwist = THREE.MathUtils.lerp(twist.base, twist.mid, t * 2);
+              } else {
+                currentTwist = THREE.MathUtils.lerp(twist.mid, twist.top, (t - 0.5) * 2);
+              }
+            }
+            const rotationRad = (currentTwist * Math.PI) / 180;
+
+            // Calculate taper (scale)
+            const currentScale = THREE.MathUtils.lerp(1, taper, t);
+
+            // Calculate shear and jitter
+            const shearOffsetX = shear ? shear.x * t : 0;
+            const shearOffsetZ = shear ? shear.y * t : 0;
+            const jitterX = (Math.random() - 0.5) * jitter;
+            const jitterZ = (Math.random() - 0.5) * jitter;
+
+            const floorY = f * floorHeight + oy;
+            
             spline.forEach((p: any, i: number) => {
               const next = spline[(i + 1) % spline.length];
-              const dx = next[0] - p[0];
-              const dz = next[1] - p[1];
+              
+              // Rotate and scale points for this floor
+              const rotatePoint = (pt: [number, number]): [number, number] => {
+                const s = Math.sin(rotationRad);
+                const c = Math.cos(rotationRad);
+                const rx = pt[0] * currentScale;
+                const rz = pt[1] * currentScale;
+                return [
+                  rx * c - rz * s,
+                  rx * s + rz * c
+                ];
+              };
+
+              const pRot = rotatePoint(p);
+              const nextRot = rotatePoint(next);
+
+              const dx = nextRot[0] - pRot[0];
+              const dz = nextRot[1] - pRot[1];
               const len = Math.sqrt(dx * dx + dz * dz);
               const angle = Math.atan2(dx, dz);
 
               elements.push(
-                <group key={`wall-${idx}-${f}-${i}`} position={[p[0] + dx/2 + ox, y, p[1] + dz/2 + oz]} rotation={[0, angle + Math.PI/2, 0]}>
+                <group 
+                  key={`wall-${idx}-${f}-${i}`} 
+                  position={[
+                    pRot[0] + dx/2 + ox + shearOffsetX + jitterX, 
+                    floorY, 
+                    pRot[1] + dz/2 + oz + shearOffsetZ + jitterZ
+                  ]} 
+                  rotation={[0, angle + Math.PI/2, 0]}
+                >
                   <ProceduralWall 
                     width={len} height={floorHeight} thickness={wallThickness || 0.25} 
                     windowSpacing={windowSpacing || 3} windowSize={[1.2, windowHeight || 1.6]} sillHeight={0.9} 
@@ -76,7 +128,7 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
         }
 
         if (part.type === 'column' && spline) {
-           const { columnRadius = 0.2, columnSpacing = 3 } = part;
+           const { columnRadius = 0.2 } = part;
            spline.forEach((p: any, i: number) => {
              elements.push(
                <mesh key={`col-${idx}-${i}`} position={[p[0] + ox, oy + (floors * floorHeight)/2, p[1] + oz]}>
