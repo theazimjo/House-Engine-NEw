@@ -83,7 +83,6 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
             ];
             break;
           case 'custom':
-            // Default to square if custom but no points provided
             points = [[-w2, d2], [w2, d2], [w2, -d2], [-w2, -d2]];
             break;
           case 'rectangle':
@@ -108,59 +107,6 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
           { ...buildingData, type: 'full_volume', part: 'building' },
           { ...buildingData, type: 'full_volume', part: 'facade' }
         ];
-        break;
-
-      case 'extrude':
-        const inputData = inputs.find(i => i.handle === 'spline')?.data;
-        if (inputData) {
-          const points = inputData.spline || inputData;
-          const { floors, floorHeight } = node.data.params;
-          output = { spline: points, floors, floorHeight, type: 'full_volume', part: 'building' };
-        }
-        break;
-
-      case 'window':
-      case 'scatter':
-        let sideInput = inputs.find(i => i.handle === 'mesh' || i.handle === 'window')?.data;
-        if (Array.isArray(sideInput)) {
-          sideInput = sideInput.find(p => p.part === 'facade') || sideInput[0];
-        }
-        
-        if (sideInput) {
-          const params = node.data.params;
-          output = { 
-            ...sideInput, 
-            detailed: true, 
-            ...params, 
-            style: params.modern ? 'modern' : 'classic' 
-          };
-        }
-        break;
-
-      case 'split':
-        const meshData = inputs.find(i => i.handle === 'mesh')?.data;
-        if (meshData) {
-          output = { ...meshData, parts: ['top', 'sides'] };
-        }
-        break;
-
-      case 'transform':
-        const meshToMove = inputs.find(i => i.handle === 'mesh')?.data;
-        if (meshToMove) {
-          const { x = 0, y = 0, z = 0 } = node.data.params;
-          output = { ...meshToMove, offset: [x, y, z] };
-        }
-        break;
-
-      case 'output':
-        const topInput = inputs.find(i => i.handle === 'mesh')?.data;
-        if (topInput) {
-          output = { ...topInput, roof: true, ...node.data.params, style: node.data.params.modern ? 'modern' : 'classic' };
-        }
-        break;
-
-      case 'merge':
-        output = inputs.map(i => i.data).filter(Boolean);
         break;
     }
 

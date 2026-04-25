@@ -69,63 +69,21 @@ export default function App() {
   const addNode = (type: NodeType) => {
     const id = `${type}-${Date.now()}`;
     
-    let inputs: PinType[] = ['mesh'];
-    let outputs: PinType[] = ['mesh'];
-    let params: any = {};
-
-    switch (type) {
-      case 'foundation':
-        inputs = [];
-        outputs = ['spline', 'mesh', 'window'];
-        params = { 
-          width: 14, depth: 10, floors: 5, floorHeight: 3.2,
-          foundationShape: 'rectangle',
-          twistBase: 0, twistMid: 0, twistTop: 0,
-          taper: 1, shearX: 0, shearY: 0, jitter: 0
-        };
-        break;
-      case 'extrude':
-        inputs = ['spline'];
-        outputs = ['mesh'];
-        params = { floors: 3, floorHeight: 3.2 };
-        break;
-      case 'split':
-        inputs = ['mesh'];
-        outputs = ['mesh', 'mesh']; // Top, Sides
-        break;
-      case 'merge':
-        inputs = ['mesh', 'mesh'];
-        outputs = ['mesh'];
-        break;
-      case 'scatter':
-        params = { windowSpacing: 3, windowHeight: 1.6, wallThickness: 0.3 };
-        break;
-      case 'output':
-        outputs = [];
-        params = { roofType: 'pitched' };
-        break;
-      case 'transform':
-        params = { x: 0, y: 0, z: 0 };
-        break;
-      case 'balcony':
-        params = { balconyDepth: 1.5 };
-        break;
-      case 'column':
-        params = { columnRadius: 0.2, columnSpacing: 3 };
-        break;
-      case 'window':
-        inputs = ['mesh'];
-        outputs = ['mesh'];
-        params = { windowSpacing: 2.5, windowHeight: 1.6, wallThickness: 0.3 };
-        break;
-    }
+    let inputs: PinType[] = [];
+    let outputs: PinType[] = ['spline', 'mesh', 'window'];
+    let params: any = { 
+      width: 14, depth: 10, floors: 5, floorHeight: 3.2,
+      foundationShape: 'rectangle',
+      twistBase: 0, twistMid: 0, twistTop: 0,
+      taper: 1, shearX: 0, shearY: 0, jitter: 0
+    };
 
     const newNode: Node<NodeData> = {
       id,
       type: 'buildingNode',
       position: { x: 100, y: 100 },
       data: {
-        label: type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' '),
+        label: 'Foundation',
         type,
         params,
         onChange: updateNodeParams,
@@ -136,55 +94,6 @@ export default function App() {
     setNodes((nds) => nds.concat(newNode));
   };
 
-  const applyPreset = (name: 'panelka' | 'villa' | 'tower') => {
-    let newNodes: Node<NodeData>[] = [];
-    let newEdges: Edge[] = [];
-
-    const baseData = { onChange: updateNodeParams };
-
-    if (name === 'panelka') {
-      newNodes = [
-        { id: 'f1', type: 'buildingNode', position: { x: 50, y: 200 }, data: { ...baseData, label: 'Foundation', type: 'foundation', params: { width: 14, depth: 10, foundationShape: 'rectangle' }, outputs: ['spline'] } },
-        { id: 'e1', type: 'buildingNode', position: { x: 300, y: 200 }, data: { ...baseData, label: 'Floor Generator', type: 'extrude', params: { floors: 9, floorHeight: 3 }, inputs: ['spline'], outputs: ['mesh'] } },
-        { id: 's1', type: 'buildingNode', position: { x: 550, y: 200 }, data: { ...baseData, label: 'Facade Pattern', type: 'scatter', params: { windowSpacing: 2.5, windowHeight: 1.4, wallThickness: 0.3 }, inputs: ['mesh'], outputs: ['mesh'] } },
-        { id: 'o1', type: 'buildingNode', position: { x: 800, y: 200 }, data: { ...baseData, label: 'Roof System', type: 'output', params: { roofType: 'flat' }, inputs: ['mesh'], outputs: [] } },
-      ];
-      newEdges = [
-        { id: 'e1-2', source: 'f1', target: 'e1', sourceHandle: 'spline', targetHandle: 'spline' },
-        { id: 'e2-3', source: 'e1', target: 's1', sourceHandle: 'mesh', targetHandle: 'mesh' },
-        { id: 'e3-4', source: 's1', target: 'o1', sourceHandle: 'mesh', targetHandle: 'mesh' },
-      ];
-    } else if (name === 'villa') {
-       newNodes = [
-        { id: 'f1', type: 'buildingNode', position: { x: 50, y: 200 }, data: { ...baseData, label: 'L-Foundation', type: 'foundation', params: { width: 14, depth: 12, foundationShape: 'L-shape' }, outputs: ['spline'] } },
-        { id: 'e1', type: 'buildingNode', position: { x: 300, y: 200 }, data: { ...baseData, label: '2 Floors', type: 'extrude', params: { floors: 2, floorHeight: 3.2 }, inputs: ['spline'], outputs: ['mesh'] } },
-        { id: 's1', type: 'buildingNode', position: { x: 550, y: 200 }, data: { ...baseData, label: 'Facade', type: 'scatter', params: { windowSpacing: 3, windowHeight: 1.8, wallThickness: 0.3 }, inputs: ['mesh'], outputs: ['mesh'] } },
-        { id: 'o1', type: 'buildingNode', position: { x: 800, y: 200 }, data: { ...baseData, label: 'Red Roof', type: 'output', params: { roofType: 'pitched' }, inputs: ['mesh'], outputs: [] } },
-      ];
-      newEdges = [
-        { id: 'e1-2', source: 'f1', target: 'e1', sourceHandle: 'spline', targetHandle: 'spline' },
-        { id: 'e2-3', source: 'e1', target: 's1', sourceHandle: 'mesh', targetHandle: 'mesh' },
-        { id: 'e3-4', source: 's1', target: 'o1', sourceHandle: 'mesh', targetHandle: 'mesh' },
-      ];
-    }
- else if (name === 'tower') {
-      newNodes = [
-        { id: 'f1', type: 'buildingNode', position: { x: 50, y: 200 }, data: { ...baseData, label: 'Foundation', type: 'foundation', params: { width: 8, depth: 8, foundationShape: 'rectangle' }, outputs: ['spline'] } },
-        { id: 'e1', type: 'buildingNode', position: { x: 300, y: 200 }, data: { ...baseData, label: 'Floor Generator', type: 'extrude', params: { floors: 25, floorHeight: 3.2 }, inputs: ['spline'], outputs: ['mesh'] } },
-        { id: 's1', type: 'buildingNode', position: { x: 550, y: 200 }, data: { ...baseData, label: 'Facade Pattern', type: 'scatter', params: { windowSpacing: 1.5, windowHeight: 2.2, wallThickness: 0.5 }, inputs: ['mesh'], outputs: ['mesh'] } },
-        { id: 'o1', type: 'buildingNode', position: { x: 800, y: 200 }, data: { ...baseData, label: 'Roof System', type: 'output', params: { roofType: 'dome' }, inputs: ['mesh'], outputs: [] } },
-      ];
-      newEdges = [
-        { id: 'e1-2', source: 'f1', target: 'e1', sourceHandle: 'spline', targetHandle: 'spline' },
-        { id: 'e2-3', source: 'e1', target: 's1', sourceHandle: 'mesh', targetHandle: 'mesh' },
-        { id: 'e3-4', source: 's1', target: 'o1', sourceHandle: 'mesh', targetHandle: 'mesh' },
-      ];
-    }
-
-    setNodes(newNodes);
-    setEdges(newEdges);
-  };
-
   const isValidConnection = (connection: Connection) => {
     return connection.sourceHandle === connection.targetHandle;
   };
@@ -192,7 +101,7 @@ export default function App() {
   return (
     <div className="app-container">
       <div className="editor-pane">
-        <Sidebar onAddNode={addNode} onApplyPreset={applyPreset} />
+        <Sidebar onAddNode={addNode} />
 
         <ReactFlow
           nodes={nodes}

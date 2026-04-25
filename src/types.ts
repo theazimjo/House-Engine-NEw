@@ -1,6 +1,6 @@
 import type { Node, Edge } from 'reactflow';
 
-export type NodeType = 'foundation' | 'extrude' | 'split' | 'merge' | 'scatter' | 'output' | 'balcony' | 'column' | 'stairs' | 'transform' | 'window';
+export type NodeType = 'foundation';
 export type PinType = 'spline' | 'mesh' | 'float' | 'mask';
 
 export interface NodeData {

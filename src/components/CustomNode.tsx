@@ -38,15 +38,16 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
           <div key={key} className="input-group" style={{ position: 'relative' }}>
             <Handle
               type="target"
-              position={Position.Left}
+              position={Position.Right}
               id={`param-${key}`}
               style={{
-                left: '-22px',
+                right: '-17px',
                 top: '50%',
                 background: PIN_COLORS.float,
-                width: '8px',
-                height: '8px',
-                border: '1px solid #ffffff44'
+                width: '10px',
+                height: '10px',
+                border: '1.5px solid #1a1a1a',
+                borderRadius: '2px'
               }}
             />
             <label className="input-label">{key}</label>

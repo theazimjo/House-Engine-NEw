@@ -162,8 +162,8 @@ export const Viewport: React.FC<ViewportProps> = ({ nodes, edges }) => {
   return (
     <div style={{ width: '100%', height: '100%', background: '#0a0a0c' }}>
       <Canvas shadows dpr={[1, 2]}>
-        <PerspectiveCamera makeDefault position={[15, 15, 15]} fov={45} />
-        <OrbitControls makeDefault minDistance={5} maxDistance={50} />
+        <PerspectiveCamera makeDefault position={[25, 25, 25]} fov={45} far={2000} />
+        <OrbitControls makeDefault minDistance={5} maxDistance={1000} />
         
         <ambientLight intensity={0.4} />
         <directionalLight position={[10, 20, 10]} intensity={1.5} castShadow shadow-mapSize={[1024, 1024]} />
