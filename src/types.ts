@@ -1,12 +1,20 @@
 import type { Node, Edge } from 'reactflow';
 
-export type NodeType = 'foundation' | 'extrude' | 'scatter' | 'output' | 'balcony' | 'column' | 'stairs';
+export type NodeType = 'foundation' | 'extrude' | 'split' | 'merge' | 'scatter' | 'output' | 'balcony' | 'column' | 'stairs' | 'transform';
+export type PinType = 'spline' | 'mesh' | 'float' | 'mask';
 
 export interface NodeData {
   label: string;
   type: NodeType;
   params: Record<string, any>;
   onChange: (id: string, params: Record<string, any>) => void;
+  inputs?: PinType[];
+  outputs?: PinType[];
+}
+
+export interface ViewportProps {
+  nodes: Node<NodeData>[];
+  edges: Edge[];
 }
 
 export interface BuildingParams {

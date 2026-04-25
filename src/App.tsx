@@ -1,11 +1,11 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import ReactFlow, { 
   addEdge, 
   Background, 
   Controls, 
+  Panel,
   useNodesState,
   useEdgesState,
-  Panel,
   type Node,
   type Edge,
   type Connection
@@ -13,11 +13,11 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import './index.css';
 
-import { CustomNode } from './CustomNode';
+import { CustomNode } from './components/CustomNode';
 import { Viewport } from './Viewport';
-import type { BuildingParams, NodeData } from './types';
-import { Box, Play, Download, Settings } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Sidebar } from './components/Sidebar';
+import type { NodeData, NodeType } from './types';
+import { Play, Download } from 'lucide-react';
 
 const nodeTypes = {
   buildingNode: CustomNode,
@@ -25,107 +25,108 @@ const nodeTypes = {
 
 const initialNodes: Node<NodeData>[] = [
   {
-    id: '1',
+    id: 'foundation-1',
     type: 'buildingNode',
-    data: { 
-      label: 'Foundation', 
-      type: 'foundation', 
-      params: { width: 8, depth: 6, foundationShape: 'rectangle' },
-      onChange: () => {} 
+    data: {
+      label: 'Foundation',
+      type: 'foundation',
+      params: { width: 12, depth: 10, foundationShape: 'rectangle' },
+      onChange: () => { },
+      outputs: ['spline']
     },
-    position: { x: 50, y: 150 },
+    position: { x: 50, y: 200 },
   },
   {
-    id: '2',
+    id: 'extrude-1',
     type: 'buildingNode',
-    data: { 
-      label: 'Floor Generator', 
-      type: 'extrude', 
-      params: { floors: 3, floorHeight: 3.2 },
-      onChange: () => {} 
+    data: {
+      label: 'Extrude',
+      type: 'extrude',
+      params: { floors: 4, floorHeight: 3.2 },
+      onChange: () => { },
+      inputs: ['spline'],
+      outputs: ['mesh']
     },
-    position: { x: 320, y: 150 },
+    position: { x: 300, y: 200 },
   },
   {
-    id: '3',
+    id: 'split-1',
     type: 'buildingNode',
-    data: { 
-      label: 'Facade Pattern', 
-      type: 'scatter', 
-      params: { windowSpacing: 2.5, sillHeight: 0.9, windowHeight: 1.5, wallThickness: 0.25 },
-      onChange: () => {} 
+    data: {
+      label: 'Split Geometry',
+      type: 'split',
+      params: {},
+      onChange: () => { },
+      inputs: ['mesh'],
+      outputs: ['mesh', 'mesh']
     },
-    position: { x: 590, y: 150 },
+    position: { x: 550, y: 200 },
   },
   {
-    id: '5',
+    id: 'facade-1',
     type: 'buildingNode',
-    data: { 
-      label: 'Roof System', 
-      type: 'output', 
+    data: {
+      label: 'Facade Pattern',
+      type: 'scatter',
+      params: { windowSpacing: 3, windowHeight: 1.6, wallThickness: 0.3 },
+      onChange: () => { },
+      inputs: ['mesh'],
+      outputs: ['mesh']
+    },
+    position: { x: 800, y: 100 },
+  },
+  {
+    id: 'roof-1',
+    type: 'buildingNode',
+    data: {
+      label: 'Roof System',
+      type: 'output',
       params: { roofType: 'pitched' },
-      onChange: () => {} 
+      onChange: () => { },
+      inputs: ['mesh'],
+      outputs: ['mesh']
     },
-    position: { x: 860, y: 150 },
+    position: { x: 800, y: 350 },
+  },
+  {
+    id: 'merge-1',
+    type: 'buildingNode',
+    data: {
+      label: 'Merge Mesh',
+      type: 'merge',
+      params: {},
+      onChange: () => { },
+      inputs: ['mesh', 'mesh'],
+      outputs: ['mesh']
+    },
+    position: { x: 1100, y: 200 },
   },
 ];
 
 const initialEdges: Edge[] = [
-  { id: 'e1-2', source: '1', target: '2', animated: true },
-  { id: 'e2-3', source: '2', target: '3', animated: true },
-  { id: 'e3-5', source: '3', target: '5', animated: true },
+  { id: 'e1-2', source: 'foundation-1', target: 'extrude-1', sourceHandle: 'spline', targetHandle: 'spline' },
+  { id: 'e2-3', source: 'extrude-1', target: 'split-1', sourceHandle: 'mesh', targetHandle: 'mesh' },
+  { id: 'e3-4', source: 'split-1', target: 'facade-1', sourceHandle: 'mesh', targetHandle: 'mesh' },
+  { id: 'e3-5', source: 'split-1', target: 'roof-1', sourceHandle: 'mesh', targetHandle: 'mesh' },
+  { id: 'e4-6', source: 'facade-1', target: 'merge-1', sourceHandle: 'mesh', targetHandle: 'mesh' },
+  { id: 'e5-6', source: 'roof-1', target: 'merge-1', sourceHandle: 'mesh', targetHandle: 'mesh' },
 ];
 
 export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [buildingParams, setBuildingParams] = useState<BuildingParams>({
-    width: 8,
-    depth: 6,
-    floors: 3,
-    floorHeight: 3.2,
-    wallThickness: 0.25,
-    windowSpacing: 2.5,
-    windowSize: [1.2, 1.5],
-    windowHeight: 1.5,
-    sillHeight: 0.9,
-    roofType: 'pitched',
-    foundationShape: 'rectangle',
-    balconyDepth: 1.5,
-    columnRadius: 0.2,
-    columnSpacing: 3,
-    stairsWidth: 1.5,
-    showBalcony: false,
-    showColumns: false,
-    showStairs: false,
-  });
 
-  const onConnect = useCallback((params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
-
-  const updateNodeParams = useCallback((id: string, newParams: Record<string, any>) => {
+  const updateNodeParams = useCallback((nodeId: string, params: any) => {
     setNodes((nds) =>
       nds.map((node) => {
-        if (node.id === id) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              params: newParams,
-            },
-          };
+        if (node.id === nodeId) {
+          return { ...node, data: { ...node.data, params } };
         }
         return node;
       })
     );
-
-    // Update global building params based on node change
-    setBuildingParams((prev) => ({
-      ...prev,
-      ...newParams,
-    }));
   }, [setNodes]);
 
-  // Inject the onChange handler into nodes
   useEffect(() => {
     setNodes((nds) =>
       nds.map((node) => ({
@@ -138,64 +139,39 @@ export default function App() {
     );
   }, [updateNodeParams, setNodes]);
 
-  const onNodesDelete = useCallback((deleted: Node[]) => {
-    deleted.forEach((node) => {
-      const type = node.data.type;
-      if (type === 'balcony') setBuildingParams((prev) => ({ ...prev, showBalcony: false }));
-      if (type === 'column') setBuildingParams((prev) => ({ ...prev, showColumns: false }));
-      if (type === 'stairs') setBuildingParams((prev) => ({ ...prev, showStairs: false }));
-    });
-  }, []);
+  const onConnect = useCallback((params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
 
   const addNode = (type: NodeType) => {
-    const id = (nodes.length + 1).toString();
+    const id = `${type}-${Date.now()}`;
     const newNode: Node<NodeData> = {
       id,
       type: 'buildingNode',
       position: { x: 100, y: 100 },
       data: {
-        label: type.charAt(0).toUpperCase() + type.slice(1),
+        label: type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' '),
         type,
-        params: 
-          type === 'balcony' ? { balconyDepth: 1.5, showBalcony: true } :
-          type === 'column' ? { columnRadius: 0.2, columnSpacing: 3, showColumns: true } :
-          type === 'stairs' ? { stairsWidth: 1.5, showStairs: true } :
-          {},
+        params:
+          type === 'scatter' ? { windowSpacing: 3, windowHeight: 1.6, wallThickness: 0.3 } :
+            type === 'output' ? { roofType: 'pitched' } :
+              type === 'foundation' ? { width: 10, depth: 8, foundationShape: 'rectangle' } :
+                type === 'extrude' ? { floors: 3, floorHeight: 3.2 } :
+                  {},
         onChange: updateNodeParams,
+        inputs: type === 'foundation' ? [] : [type === 'extrude' ? 'spline' : 'mesh'],
+        outputs: type === 'output' ? [] : [type === 'foundation' ? 'spline' : 'mesh'],
       },
     };
     setNodes((nds) => nds.concat(newNode));
   };
 
+  const isValidConnection = (connection: Connection) => {
+    return connection.sourceHandle === connection.targetHandle;
+  };
+
   return (
     <div className="app-container">
       <div className="editor-pane">
-      <div className="sidebar-overlay">
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="glass-panel" 
-          style={{ padding: '15px', width: '200px' }}
-        >
-          <h1 className="gradient-text" style={{ fontSize: '1.2rem', marginBottom: '4px' }}>House Engine</h1>
-          <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginBottom: '15px' }}>Node-Based Architecture</p>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <button onClick={() => addNode('balcony')} className="glass-card" style={{ padding: '8px', color: '#fff', fontSize: '0.7rem', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '8px', height: '8px', background: '#059669' }}></div>
-              + Balcony Node
-            </button>
-            <button onClick={() => addNode('column')} className="glass-card" style={{ padding: '8px', color: '#fff', fontSize: '0.7rem', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '8px', height: '8px', background: '#7c3aed' }}></div>
-              + Column Node
-            </button>
-            <button onClick={() => addNode('stairs')} className="glass-card" style={{ padding: '8px', color: '#fff', fontSize: '0.7rem', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '8px', height: '8px', background: '#db2777' }}></div>
-              + Stairs Node
-            </button>
-          </div>
-        </motion.div>
-      </div>
+        <Sidebar onAddNode={addNode} />
 
         <ReactFlow
           nodes={nodes}
@@ -203,35 +179,26 @@ export default function App() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          onNodesDelete={onNodesDelete}
           nodeTypes={nodeTypes}
-          dragHandle=".custom-drag-handle"
+          isValidConnection={isValidConnection}
           fitView
         >
           <Background color="#1a1a20" gap={20} />
           <Controls />
-          <Panel position="bottom-center">
-            <div className="glass-panel toolbar">
-              <button className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', border: 'none', color: '#fff', cursor: 'pointer' }}>
-                <Play size={16} className="text-green-400" />
-                <span>Generate</span>
-              </button>
-              <button className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', border: 'none', color: '#fff', cursor: 'pointer' }}>
-                <Download size={16} />
-                <span>Export OBJ</span>
-              </button>
-            </div>
-          </Panel>
         </ReactFlow>
       </div>
 
       <div className="preview-pane" style={{ width: '600px' }}>
-        <Viewport params={buildingParams} />
-        
+        <Viewport nodes={nodes} edges={edges} />
+
         <div style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 10 }}>
           <div className="glass-panel" style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#4ade80' }}></div>
-            <span style={{ fontSize: '0.8rem', fontWeight: '500' }}>Live Renderer</span>
+            <button className="glass-card" style={{ padding: '8px 15px', border: 'none', color: '#fff', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Play size={14} /> COOK GRAPH
+            </button>
+            <button className="glass-card" style={{ padding: '8px 15px', border: 'none', color: '#fff', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Download size={14} /> EXPORT
+            </button>
           </div>
         </div>
       </div>
