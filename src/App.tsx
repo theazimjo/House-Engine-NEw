@@ -143,6 +143,45 @@ export default function App() {
 
   const addNode = (type: NodeType) => {
     const id = `${type}-${Date.now()}`;
+    
+    let inputs: string[] = ['mesh'];
+    let outputs: string[] = ['mesh'];
+    let params: any = {};
+
+    switch (type) {
+      case 'foundation':
+        inputs = [];
+        outputs = ['spline'];
+        params = { width: 10, depth: 8, foundationShape: 'rectangle' };
+        break;
+      case 'extrude':
+        inputs = ['spline'];
+        outputs = ['mesh'];
+        params = { floors: 3, floorHeight: 3.2 };
+        break;
+      case 'split':
+        inputs = ['mesh'];
+        outputs = ['mesh', 'mesh']; // Top, Sides
+        break;
+      case 'merge':
+        inputs = ['mesh', 'mesh'];
+        outputs = ['mesh'];
+        break;
+      case 'scatter':
+        params = { windowSpacing: 3, windowHeight: 1.6, wallThickness: 0.3 };
+        break;
+      case 'output':
+        outputs = [];
+        params = { roofType: 'pitched' };
+        break;
+      case 'balcony':
+        params = { balconyDepth: 1.5 };
+        break;
+      case 'column':
+        params = { columnRadius: 0.2, columnSpacing: 3 };
+        break;
+    }
+
     const newNode: Node<NodeData> = {
       id,
       type: 'buildingNode',
@@ -150,15 +189,10 @@ export default function App() {
       data: {
         label: type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' '),
         type,
-        params:
-          type === 'scatter' ? { windowSpacing: 3, windowHeight: 1.6, wallThickness: 0.3 } :
-            type === 'output' ? { roofType: 'pitched' } :
-              type === 'foundation' ? { width: 10, depth: 8, foundationShape: 'rectangle' } :
-                type === 'extrude' ? { floors: 3, floorHeight: 3.2 } :
-                  {},
+        params,
         onChange: updateNodeParams,
-        inputs: type === 'foundation' ? [] : [type === 'extrude' ? 'spline' : 'mesh'],
-        outputs: type === 'output' ? [] : [type === 'foundation' ? 'spline' : 'mesh'],
+        inputs,
+        outputs,
       },
     };
     setNodes((nds) => nds.concat(newNode));

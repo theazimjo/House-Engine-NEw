@@ -9,12 +9,15 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ onAddNode }) => {
   const nodeOptions: { type: NodeType; label: string }[] = [
+    { type: 'foundation', label: 'Foundation' },
+    { type: 'extrude', label: 'Floor Generator' },
     { type: 'split', label: 'Split Geometry' },
+    { type: 'scatter', label: 'Facade Pattern' },
+    { type: 'output', label: 'Roof System' },
     { type: 'merge', label: 'Merge Mesh' },
     { type: 'transform', label: 'Transform' },
     { type: 'balcony', label: 'Balcony' },
     { type: 'column', label: 'Column' },
-    { type: 'stairs', label: 'Stairs' },
   ];
 
   return (
