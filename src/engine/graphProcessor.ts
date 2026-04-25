@@ -20,11 +20,31 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
 
     switch (node.data.type) {
       case 'floors':
-        output = {
-          count: node.data.params.count,
-          height: node.data.params.height,
-          showWindow: node.data.params.showWindow
-        };
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        const count = inputs.find(i => i.handle === 'param-count')?.data || node.data.params.count;
+        const height = inputs.find(i => i.handle === 'param-height')?.data || node.data.params.height;
+
+        if (!splineData) {
+          output = { count, height, showWindow: node.data.params.showWindow };
+        } else {
+          // If we have a spline, we generate the actual building geometry
+          const buildingData = {
+            spline: splineData.points,
+            floors: count,
+            floorHeight: height,
+            twist: splineData.twist,
+            taper: splineData.taper,
+            shear: splineData.shear,
+            jitter: splineData.jitter,
+            detailed: true
+          };
+
+          output = [
+            { ...buildingData, type: 'foundation_slab', detailed: false },
+            { ...buildingData, type: 'full_volume', part: 'building' },
+            { ...buildingData, type: 'full_volume', part: 'facade' }
+          ];
+        }
         break;
 
       case 'foundation':
@@ -33,20 +53,9 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
           return input ? input.data : node.data.params[name];
         };
 
-        const floorsInput = inputs.find(i => i.handle === 'floors')?.data;
-        const floorsParamInput = inputs.find(i => i.handle === 'param-floors')?.data;
-        
-        // Priority: Direct 'floors' pin > 'param-floors' pin > local params
-        const floorsData = floorsInput || (floorsParamInput && typeof floorsParamInput === 'object' ? floorsParamInput : null);
-
         const width = getParam('width');
         const depth = getParam('depth');
         const foundationShape = getParam('foundationShape');
-        
-        const floors = floorsData ? floorsData.count : (getParam('floors') || 1);
-        const floorHeight = floorsData ? floorsData.height : (getParam('floorHeight') || 3);
-        
-        const totalHeight = getParam('height');
         const twistBase = getParam('twistBase') || 0;
         const twistMid = getParam('twistMid') || 0;
         const twistTop = getParam('twistTop') || 0;
@@ -98,31 +107,20 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
               [-w2, d2 - xt], [-w2, d2]
             ];
             break;
-          case 'custom':
-            points = [[-w2, d2], [w2, d2], [w2, -d2], [-w2, -d2]];
-            break;
           case 'rectangle':
           default:
             points = [[-w2, d2], [w2, d2], [w2, -d2], [-w2, -d2]];
             break;
         }
 
-        const buildingData = { 
-          spline: points, 
-          floors, 
-          floorHeight: totalHeight ? (totalHeight / floors) : floorHeight,
+        // Return a shape package (spline) instead of meshes
+        output = {
+          points,
           twist: { base: twistBase, mid: twistMid, top: twistTop },
           taper,
           shear: { x: shearX, y: shearY },
-          jitter,
-          detailed: true
+          jitter
         };
-
-        output = [
-          { ...buildingData, type: 'foundation_slab', detailed: false },
-          { ...buildingData, type: 'full_volume', part: 'building' },
-          { ...buildingData, type: 'full_volume', part: 'facade' }
-        ];
         break;
     }
 

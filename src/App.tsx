@@ -61,8 +61,18 @@ export default function App() {
             data: {
               ...node.data,
               onChange: updateNodeParams,
-              inputs: [], // Foundation should have no inputs
-              outputs: ['spline', 'mesh', 'window']
+              inputs: [],
+              outputs: ['spline'] // Foundation outputs shape
+            },
+          };
+        } else if (node.data.type === 'floors') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              onChange: updateNodeParams,
+              inputs: ['spline'], // Floors receives shape
+              outputs: ['mesh', 'window'] // Floors outputs geometry
             },
           };
         }
@@ -89,17 +99,17 @@ export default function App() {
 
     if (type === 'foundation') {
       inputs = [];
-      outputs = ['spline', 'mesh', 'window'];
+      outputs = ['spline'];
       params = { 
-        width: 14, depth: 10, floors: 5, floorHeight: 3.2,
+        width: 14, depth: 10,
         foundationShape: 'rectangle',
         twistBase: 0, twistMid: 0, twistTop: 0,
         taper: 1, shearX: 0, shearY: 0, jitter: 0
       };
       label = 'Foundation';
     } else if (type === 'floors') {
-      inputs = [];
-      outputs = ['floors'];
+      inputs = ['spline'];
+      outputs = ['mesh', 'window'];
       params = { count: 10, height: 3.5, showWindow: true };
       label = 'Floors System';
     }
@@ -121,7 +131,7 @@ export default function App() {
   };
 
   const isValidConnection = (connection: Connection) => {
-    return connection.sourceHandle === connection.targetHandle;
+    return connection.source !== connection.target;
   };
 
   return (

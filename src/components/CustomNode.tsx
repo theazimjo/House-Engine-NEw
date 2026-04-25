@@ -141,11 +141,45 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
       </div>
 
       <div className="node-ports-left">
-        {/* Input ports removed as requested */}
+        {data.inputs?.map((type, i) => (
+          <Handle
+            key={`in-${i}`}
+            type="target"
+            position={Position.Left}
+            id={type}
+            style={{
+              left: '-8px',
+              top: `${20 + i * 24}px`,
+              background: PIN_COLORS[type] || PIN_COLORS.float,
+              width: '12px',
+              height: '12px',
+              border: '1px solid #000',
+              borderRadius: '2px',
+              pointerEvents: 'all'
+            }}
+          />
+        ))}
       </div>
 
       <div className="node-ports-right">
-        {/* Output ports removed as requested */}
+        {data.outputs?.map((type, i) => (
+          <Handle
+            key={`out-${i}`}
+            type="source"
+            position={Position.Right}
+            id={type}
+            style={{
+              right: '-8px',
+              top: `${20 + i * 24}px`,
+              background: PIN_COLORS[type] || PIN_COLORS.float,
+              width: '12px',
+              height: '12px',
+              border: '1px solid #000',
+              borderRadius: '2px',
+              pointerEvents: 'all'
+            }}
+          />
+        ))}
       </div>
     </>
   );

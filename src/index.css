@@ -117,10 +117,15 @@ body {
   outline: none;
   color: #eee !important;
   border-radius: 2px;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: textfield !important;
 }
 
-.node-input:focus, .node-select:focus {
-  border-color: #6366f1;
+.node-input::-webkit-outer-spin-button,
+.node-input::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
 }
 
 .input-with-unit {
