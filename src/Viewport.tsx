@@ -66,7 +66,7 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           }
         }
 
-        if (part.type === 'full_volume' || part.detailed) {
+        if ((part.type === 'full_volume' || part.detailed || part.type === 'foundation_slab') && Array.isArray(spline) && spline.length > 0) {
            const slabShape = new THREE.Shape();
            slabShape.moveTo(spline[0][0], spline[0][1]);
            spline.slice(1).forEach((p: any) => slabShape.lineTo(p[0], p[1]));
@@ -74,7 +74,7 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
            elements.push(
              <mesh key={`slab-${idx}`} position={[0, 0, 0]} rotation={[-Math.PI/2, 0, 0]}>
                <extrudeGeometry args={[slabShape, { depth: 0.1, bevelEnabled: false }]} />
-               <meshStandardMaterial color="#222" />
+               <meshStandardMaterial color={part.type === 'foundation_slab' ? "#1e1e24" : "#222"} roughness={0.8} />
              </mesh>
            );
         }

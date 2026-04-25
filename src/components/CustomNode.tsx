@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import type { NodeData } from '../types';
 import { PIN_COLORS } from '../constants/nodeStyles';
+import { X } from 'lucide-react';
 
 export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
   const handleParamChange = (name: string, value: any) => {
@@ -20,7 +21,16 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
     <>
       <div className={`node-header header-${data.type} custom-drag-handle`}>
         <span>{data.label}</span>
-        <span className="node-id">NB{id.toUpperCase()}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span className="node-id">NB{id.split('-')[0].toUpperCase()}</span>
+          <div className="node-delete-btn" onClick={(e) => {
+            e.stopPropagation();
+            // We'll use a custom event or a shared context if useReactFlow fails here
+            window.dispatchEvent(new CustomEvent('delete-node', { detail: id }));
+          }}>
+            <X size={12} />
+          </div>
+        </div>
       </div>
       
       <div className="node-body">

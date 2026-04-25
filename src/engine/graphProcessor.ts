@@ -1,5 +1,5 @@
 import type { Node, Edge } from 'reactflow';
-import type { NodeData, PinType } from '../types';
+import type { NodeData } from '../types';
 
 export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
   const results = new Map<string, any>();
@@ -23,19 +23,22 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
         const { width, depth, foundationShape } = node.data.params;
         const w2 = width / 2;
         const d2 = depth / 2;
+        let points = [];
         if (foundationShape === 'rectangle') {
-          output = [[-w2, d2], [w2, d2], [w2, -d2], [-w2, -d2]];
+          points = [[-w2, d2], [w2, d2], [w2, -d2], [-w2, -d2]];
         } else {
           const t = Math.min(width, depth) * 0.4;
-          output = [[-w2, d2], [w2, d2], [w2, -d2 + t], [-w2 + t, -d2 + t], [-w2 + t, -d2], [-w2, -d2]];
+          points = [[-w2, d2], [w2, d2], [w2, -d2 + t], [-w2 + t, -d2 + t], [-w2 + t, -d2], [-w2, -d2]];
         }
+        output = { spline: points, type: 'foundation_slab' };
         break;
 
       case 'extrude':
-        const spline = inputs.find(i => i.handle === 'spline')?.data;
-        if (spline) {
+        const inputData = inputs.find(i => i.handle === 'spline')?.data;
+        if (inputData) {
+          const points = inputData.spline || inputData; // Extract points if it's an object
           const { floors, floorHeight } = node.data.params;
-          output = { spline, floors, floorHeight, type: 'full_volume' };
+          output = { spline: points, floors, floorHeight, type: 'full_volume' };
         }
         break;
 
@@ -70,8 +73,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
   };
 
   const rootNodes = nodes.filter(n => 
-    n.data.type === 'merge' || 
-    (n.data.type === 'output' && !edges.some(e => e.source === n.id))
+    !edges.some(e => e.source === n.id)
   );
 
   const processed = rootNodes.map(root => resolveNode(root.id)).flat();

@@ -1,9 +1,8 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import ReactFlow, { 
   addEdge, 
   Background, 
   Controls, 
-  Panel,
   useNodesState,
   useEdgesState,
   type Node,
@@ -19,100 +18,15 @@ import { Sidebar } from './components/Sidebar';
 import type { NodeData, NodeType } from './types';
 import { Play, Download } from 'lucide-react';
 
-const nodeTypes = {
-  buildingNode: CustomNode,
-};
 
-const initialNodes: Node<NodeData>[] = [
-  {
-    id: 'foundation-1',
-    type: 'buildingNode',
-    data: {
-      label: 'Foundation',
-      type: 'foundation',
-      params: { width: 12, depth: 10, foundationShape: 'rectangle' },
-      onChange: () => { },
-      outputs: ['spline']
-    },
-    position: { x: 50, y: 200 },
-  },
-  {
-    id: 'extrude-1',
-    type: 'buildingNode',
-    data: {
-      label: 'Extrude',
-      type: 'extrude',
-      params: { floors: 4, floorHeight: 3.2 },
-      onChange: () => { },
-      inputs: ['spline'],
-      outputs: ['mesh']
-    },
-    position: { x: 300, y: 200 },
-  },
-  {
-    id: 'split-1',
-    type: 'buildingNode',
-    data: {
-      label: 'Split Geometry',
-      type: 'split',
-      params: {},
-      onChange: () => { },
-      inputs: ['mesh'],
-      outputs: ['mesh', 'mesh']
-    },
-    position: { x: 550, y: 200 },
-  },
-  {
-    id: 'facade-1',
-    type: 'buildingNode',
-    data: {
-      label: 'Facade Pattern',
-      type: 'scatter',
-      params: { windowSpacing: 3, windowHeight: 1.6, wallThickness: 0.3 },
-      onChange: () => { },
-      inputs: ['mesh'],
-      outputs: ['mesh']
-    },
-    position: { x: 800, y: 100 },
-  },
-  {
-    id: 'roof-1',
-    type: 'buildingNode',
-    data: {
-      label: 'Roof System',
-      type: 'output',
-      params: { roofType: 'pitched' },
-      onChange: () => { },
-      inputs: ['mesh'],
-      outputs: ['mesh']
-    },
-    position: { x: 800, y: 350 },
-  },
-  {
-    id: 'merge-1',
-    type: 'buildingNode',
-    data: {
-      label: 'Merge Mesh',
-      type: 'merge',
-      params: {},
-      onChange: () => { },
-      inputs: ['mesh', 'mesh'],
-      outputs: ['mesh']
-    },
-    position: { x: 1100, y: 200 },
-  },
-];
 
-const initialEdges: Edge[] = [
-  { id: 'e1-2', source: 'foundation-1', target: 'extrude-1', sourceHandle: 'spline', targetHandle: 'spline' },
-  { id: 'e2-3', source: 'extrude-1', target: 'split-1', sourceHandle: 'mesh', targetHandle: 'mesh' },
-  { id: 'e3-4', source: 'split-1', target: 'facade-1', sourceHandle: 'mesh', targetHandle: 'mesh' },
-  { id: 'e3-5', source: 'split-1', target: 'roof-1', sourceHandle: 'mesh', targetHandle: 'mesh' },
-  { id: 'e4-6', source: 'facade-1', target: 'merge-1', sourceHandle: 'mesh', targetHandle: 'mesh' },
-  { id: 'e5-6', source: 'roof-1', target: 'merge-1', sourceHandle: 'mesh', targetHandle: 'mesh' },
-];
+const initialNodes: Node<NodeData>[] = [];
+const initialEdges: Edge[] = [];
 
 export default function App() {
+  const nodeTypes = useMemo(() => ({
+    buildingNode: CustomNode,
+  }), []);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
@@ -126,6 +40,17 @@ export default function App() {
       })
     );
   }, [setNodes]);
+
+  useEffect(() => {
+    const handleDeleteNode = (e: any) => {
+      const nodeId = e.detail;
+      setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+      setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+    };
+
+    window.addEventListener('delete-node', handleDeleteNode);
+    return () => window.removeEventListener('delete-node', handleDeleteNode);
+  }, [setNodes, setEdges]);
 
   useEffect(() => {
     setNodes((nds) =>
@@ -144,8 +69,8 @@ export default function App() {
   const addNode = (type: NodeType) => {
     const id = `${type}-${Date.now()}`;
     
-    let inputs: string[] = ['mesh'];
-    let outputs: string[] = ['mesh'];
+    let inputs: PinType[] = ['mesh'];
+    let outputs: PinType[] = ['mesh'];
     let params: any = {};
 
     switch (type) {

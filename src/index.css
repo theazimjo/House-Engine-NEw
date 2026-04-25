@@ -165,6 +165,22 @@ body {
 .node-ports-left { left: 0; }
 .node-ports-right { right: 0; }
 
+.node-delete-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.node-delete-btn:hover {
+  background: #ef4444;
+  transform: scale(1.1);
+}
+
 .react-flow__handle {
   width: 10px !important;
   height: 10px !important;
