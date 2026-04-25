@@ -1,6 +1,6 @@
 import type { Node, Edge } from 'reactflow';
 
-export type NodeType = 'foundation' | 'extrude' | 'scatter' | 'output';
+export type NodeType = 'foundation' | 'extrude' | 'scatter' | 'output' | 'balcony' | 'column' | 'stairs';
 
 export interface NodeData {
   label: string;
@@ -21,6 +21,13 @@ export interface BuildingParams {
   sillHeight: number;
   roofType: 'flat' | 'pitched' | 'dome';
   foundationShape: 'rectangle' | 'L-shape';
+  balconyDepth: number;
+  columnRadius: number;
+  columnSpacing: number;
+  stairsWidth: number;
+  showBalcony: boolean;
+  showColumns: boolean;
+  showStairs: boolean;
 }
 
 export type BuildingNode = Node<NodeData>;

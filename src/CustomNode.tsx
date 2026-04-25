@@ -17,7 +17,7 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
 
   return (
     <>
-      <div className={`node-header header-${data.type}`}>
+      <div className={`node-header header-${data.type} custom-drag-handle`}>
         <span>{data.label}</span>
         <span className="node-id">NB{id}</span>
       </div>
@@ -47,13 +47,16 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
                 )}
               </select>
             ) : (
-              <input
-                type="number"
-                step={0.1}
-                value={value}
-                onChange={(e) => handleParamChange(key, parseFloat(e.target.value))}
-                className="node-input"
-              />
+              <div className="input-with-unit">
+                <input
+                  type="number"
+                  step={0.1}
+                  value={value}
+                  onChange={(e) => handleParamChange(key, parseFloat(e.target.value))}
+                  className="node-input"
+                />
+                <span className="unit-label">m</span>
+              </div>
             )}
           </div>
         ))}

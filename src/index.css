@@ -70,6 +70,7 @@ body {
   align-items: center;
   border-bottom: 1.5px solid #1a1a1a;
   text-transform: uppercase;
+  cursor: move; /* Drag handle indicator */
 }
 
 .node-header .node-id {
@@ -83,12 +84,16 @@ body {
 .header-extrude { background-color: #005682; }
 .header-scatter { background-color: #f2b705; color: #1a1a1a !important; }
 .header-output { background-color: #1a1a1a; }
+.header-balcony { background-color: #059669; } /* Green */
+.header-column { background-color: #7c3aed; }  /* Purple */
+.header-stairs { background-color: #db2777; }  /* Pink */
 
 .node-body {
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  cursor: default; /* Prevent move cursor inside body */
 }
 
 .input-group {
@@ -114,7 +119,29 @@ body {
   font-weight: 600;
   text-align: right;
   outline: none;
-  color: #1a1a1a !important; /* Fixed text visibility */
+  color: #1a1a1a !important;
+  appearance: textfield; /* Hide spinners in Chrome/Safari/Edge */
+  -moz-appearance: textfield; /* Hide spinners in Firefox */
+}
+
+.node-input::-webkit-outer-spin-button,
+.node-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input-with-unit {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.unit-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  opacity: 0.5;
 }
 
 .node-select {

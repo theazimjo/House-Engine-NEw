@@ -91,6 +91,13 @@ export default function App() {
     sillHeight: 0.9,
     roofType: 'pitched',
     foundationShape: 'rectangle',
+    balconyDepth: 1.5,
+    columnRadius: 0.2,
+    columnSpacing: 3,
+    stairsWidth: 1.5,
+    showBalcony: false,
+    showColumns: false,
+    showStairs: false,
   });
 
   const onConnect = useCallback((params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
@@ -131,31 +138,64 @@ export default function App() {
     );
   }, [updateNodeParams, setNodes]);
 
+  const onNodesDelete = useCallback((deleted: Node[]) => {
+    deleted.forEach((node) => {
+      const type = node.data.type;
+      if (type === 'balcony') setBuildingParams((prev) => ({ ...prev, showBalcony: false }));
+      if (type === 'column') setBuildingParams((prev) => ({ ...prev, showColumns: false }));
+      if (type === 'stairs') setBuildingParams((prev) => ({ ...prev, showStairs: false }));
+    });
+  }, []);
+
+  const addNode = (type: NodeType) => {
+    const id = (nodes.length + 1).toString();
+    const newNode: Node<NodeData> = {
+      id,
+      type: 'buildingNode',
+      position: { x: 100, y: 100 },
+      data: {
+        label: type.charAt(0).toUpperCase() + type.slice(1),
+        type,
+        params: 
+          type === 'balcony' ? { balconyDepth: 1.5, showBalcony: true } :
+          type === 'column' ? { columnRadius: 0.2, columnSpacing: 3, showColumns: true } :
+          type === 'stairs' ? { stairsWidth: 1.5, showStairs: true } :
+          {},
+        onChange: updateNodeParams,
+      },
+    };
+    setNodes((nds) => nds.concat(newNode));
+  };
+
   return (
     <div className="app-container">
       <div className="editor-pane">
-        <div className="sidebar-overlay">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="glass-panel" 
-            style={{ padding: '15px' }}
-          >
-            <h1 className="gradient-text" style={{ fontSize: '1.2rem', marginBottom: '4px' }}>House Engine</h1>
-            <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>Procedural Architecture Generator</p>
-          </motion.div>
+      <div className="sidebar-overlay">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="glass-panel" 
+          style={{ padding: '15px', width: '200px' }}
+        >
+          <h1 className="gradient-text" style={{ fontSize: '1.2rem', marginBottom: '4px' }}>House Engine</h1>
+          <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginBottom: '15px' }}>Node-Based Architecture</p>
           
-          <div className="glass-panel" style={{ padding: '10px' }}>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button className="glass-card" style={{ padding: '8px', border: 'none', color: '#fff', cursor: 'pointer' }}>
-                <Box size={18} />
-              </button>
-              <button className="glass-card" style={{ padding: '8px', border: 'none', color: '#fff', cursor: 'pointer' }}>
-                <Settings size={18} />
-              </button>
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <button onClick={() => addNode('balcony')} className="glass-card" style={{ padding: '8px', color: '#fff', fontSize: '0.7rem', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '8px', height: '8px', background: '#059669' }}></div>
+              + Balcony Node
+            </button>
+            <button onClick={() => addNode('column')} className="glass-card" style={{ padding: '8px', color: '#fff', fontSize: '0.7rem', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '8px', height: '8px', background: '#7c3aed' }}></div>
+              + Column Node
+            </button>
+            <button onClick={() => addNode('stairs')} className="glass-card" style={{ padding: '8px', color: '#fff', fontSize: '0.7rem', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '8px', height: '8px', background: '#db2777' }}></div>
+              + Stairs Node
+            </button>
           </div>
-        </div>
+        </motion.div>
+      </div>
 
         <ReactFlow
           nodes={nodes}
@@ -163,7 +203,9 @@ export default function App() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onNodesDelete={onNodesDelete}
           nodeTypes={nodeTypes}
+          dragHandle=".custom-drag-handle"
           fitView
         >
           <Background color="#1a1a20" gap={20} />
