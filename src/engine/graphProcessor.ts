@@ -481,7 +481,6 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
         break;
       }
 
-      // ── Scatter Points ───────────────────────────────────────────────────────
       case 'scatter_points': {
         const splineData = inputs.find(i => i.handle === 'spline')?.data;
         if (!splineData || !Array.isArray(splineData.points)) break;
@@ -492,24 +491,72 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
         const maxScale = node.data.params.maxScale || 1.2;
         const pts      = splineData.points;
 
-        // Bounding box of spline
         const minX = Math.min(...pts.map((p: any) => p[0]));
         const maxX = Math.max(...pts.map((p: any) => p[0]));
         const minZ = Math.min(...pts.map((p: any) => p[1]));
         const maxZ = Math.max(...pts.map((p: any) => p[1]));
 
-        // Simple seeded pseudo-random
         const rand = (s: number) => {
           const x = Math.sin(s) * 43758.5453123;
           return x - Math.floor(x);
         };
 
+        const pointInPolygon = (x: number, z: number, polygon: [number, number][]) => {
+          let inside = false;
+          for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            const xi = polygon[i][0], zi = polygon[i][1];
+            const xj = polygon[j][0], zj = polygon[j][1];
+            const intersect = ((zi > z) !== (zj > z)) && (x < (xj - xi) * (z - zi) / (zj - zi) + xi);
+            if (intersect) inside = !inside;
+          }
+          return inside;
+        };
+
+        const distToSegment = (px: number, pz: number, x1: number, z1: number, x2: number, z2: number) => {
+          const C = x2 - x1; const D = z2 - z1;
+          const dot = (px - x1) * C + (pz - z1) * D;
+          const len_sq = C * C + D * D;
+          let param = -1;
+          if (len_sq !== 0) param = dot / len_sq;
+          let xx, zz;
+          if (param < 0) { xx = x1; zz = z1; }
+          else if (param > 1) { xx = x2; zz = z2; }
+          else { xx = x1 + param * C; zz = z1 + param * D; }
+          const dx = px - xx; const dz = pz - zz;
+          return Math.sqrt(dx * dx + dz * dz);
+        };
+
+        const margin = 20; // Scatter around the building
+        const sMinX = minX - margin;
+        const sMaxX = maxX + margin;
+        const sMinZ = minZ - margin;
+        const sMaxZ = maxZ + margin;
+
         const scattered: any[] = [];
-        for (let i = 0; i < count; i++) {
-          const rx = rand(seed + i * 3.1)    * (maxX - minX) + minX;
-          const rz = rand(seed + i * 7.7 + 1) * (maxZ - minZ) + minZ;
-          const sc = rand(seed + i * 13.3 + 2) * (maxScale - minScale) + minScale;
-          const ry = rand(seed + i * 5.5 + 3)  * Math.PI * 2;
+        let attempts = 0;
+        let validFound = 0;
+
+        while (validFound < count && attempts < count * 50) {
+          const rx = rand(seed + attempts * 3.1)    * (sMaxX - sMinX) + sMinX;
+          const rz = rand(seed + attempts * 7.7 + 1) * (sMaxZ - sMinZ) + sMinZ;
+          const sc = rand(seed + attempts * 13.3 + 2) * (maxScale - minScale) + minScale;
+          const ry = rand(seed + attempts * 5.5 + 3)  * Math.PI * 2;
+          
+          attempts++;
+          
+          // 1. Must not be inside the building
+          if (pointInPolygon(rx, rz, pts)) continue;
+          
+          // 2. Must not be too close to the walls (clipping)
+          let tooClose = false;
+          for (let i = 0; i < pts.length; i++) {
+             const next = pts[(i + 1) % pts.length];
+             if (distToSegment(rx, rz, pts[i][0], pts[i][1], next[0], next[1]) < 3.0) {
+                tooClose = true;
+                break;
+             }
+          }
+          if (tooClose) continue;
 
           scattered.push({
             type: 'scatter_instance',
@@ -517,6 +564,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
             scale: sc,
             rotation: ry,
           });
+          validFound++;
         }
         output = scattered;
         break;

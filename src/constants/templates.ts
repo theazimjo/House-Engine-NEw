@@ -48,11 +48,11 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
     preview: '🏢',
     nodes: [
       makeNode('f-1', 'foundation', 'Foundation', 50, 250, {
-        width: 14, depth: 10, foundationShape: 'rectangle',
+        width: 32, depth: 16, foundationShape: 'rectangle',
       }),
       makeNode('fl-1', 'floors', 'Floors System', 380, 300, {
-        count: 5, height: 3.2, winWidth: 1.4, winHeight: 2.0, winSpacing: 2.8,
-        doorWidth: 2.0, doorHeight: 2.6, doorSide: 'front',
+        count: 5, height: 3.2, winWidth: 1.6, winHeight: 2.2, winSpacing: 3.2,
+        doorWidth: 2.4, doorHeight: 2.6, doorSide: 'front',
         windowType: 'modern', doorType: 'modern', material: 'concrete',
         hasBalcony: true, hasRibs: false, plinthHeight: 0.6,
       }),
@@ -85,11 +85,11 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
     preview: '🏡',
     nodes: [
       makeNode('f-1', 'foundation', 'Foundation', 50, 250, {
-        width: 18, depth: 12, foundationShape: 'rectangle',
+        width: 20, depth: 14, foundationShape: 'rectangle',
       }),
       makeNode('fl-1', 'floors', 'Floors System', 380, 300, {
-        count: 2, height: 3.5, winWidth: 1.0, winHeight: 1.6, winSpacing: 2.2,
-        doorWidth: 2.2, doorHeight: 2.8, doorSide: 'front',
+        count: 2, height: 3.6, winWidth: 1.2, winHeight: 1.8, winSpacing: 2.5,
+        doorWidth: 2.4, doorHeight: 2.8, doorSide: 'front',
         windowType: 'classic', doorType: 'classic', material: 'bricks',
         hasBalcony: false, hasRibs: false, plinthHeight: 0.5,
       }),
@@ -126,12 +126,12 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
     preview: '🏙️',
     nodes: [
       makeNode('f-1', 'foundation', 'Foundation', 50, 250, {
-        width: 16, depth: 16, foundationShape: 'rectangle',
+        width: 35, depth: 35, foundationShape: 'rectangle',
         taper: 0.85, twistBase: 0, twistMid: 0, twistTop: 3,
       }),
       makeNode('fl-1', 'floors', 'Floors System', 380, 300, {
-        count: 12, height: 3.5, winWidth: 1.6, winHeight: 2.2, winSpacing: 2.0,
-        doorWidth: 3.0, doorHeight: 3.0, doorSide: 'frontback',
+        count: 14, height: 3.8, winWidth: 2.0, winHeight: 2.6, winSpacing: 2.4,
+        doorWidth: 4.0, doorHeight: 3.5, doorSide: 'frontback',
         windowType: 'modern', doorType: 'double', material: 'metal',
         hasBalcony: false, hasRibs: true, plinthHeight: 1.0,
       }),
@@ -164,13 +164,13 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
     preview: '🏠',
     nodes: [
       makeNode('f-1', 'foundation', 'Foundation', 50, 250, {
-        width: 16, depth: 12, foundationShape: 'L-shape',
+        width: 22, depth: 16, foundationShape: 'L-shape',
       }),
       makeNode('fl-1', 'floors', 'Floors System', 380, 300, {
-        count: 2, height: 3.0, winWidth: 1.1, winHeight: 1.7, winSpacing: 2.4,
-        doorWidth: 1.8, doorHeight: 2.4, doorSide: 'front',
+        count: 2, height: 3.2, winWidth: 1.2, winHeight: 1.8, winSpacing: 2.6,
+        doorWidth: 2.0, doorHeight: 2.5, doorSide: 'front',
         windowType: 'arched', doorType: 'modern', material: 'bricks',
-        hasBalcony: true, hasRibs: false, plinthHeight: 0.4,
+        hasBalcony: false, hasRibs: false, plinthHeight: 0.4,
       }),
       makeNode('r-1', 'roof', 'Roof System', 380, 50, {
         roofType: 'mansard', height: 3, overhang: 0.6, color: '#4a3728',
@@ -205,11 +205,11 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
     preview: '🏭',
     nodes: [
       makeNode('f-1', 'foundation', 'Foundation', 50, 250, {
-        width: 30, depth: 18, foundationShape: 'rectangle',
+        width: 60, depth: 40, foundationShape: 'rectangle',
       }),
       makeNode('fl-1', 'floors', 'Floors System', 380, 300, {
-        count: 1, height: 6, winWidth: 2.0, winHeight: 2.5, winSpacing: 5.0,
-        doorWidth: 4.0, doorHeight: 4.5, doorSide: 'frontback',
+        count: 1, height: 8.0, winWidth: 3.0, winHeight: 1.5, winSpacing: 6.0,
+        doorWidth: 6.0, doorHeight: 5.0, doorSide: 'frontback',
         windowType: 'modern', doorType: 'double', material: 'metal',
         hasBalcony: false, hasRibs: true, plinthHeight: 0.3,
       }),
@@ -238,11 +238,11 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
     preview: '⬡',
     nodes: [
       makeNode('f-1', 'foundation', 'Foundation', 50, 250, {
-        width: 10, depth: 10, foundationShape: 'hexagon',
+        width: 12, depth: 12, foundationShape: 'hexagon',
       }),
       makeNode('fl-1', 'floors', 'Floors System', 380, 300, {
-        count: 1, height: 4.0, winWidth: 1.5, winHeight: 2.5, winSpacing: 3.0,
-        doorWidth: 2.0, doorHeight: 3.0, doorSide: 'front',
+        count: 1, height: 4.5, winWidth: 1.8, winHeight: 2.8, winSpacing: 3.5,
+        doorWidth: 2.4, doorHeight: 3.0, doorSide: 'front',
         windowType: 'arched', doorType: 'double', material: 'wood',
         hasBalcony: false, hasRibs: false, plinthHeight: 0.3,
       }),
@@ -312,13 +312,13 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
     preview: '🗼',
     nodes: [
       makeNode('f-1', 'foundation', 'Foundation', 50, 250, {
-        width: 14, depth: 14, foundationShape: 'rectangle',
-        twistBase: 0, twistMid: 15, twistTop: 45, taper: 0.7,
+        width: 30, depth: 30, foundationShape: 'rectangle',
+        twistBase: 0, twistMid: 15, twistTop: 45, taper: 0.6,
         shearX: 0.5, shearY: 0,
       }),
       makeNode('fl-1', 'floors', 'Floors System', 380, 300, {
-        count: 20, height: 3.5, winWidth: 1.8, winHeight: 2.4, winSpacing: 2.0,
-        doorWidth: 3.0, doorHeight: 3.2, doorSide: 'all',
+        count: 30, height: 3.8, winWidth: 2.2, winHeight: 2.6, winSpacing: 2.5,
+        doorWidth: 4.0, doorHeight: 3.5, doorSide: 'all',
         windowType: 'modern', doorType: 'double', material: 'metal',
         hasBalcony: false, hasRibs: true, plinthHeight: 1.2,
       }),

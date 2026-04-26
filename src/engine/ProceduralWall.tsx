@@ -122,15 +122,19 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
     for (let i = 0; i < wCount; i++) {
       const x = startX + i * windowSpacing;
       if (!(hasDoor && x + w / 2 > doorMin && x - w / 2 < doorMax)) {
+        const isBalcony = hasBalcony && (i % 2 === 0);
+        const yBase = isBalcony ? 0 : sillHeight;
+        const currentH = isBalcony ? sillHeight + h : h;
+        
         const hole = new THREE.Path();
-        const y = sillHeight;
-        hole.moveTo(x - w / 2, y);
-        hole.lineTo(x + w / 2, y);
-        hole.lineTo(x + w / 2, y + h);
-        hole.lineTo(x - w / 2, y + h);
+        hole.moveTo(x - w / 2, yBase);
+        hole.lineTo(x + w / 2, yBase);
+        hole.lineTo(x + w / 2, yBase + currentH);
+        hole.lineTo(x - w / 2, yBase + currentH);
         hole.closePath();
         s.holes.push(hole);
-        winPos.push({ x, y: y + h / 2 });
+        
+        winPos.push({ x, y: yBase + currentH / 2, isBalcony, currentH });
       }
     }
 
@@ -174,33 +178,37 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
         <Instances limit={1000} castShadow receiveShadow>
           <boxGeometry args={[1, 1, 1]} />
           <meshStandardMaterial color={fC} side={THREE.DoubleSide} />
-          {windowPositions.map((pos, i) => (
-            <group key={`w-${i}`} position={[pos.x, pos.y, 0]}>
-              <Instance position={[0, h/2 - fT/2, 0]} scale={[w, fT, depth]} />
-              <Instance position={[0, -h/2 + fT/2, 0]} scale={[w, fT, depth]} />
-              <Instance position={[-w/2 + fT/2, 0, 0]} scale={[fT, h, depth]} />
-              <Instance position={[w/2 - fT/2, 0, 0]} scale={[fT, h, depth]} />
-              <Instance position={[0, -h/2, 0]} scale={[w + 0.1, 0.04, depth + 0.15]} />
-              
-              {windowType === 'classic' && (
-                <>
-                  <Instance position={[0, 0, 0]} scale={[glassW, 0.03, depth + 0.02]} />
-                  <Instance position={[0, 0, 0]} scale={[0.03, glassH, depth + 0.02]} />
-                </>
-              )}
+          {windowPositions.map((pos, i) => {
+            const cH = pos.currentH;
+            const glassH = cH - fT * 2;
+            return (
+              <group key={`w-${i}`} position={[pos.x, pos.y, 0]}>
+                <Instance position={[0, cH/2 - fT/2, 0]} scale={[w, fT, depth]} />
+                <Instance position={[0, -cH/2 + fT/2, 0]} scale={[w, fT, depth]} />
+                <Instance position={[-w/2 + fT/2, 0, 0]} scale={[fT, cH, depth]} />
+                <Instance position={[w/2 - fT/2, 0, 0]} scale={[fT, cH, depth]} />
+                {!pos.isBalcony && <Instance position={[0, -cH/2, 0]} scale={[w + 0.1, 0.04, depth + 0.15]} />}
+                
+                {windowType === 'classic' && (
+                  <>
+                    <Instance position={[0, 0, 0]} scale={[glassW, 0.03, depth + 0.02]} />
+                    <Instance position={[0, 0, 0]} scale={[0.03, glassH, depth + 0.02]} />
+                  </>
+                )}
 
-              {windowType === 'industrial' && (
-                <>
-                  {Array.from({ length: 3 }).map((_, gi) => (
-                    <Instance key={`h-${gi}`} position={[0, -glassH/2 + (gi+1)*glassH/4, 0]} scale={[glassW, 0.03, depth + 0.02]} color="#444" />
-                  ))}
-                  {Array.from({ length: 2 }).map((_, gi) => (
-                    <Instance key={`v-${gi}`} position={[-glassW/2 + (gi+1)*glassW/3, 0, 0]} scale={[0.03, glassH, depth + 0.02]} color="#444" />
-                  ))}
-                </>
-              )}
-            </group>
-          ))}
+                {windowType === 'industrial' && (
+                  <>
+                    {Array.from({ length: 3 }).map((_, gi) => (
+                      <Instance key={`h-${gi}`} position={[0, -glassH/2 + (gi+1)*glassH/4, 0]} scale={[glassW, 0.03, depth + 0.02]} color="#444" />
+                    ))}
+                    {Array.from({ length: 2 }).map((_, gi) => (
+                      <Instance key={`v-${gi}`} position={[-glassW/2 + (gi+1)*glassW/3, 0, 0]} scale={[0.03, glassH, depth + 0.02]} color="#444" />
+                    ))}
+                  </>
+                )}
+              </group>
+            );
+          })}
         </Instances>
       )}
 
@@ -210,7 +218,7 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
           <boxGeometry args={[1, 1, 1]} />
           {windowPositions.map((pos, i) => (
             <group key={`g-${i}`} position={[pos.x, pos.y, 0]}>
-              <Instance position={[0, 0, 0]} scale={[glassW, glassH, 0.05]} />
+              <Instance position={[0, 0, 0]} scale={[glassW, pos.currentH - fT * 2, 0.05]} />
             </group>
           ))}
         </Instances>
@@ -235,17 +243,20 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
           <boxGeometry args={[1, 1, 1]} />
           <meshStandardMaterial color="#c8c8cc" roughness={0.6} metalness={0.05} />
           {windowPositions.map((pos, i) => {
-            if (i % 2 !== 0) return null;
-            const bW = w + 0.5;
+            if (!pos.isBalcony) return null;
+            const bW = w + 0.6;
             const bD = 1.3;
             const rH = 1.05;
             const slabT = 0.12;
-            const balCount = Math.max(2, Math.floor((w + 0.4) / 0.4));
+            const balCount = Math.max(2, Math.floor(bW / 0.4));
+            const yBase = pos.y - pos.currentH / 2;
             
             return (
-              <group key={`b-${i}`} position={[pos.x, pos.y - h/2, -(thickness / 2 + 0.05)]}>
+              <group key={`b-${i}`} position={[pos.x, yBase, -(thickness / 2 + 0.05)]}>
                 <Instance position={[0, -slabT/2, -bD/2]} scale={[bW, slabT, bD]} />
-                <Instance position={[0, rH, -bD/2]} scale={[bW + 0.06, 0.06, bD + 0.06]} color="#222" />
+                <Instance position={[0, rH, -bD]} scale={[bW, 0.05, 0.05]} color="#222" />
+                <Instance position={[-bW/2, rH, -bD/2]} scale={[0.05, 0.05, bD]} color="#222" />
+                <Instance position={[bW/2, rH, -bD/2]} scale={[0.05, 0.05, bD]} color="#222" />
                 {Array.from({ length: balCount }).map((_, bi) => {
                   const bx = -bW/2 + (bi + 0.5) * (bW / balCount);
                   return <Instance key={`bu-${bi}`} position={[bx, rH/2, -bD]} scale={[0.04, rH, 0.04]} color="#444" />;
@@ -261,12 +272,13 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
         <Instances limit={200} material={materialLib.getMaterial('glass')}>
           <boxGeometry args={[1, 1, 1]} />
           {windowPositions.map((pos, i) => {
-            if (i % 2 !== 0) return null;
-            const bW = w + 0.5;
+            if (!pos.isBalcony) return null;
+            const bW = w + 0.6;
             const bD = 1.3;
             const rH = 1.05;
+            const yBase = pos.y - pos.currentH / 2;
             return (
-              <group key={`bg-${i}`} position={[pos.x, pos.y - h/2, -(thickness / 2 + 0.05)]}>
+              <group key={`bg-${i}`} position={[pos.x, yBase, -(thickness / 2 + 0.05)]}>
                 <Instance position={[0, rH/2, -bD]} scale={[bW, rH, 0.04]} />
                 <Instance position={[-bW/2, rH/2, -bD/2]} scale={[0.04, rH, bD]} />
                 <Instance position={[bW/2, rH/2, -bD/2]} scale={[0.04, rH, bD]} />

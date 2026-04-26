@@ -153,7 +153,7 @@ export const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { 
                     windowType={part.windowType}
                     doorType={part.doorType}
                     materialType={part.material}
-                    hasBalcony={part.hasBalcony}
+                    hasBalcony={part.hasBalcony && f > 0}
                     hasRibs={part.hasRibs}
                     plinthHeight={f === 0 ? part.plinthHeight : 0}
                   />
