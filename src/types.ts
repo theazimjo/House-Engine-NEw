@@ -28,6 +28,15 @@ export type NodeType =
   | 'stairs'
   | 'plinth'
   | 'railing'
+  // ── AAA Game/Architecture Nodes ──
+  | 'castle_wall'       // Battlements, merlons, crenellations
+  | 'tower'             // Round/square tower with conical/crenellated top
+  | 'bridge'            // Arch/suspension/cable-stayed bridge deck
+  | 'gate_arch'         // Castle gate, triumphal arch
+  | 'terrain'           // Ground terrain with height noise
+  | 'spire'             // Gothic spire / minaret tip
+  | 'buttress'          // Flying buttress pair
+  | 'pyramid'           // Stepped/smooth pyramid
   // Modifiers
   | 'offset_spline'
   | 'transform_spline'
@@ -126,6 +135,81 @@ export const DEFAULT_PARAMS: Record<NodeType, Record<string, any>> = {
     zOffset: 0,
     color: '#e8dfc8',
   },
+  // ── AAA Nodes ──
+  castle_wall: {
+    height: 8.0,
+    thickness: 2.0,
+    merlonWidth: 1.2,
+    merlonHeight: 1.5,
+    merlonSpacing: 2.4,
+    material: 'worn_stone',
+    zOffset: 0,
+    hasMachicolations: false,
+  },
+  tower: {
+    radius: 4.0,
+    height: 20.0,
+    topType: 'crenellated', // 'crenellated' | 'conical' | 'flat' | 'onion'
+    material: 'worn_stone',
+    zOffset: 0,
+    segments: 16,
+    wallThickness: 0.8,
+    conicalHeight: 5.0,
+    conicalColor: '#5a3a2a',
+  },
+  bridge: {
+    span: 40.0,
+    width: 8.0,
+    deckHeight: 0.6,
+    archCount: 3,
+    archHeight: 8.0,
+    bridgeType: 'arch',   // 'arch' | 'flat' | 'suspension' | 'cable'
+    material: 'sandstone',
+    deckMaterial: 'concrete',
+    pylonHeight: 18.0,
+    zOffset: 0,
+  },
+  gate_arch: {
+    width: 6.0,
+    height: 8.0,
+    thickness: 3.0,
+    archType: 'pointed',  // 'round' | 'pointed' | 'flat' | 'triumphal'
+    material: 'worn_stone',
+    zOffset: 0,
+    towerWidth: 4.0,
+    towerHeight: 14.0,
+  },
+  terrain: {
+    width: 200,
+    depth: 200,
+    segments: 40,
+    maxHeight: 12.0,
+    seed: 42,
+    material: 'grass',
+  },
+  spire: {
+    baseRadius: 1.5,
+    height: 20.0,
+    segments: 8,
+    material: 'dark_metal',
+    color: '#2a2a3a',
+    zOffset: 0,
+  },
+  buttress: {
+    span: 5.0,
+    height: 12.0,
+    thickness: 0.8,
+    material: 'limestone',
+    zOffset: 0,
+    count: 4,
+  },
+  pyramid: {
+    baseWidth: 30.0,
+    baseDepth: 30.0,
+    height: 20.0,
+    steps: 0,            // 0 = smooth, >0 = stepped like Mayan
+    material: 'sandstone',
+  },
   offset_spline: {
     amount: -1.0,
   },
@@ -174,24 +258,33 @@ export const DEFAULT_PARAMS: Record<NodeType, Record<string, any>> = {
 
 // ── Node Pin Definitions ──────────────────────────────────────────────────────
 export const NODE_PINS: Record<NodeType, { inputs: PinType[]; outputs: PinType[] }> = {
-  foundation:       { inputs: [],                          outputs: ['spline'] },
-  primitive_box:    { inputs: [],                          outputs: ['mesh'] },
-  primitive_cylinder:{ inputs: [],                         outputs: ['mesh'] },
-  floors:           { inputs: ['spline'],                   outputs: ['mesh', 'window', 'float'] },
-  roof:             { inputs: ['spline', 'float'],          outputs: ['mesh'] },
-  columns:          { inputs: ['spline'],                   outputs: ['mesh'] },
-  stairs:           { inputs: ['spline'],                   outputs: ['mesh'] },
-  plinth:           { inputs: ['spline'],                   outputs: ['mesh'] },
-  railing:          { inputs: ['spline'],                   outputs: ['mesh'] },
-  dome:             { inputs: ['spline'],                   outputs: ['mesh'] },
-  offset_spline:    { inputs: ['spline'],                   outputs: ['spline'] },
-  smooth_spline:    { inputs: ['spline'],                   outputs: ['spline'] },
-  transform_spline: { inputs: ['spline'],                   outputs: ['spline'] },
-  mirror_spline:    { inputs: ['spline'],                   outputs: ['spline'] },
-  boolean_subtract: { inputs: ['mesh', 'mesh'],             outputs: ['mesh'] },
-  math_node:        { inputs: ['float', 'float'],           outputs: ['float'] },
-  merge_mesh:       { inputs: ['mesh', 'mesh'],             outputs: ['mesh'] },
-  scatter_points:   { inputs: ['spline'],                   outputs: ['mesh'] },
+  foundation:        { inputs: [],                          outputs: ['spline'] },
+  primitive_box:     { inputs: [],                          outputs: ['mesh'] },
+  primitive_cylinder:{ inputs: [],                          outputs: ['mesh'] },
+  floors:            { inputs: ['spline'],                   outputs: ['mesh', 'window', 'float'] },
+  roof:              { inputs: ['spline', 'float'],          outputs: ['mesh'] },
+  columns:           { inputs: ['spline'],                   outputs: ['mesh'] },
+  stairs:            { inputs: ['spline'],                   outputs: ['mesh'] },
+  plinth:            { inputs: ['spline'],                   outputs: ['mesh'] },
+  railing:           { inputs: ['spline'],                   outputs: ['mesh'] },
+  dome:              { inputs: ['spline'],                   outputs: ['mesh'] },
+  // ── AAA Nodes ──
+  castle_wall:       { inputs: ['spline'],                   outputs: ['mesh'] },
+  tower:             { inputs: ['spline'],                   outputs: ['mesh'] },
+  bridge:            { inputs: [],                           outputs: ['mesh'] },
+  gate_arch:         { inputs: ['spline'],                   outputs: ['mesh'] },
+  terrain:           { inputs: [],                           outputs: ['mesh'] },
+  spire:             { inputs: ['spline'],                   outputs: ['mesh'] },
+  buttress:          { inputs: ['spline'],                   outputs: ['mesh'] },
+  pyramid:           { inputs: [],                           outputs: ['mesh'] },
+  offset_spline:     { inputs: ['spline'],                   outputs: ['spline'] },
+  smooth_spline:     { inputs: ['spline'],                   outputs: ['spline'] },
+  transform_spline:  { inputs: ['spline'],                   outputs: ['spline'] },
+  mirror_spline:     { inputs: ['spline'],                   outputs: ['spline'] },
+  boolean_subtract:  { inputs: ['mesh', 'mesh'],             outputs: ['mesh'] },
+  math_node:         { inputs: ['float', 'float'],           outputs: ['float'] },
+  merge_mesh:        { inputs: ['mesh', 'mesh'],             outputs: ['mesh'] },
+  scatter_points:    { inputs: ['spline'],                   outputs: ['mesh'] },
 };
 
 // ── Legacy BuildingParams ─────────────────────────────────────────────────────

@@ -611,6 +611,355 @@ export const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { 
           );
         }
 
+        // ── Castle Wall Segment ──
+        if (part.type === 'castle_wall_segment') {
+          const { position: cwPos, rotation: cwRot, length: cwLen, height: cwH, thickness: cwT, material: cwMat } = part;
+          const cwMesh = wireframe ? new THREE.MeshStandardMaterial({ color: '#888', wireframe: true })
+            : materialLib.getMaterial(cwMat || 'worn_stone');
+          return (
+            <mesh key={`cw-${idx}`} position={[cwPos[0], cwPos[1] + cwH / 2, cwPos[2]]}
+              rotation={cwRot} material={cwMesh} castShadow receiveShadow>
+              <boxGeometry args={[cwLen, cwH, cwT]} />
+            </mesh>
+          );
+        }
+
+        // ── Castle Merlon (Crenellation) ──
+        if (part.type === 'castle_merlon') {
+          const { position: mPos, rotation: mRot, width: mW, height: mH, thickness: mT, material: mMat } = part;
+          const mMesh = wireframe ? new THREE.MeshStandardMaterial({ color: '#888', wireframe: true })
+            : materialLib.getMaterial(mMat || 'worn_stone');
+          return (
+            <mesh key={`merlon-${idx}`} position={[mPos[0], mPos[1] + mH / 2, mPos[2]]}
+              rotation={mRot} material={mMesh} castShadow>
+              <boxGeometry args={[mW, mH, mT]} />
+            </mesh>
+          );
+        }
+
+        // ── Castle Machicolation ──
+        if (part.type === 'castle_machicolation') {
+          const { position: mcPos, rotation: mcRot, length: mcLen, material: mcMat } = part;
+          const mcMesh = wireframe ? new THREE.MeshStandardMaterial({ color: '#888', wireframe: true })
+            : materialLib.getMaterial(mcMat || 'worn_stone');
+          return (
+            <mesh key={`mach-${idx}`} position={[mcPos[0], mcPos[1], mcPos[2]]}
+              rotation={mcRot} material={mcMesh} castShadow>
+              <boxGeometry args={[mcLen, 0.8, 3.2]} />
+            </mesh>
+          );
+        }
+
+        // ── Tower Mesh ──
+        if (part.type === 'tower_mesh') {
+          const { position: tPos, radius: tR, height: tH, topType, material: tMat,
+            segments: tSeg, conicalHeight: cH, conicalColor: cCol, wallThickness: wT } = part;
+          const tMesh = wireframe ? new THREE.MeshStandardMaterial({ color: '#888', wireframe: true })
+            : materialLib.getMaterial(tMat || 'worn_stone');
+          const cMesh = wireframe ? new THREE.MeshStandardMaterial({ color: '#888', wireframe: true })
+            : new THREE.MeshStandardMaterial({ color: cCol || '#5a3a2a', roughness: 0.7 });
+          const seg = tSeg || 16;
+          const merlonH = 1.4, merlonW = 1.0;
+          const merlonRing = topType === 'crenellated' ? Array.from({ length: seg }, (_, mi) => {
+            const a = (mi / seg) * Math.PI * 2;
+            return mi % 2 === 0 ? (
+              <mesh key={`tm-${idx}-m${mi}`}
+                position={[Math.cos(a) * tR, tH + merlonH / 2, Math.sin(a) * tR]}
+                rotation={[0, a, 0]} material={tMesh} castShadow>
+                <boxGeometry args={[merlonW, merlonH, wT || 0.8]} />
+              </mesh>
+            ) : null;
+          }) : null;
+          return (
+            <group key={`tower-${idx}`} position={[tPos[0], tPos[1], tPos[2]]}>
+              {/* Shaft */}
+              <mesh position={[0, tH / 2, 0]} material={tMesh} castShadow receiveShadow>
+                <cylinderGeometry args={[tR, tR * 1.08, tH, seg]} />
+              </mesh>
+              {/* Top cap */}
+              {topType === 'conical' && (
+                <mesh position={[0, tH, 0]} castShadow>
+                  <coneGeometry args={[tR * 1.1, cH || 5, seg]} />
+                  {wireframe ? <meshStandardMaterial wireframe color="#888" /> : <meshStandardMaterial color={cCol || '#5a3a2a'} roughness={0.6} />}
+                </mesh>
+              )}
+              {topType === 'onion' && (
+                <mesh position={[0, tH + (cH || 4) * 0.4, 0]} castShadow>
+                  <sphereGeometry args={[tR * 1.05, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.65]} />
+                  {wireframe ? <meshStandardMaterial wireframe color="#888" /> : cMesh && <primitive object={cMesh} attach="material" />}
+                </mesh>
+              )}
+              {/* Crenellations */}
+              {topType === 'crenellated' && merlonRing}
+              {/* Platform ring */}
+              <mesh position={[0, tH, 0]} material={tMesh} castShadow>
+                <cylinderGeometry args={[tR + 0.5, tR + 0.5, 0.6, seg]} />
+              </mesh>
+            </group>
+          );
+        }
+
+        // ── Bridge Deck ──
+        if (part.type === 'bridge_deck') {
+          const { position: bdPos, span: bdSpan, width: bdW, deckHeight: bdH, material: bdMat } = part;
+          const bdMesh = wireframe ? new THREE.MeshStandardMaterial({ color: '#888', wireframe: true })
+            : materialLib.getMaterial(bdMat || 'concrete');
+          return (
+            <group key={`bdeck-${idx}`}>
+              {/* Main deck slab */}
+              <mesh position={[bdPos[0], bdPos[1] + (bdH || 0.6) / 2, bdPos[2]]} material={bdMesh} castShadow receiveShadow>
+                <boxGeometry args={[bdSpan + 2, bdH || 0.6, bdW || 8]} />
+              </mesh>
+              {/* Parapets */}
+              <mesh position={[bdPos[0], bdPos[1] + (bdH || 0.6) + 0.4, bdPos[2] - (bdW || 8) / 2 + 0.3]} material={bdMesh} castShadow>
+                <boxGeometry args={[bdSpan + 2, 0.8, 0.5]} />
+              </mesh>
+              <mesh position={[bdPos[0], bdPos[1] + (bdH || 0.6) + 0.4, bdPos[2] + (bdW || 8) / 2 - 0.3]} material={bdMesh} castShadow>
+                <boxGeometry args={[bdSpan + 2, 0.8, 0.5]} />
+              </mesh>
+            </group>
+          );
+        }
+
+        // ── Bridge Arch ──
+        if (part.type === 'bridge_arch') {
+          const { position: baPos, span: baSpan, height: baH, width: baW, material: baMat } = part;
+          const baMesh = wireframe ? new THREE.MeshStandardMaterial({ color: '#888', wireframe: true })
+            : materialLib.getMaterial(baMat || 'sandstone');
+          const archShape = new THREE.Shape();
+          const aW2 = (baSpan || 10) / 2;
+          const aThick = 1.2;
+          archShape.moveTo(-aW2, 0);
+          archShape.lineTo(-aW2, aThick);
+          archShape.absarc(0, 0, aW2 - aThick / 2, Math.PI, 0, false);
+          archShape.lineTo(aW2, 0);
+          archShape.absarc(0, 0, aW2, 0, Math.PI, true);
+          archShape.closePath();
+          return (
+            <mesh key={`barch-${idx}`}
+              position={[baPos[0], baPos[1] + (baH || 8), baPos[2]]}
+              rotation={[-Math.PI / 2, 0, 0]} material={baMesh} castShadow receiveShadow>
+              <extrudeGeometry args={[archShape, { depth: baW || 8, bevelEnabled: false, curveSegments: 20 }]} />
+            </mesh>
+          );
+        }
+
+        // ── Bridge Pier ──
+        if (part.type === 'bridge_pier') {
+          const { position: bpPos, height: bpH, width: bpW, material: bpMat } = part;
+          const bpMesh = wireframe ? new THREE.MeshStandardMaterial({ color: '#888', wireframe: true })
+            : materialLib.getMaterial(bpMat || 'sandstone');
+          return (
+            <mesh key={`bpier-${idx}`}
+              position={[bpPos[0], bpPos[1] + (bpH || 8) / 2, bpPos[2]]}
+              material={bpMesh} castShadow receiveShadow>
+              <boxGeometry args={[2.5, bpH || 8, bpW || 8]} />
+            </mesh>
+          );
+        }
+
+        // ── Bridge Pylon (Suspension / Cable) ──
+        if (part.type === 'bridge_pylon') {
+          const { position: pylPos, height: pylH, width: pylW, material: pylMat, bridgeType: pylBT } = part;
+          const pylMesh = wireframe ? new THREE.MeshStandardMaterial({ color: '#888', wireframe: true })
+            : materialLib.getMaterial(pylMat || 'concrete');
+          const isIShape = pylBT === 'cable';
+          return (
+            <group key={`pylon-${idx}`}>
+              {/* Left leg */}
+              <mesh position={[pylPos[0] - (pylW || 8) * 0.25, pylPos[1] + (pylH || 18) / 2, pylPos[2]]}
+                material={pylMesh} castShadow>
+                <boxGeometry args={[1.5, pylH || 18, 2.0]} />
+              </mesh>
+              {/* Right leg */}
+              <mesh position={[pylPos[0] + (pylW || 8) * 0.25, pylPos[1] + (pylH || 18) / 2, pylPos[2]]}
+                material={pylMesh} castShadow>
+                <boxGeometry args={[1.5, pylH || 18, 2.0]} />
+              </mesh>
+              {/* Crossbeam */}
+              {isIShape && (
+                <mesh position={[pylPos[0], pylPos[1] + (pylH || 18) * 0.6, pylPos[2]]}
+                  material={pylMesh} castShadow>
+                  <boxGeometry args={[(pylW || 8) * 0.55, 1.2, 1.8]} />
+                </mesh>
+              )}
+              {/* Cap */}
+              <mesh position={[pylPos[0], pylPos[1] + (pylH || 18), pylPos[2]]}
+                material={pylMesh} castShadow>
+                <boxGeometry args={[(pylW || 8) * 0.55, 1.0, 2.5]} />
+              </mesh>
+            </group>
+          );
+        }
+
+        // ── Gate Arch Mesh ──
+        if (part.type === 'gate_arch_mesh') {
+          const { position: gaPos, width: gaW, height: gaH, thickness: gaT,
+            archType: gaAT, material: gaMat, towerWidth: gaTW, towerHeight: gaTH } = part;
+          const gaMesh = wireframe ? new THREE.MeshStandardMaterial({ color: '#888', wireframe: true })
+            : materialLib.getMaterial(gaMat || 'worn_stone');
+          const halfW = (gaW || 6) / 2;
+          const h = gaH || 8;
+          const isPointed = gaAT === 'pointed';
+          const archShape = new THREE.Shape();
+          archShape.moveTo(-halfW, 0);
+          archShape.lineTo(-halfW, h * 0.55);
+          if (isPointed) {
+            archShape.lineTo(0, h);
+            archShape.lineTo(halfW, h * 0.55);
+          } else {
+            archShape.absarc(0, h * 0.55, halfW, Math.PI, 0, false);
+          }
+          archShape.lineTo(halfW, 0);
+          archShape.lineTo(-halfW, 0);
+          const opening = new THREE.Path();
+          const innerHalf = halfW - 0.8;
+          opening.moveTo(-innerHalf, 0.01);
+          opening.lineTo(-innerHalf, h * 0.52);
+          if (isPointed) {
+            opening.lineTo(0, h - 1.0);
+            opening.lineTo(innerHalf, h * 0.52);
+          } else {
+            opening.absarc(0, h * 0.55, innerHalf, Math.PI, 0, false);
+          }
+          opening.lineTo(innerHalf, 0.01);
+          archShape.holes.push(opening);
+
+          return (
+            <group key={`gate-${idx}`} position={[gaPos[0], gaPos[1], gaPos[2]]}>
+              {/* Gate arch wall */}
+              <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} material={gaMesh} castShadow receiveShadow>
+                <extrudeGeometry args={[archShape, { depth: gaT || 3, bevelEnabled: false, curveSegments: 16 }]} />
+              </mesh>
+              {/* Left flanking tower */}
+              <mesh position={[-(halfW + (gaTW || 4) / 2 + 0.2), (gaTH || 14) / 2, 0]} material={gaMesh} castShadow>
+                <boxGeometry args={[gaTW || 4, gaTH || 14, (gaT || 3) + 2]} />
+              </mesh>
+              {/* Right flanking tower */}
+              <mesh position={[(halfW + (gaTW || 4) / 2 + 0.2), (gaTH || 14) / 2, 0]} material={gaMesh} castShadow>
+                <boxGeometry args={[gaTW || 4, gaTH || 14, (gaT || 3) + 2]} />
+              </mesh>
+              {/* Portcullis groove hint */}
+              <mesh position={[0, h * 0.4, -(gaT || 3) / 2 - 0.05]} castShadow>
+                <boxGeometry args={[gaW || 6, h * 0.8, 0.3]} />
+                <meshStandardMaterial color="#111" roughness={1} wireframe={wireframe} />
+              </mesh>
+            </group>
+          );
+        }
+
+        // ── Terrain Mesh ──
+        if (part.type === 'terrain_mesh') {
+          const { width: terW = 200, depth: terD = 200, segments: terSeg = 40, maxHeight: terMH = 12, seed: terSeed = 42 } = part;
+          const geo = new THREE.PlaneGeometry(terW, terD, terSeg, terSeg);
+          const pos2 = geo.attributes.position;
+          const rand2 = (s: number) => { const x = Math.sin(s) * 43758.5453; return x - Math.floor(x); };
+          for (let vi = 0; vi < pos2.count; vi++) {
+            const vx = pos2.getX(vi); const vz = pos2.getY(vi);
+            let h2 = 0;
+            h2 += rand2(terSeed + vx * 0.1 + vz * 0.17) * terMH * 0.5;
+            h2 += rand2(terSeed + vx * 0.3 + vz * 0.41 + 7) * terMH * 0.3;
+            h2 += rand2(terSeed + vx * 0.7 + vz * 0.83 + 13) * terMH * 0.2;
+            pos2.setZ(vi, h2);
+          }
+          geo.computeVertexNormals();
+          return (
+            <mesh key={`terrain-${idx}`} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
+              <primitive object={geo} attach="geometry" />
+              <meshStandardMaterial color="#3a5a30" roughness={0.95} wireframe={wireframe} />
+            </mesh>
+          );
+        }
+
+        // ── Spire Mesh ──
+        if (part.type === 'spire_mesh') {
+          const { position: spPos, baseRadius: spR, height: spH, segments: spSeg, color: spCol } = part;
+          return (
+            <group key={`spire-${idx}`} position={[spPos[0], spPos[1], spPos[2]]}>
+              {/* Octagonal base drum */}
+              <mesh position={[0, spR * 0.5, 0]} castShadow>
+                <cylinderGeometry args={[spR, spR * 1.1, spR * 1.0, spSeg || 8]} />
+                <meshStandardMaterial color={spCol || '#2a2a3a'} roughness={0.5} metalness={0.3} wireframe={wireframe} />
+              </mesh>
+              {/* Main spire cone */}
+              <mesh position={[0, spR * 1.0 + spH / 2, 0]} castShadow>
+                <coneGeometry args={[spR, spH, spSeg || 8]} />
+                <meshStandardMaterial color={spCol || '#2a2a3a'} roughness={0.4} metalness={0.4} wireframe={wireframe} />
+              </mesh>
+              {/* Tip finial */}
+              <mesh position={[0, spR * 1.0 + spH + 0.5, 0]} castShadow>
+                <sphereGeometry args={[0.25, 8, 8]} />
+                <meshStandardMaterial color="#c8a030" metalness={0.8} roughness={0.2} wireframe={wireframe} />
+              </mesh>
+            </group>
+          );
+        }
+
+        // ── Buttress Mesh ──
+        if (part.type === 'buttress_mesh') {
+          const { position: buPos, rotation: buRot, span: buSpan, height: buH, thickness: buT, material: buMat } = part;
+          const buMesh = wireframe ? new THREE.MeshStandardMaterial({ color: '#888', wireframe: true })
+            : materialLib.getMaterial(buMat || 'limestone');
+          const buttShape = new THREE.Shape();
+          buttShape.moveTo(0, 0);
+          buttShape.lineTo(buSpan || 5, 0);
+          buttShape.lineTo(0.5, buH || 12);
+          buttShape.closePath();
+          return (
+            <mesh key={`butt-${idx}`}
+              position={[buPos[0], buPos[1], buPos[2]]}
+              rotation={buRot ? [buRot[0], buRot[1], buRot[2]] : [0, 0, 0]}
+              material={buMesh} castShadow receiveShadow>
+              <extrudeGeometry args={[buttShape, { depth: buT || 0.8, bevelEnabled: false }]} />
+            </mesh>
+          );
+        }
+
+        // ── Pyramid Mesh ──
+        if (part.type === 'pyramid_mesh') {
+          const { position: pyPos, baseWidth: pyW, baseDepth: pyD, height: pyH, steps: pySteps, material: pyMat } = part;
+          const pyMesh = wireframe ? new THREE.MeshStandardMaterial({ color: '#c8a030', wireframe: true })
+            : materialLib.getMaterial(pyMat || 'sandstone');
+          if ((pySteps || 0) > 0) {
+            const stepsArr = Array.from({ length: pySteps }, (_, si) => {
+              const t = si / pySteps;
+              const nt = (si + 1) / pySteps;
+              const sw = (pyW || 30) * (1 - t * 0.95);
+              const sd = (pyD || 30) * (1 - t * 0.95);
+              const sh = (pyH || 20) / pySteps;
+              const sy = t * (pyH || 20);
+              return (
+                <mesh key={`pystep-${si}`} position={[(pyPos || [0,0,0])[0], sy + sh / 2, (pyPos || [0,0,0])[2]]}
+                  material={pyMesh} castShadow receiveShadow>
+                  <boxGeometry args={[sw, sh, sd]} />
+                </mesh>
+              );
+            });
+            return <group key={`pyr-${idx}`}>{stepsArr}</group>;
+          }
+          // Smooth pyramid via custom geometry
+          const pyVerts: number[] = [];
+          const bW2 = (pyW || 30) / 2; const bD2 = (pyD || 30) / 2; const pyHeight = pyH || 20;
+          const apex = [0, pyHeight, 0];
+          const base = [[-bW2,0,-bD2],[bW2,0,-bD2],[bW2,0,bD2],[-bW2,0,bD2]];
+          const faces = [[0,1],[1,2],[2,3],[3,0]];
+          faces.forEach(([a,b]) => {
+            pyVerts.push(...base[a], ...apex, ...base[b]);
+          });
+          // Base
+          pyVerts.push(...base[0], ...base[1], ...base[2]);
+          pyVerts.push(...base[0], ...base[2], ...base[3]);
+          const pyGeo = new THREE.BufferGeometry();
+          pyGeo.setAttribute('position', new THREE.Float32BufferAttribute(pyVerts, 3));
+          pyGeo.computeVertexNormals();
+          return (
+            <mesh key={`pyr-${idx}`} position={[(pyPos||[0,0,0])[0], (pyPos||[0,0,0])[1], (pyPos||[0,0,0])[2]]}
+              material={pyMesh} castShadow receiveShadow>
+              <primitive object={pyGeo} attach="geometry" />
+            </mesh>
+          );
+        }
+
         // ── Full Volume / Foundation Slab ──
         if ((part.type === 'full_volume' || part.type === 'foundation_slab') && Array.isArray(spline) && spline.length > 0) {
           const slabShape = new THREE.Shape();

@@ -3,10 +3,20 @@ import * as THREE from 'three';
 export type MaterialType =
   | 'concrete' | 'bricks' | 'wood' | 'metal' | 'roof_tiles'
   | 'stone' | 'plaster' | 'marble' | 'glass'
-  // ── New architectural materials ──
+  // ── Architectural ──
   | 'limestone' | 'sandstone' | 'terracotta' | 'copper'
   | 'aged_wood' | 'worn_stone' | 'granite' | 'travertine'
-  | 'stucco' | 'dark_metal' | 'bronze' | 'slate';
+  | 'stucco' | 'dark_metal' | 'bronze' | 'slate'
+  // ── RDR2 / Western Game ──
+  | 'weathered_wood' | 'mud_brick' | 'tin_roof' | 'rusted_iron'
+  | 'painted_wood'  | 'cracked_plaster' | 'red_barn' | 'dry_stone'
+  | 'tarpaper' | 'leather'
+  // ── Cyberpunk / Sci-Fi ──
+  | 'neon_panel' | 'neon_blue' | 'neon_pink' | 'holographic'
+  | 'carbon_fiber' | 'circuit_board' | 'chrome' | 'asphalt'
+  | 'wet_concrete' | 'rust_panel'
+  // ── Nature ──
+  | 'grass' | 'mossy_stone' | 'dirt' | 'water';
 
 class MaterialLibrary {
   private cache: Map<string, THREE.MeshStandardMaterial | THREE.MeshPhysicalMaterial> = new Map();

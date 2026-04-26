@@ -923,5 +923,401 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
       { id: 'e3', source: 'xf-1', target: 'fl-1', sourceHandle: 'spline', targetHandle: 'spline' },
     ],
   },
+  // ── 22. Medieval Castle ──────────────────────────────────────────────────────
+  {
+    id: 'medieval-castle',
+    name: 'Medieval Castle',
+    description: 'AAA-grade fortified castle with perimeter walls, corner towers, gatehouse, inner keep, and courtyard. Ready for game use.',
+    category: 'custom',
+    icon: '🏰',
+    preview: '🏰',
+    nodes: [
+      // Outer perimeter wall spline
+      makeNode('f-outer', 'foundation', 'Outer Perimeter', 50, 300, {
+        width: 70, depth: 55, foundationShape: 'rectangle',
+      }),
+      makeNode('cw-1', 'castle_wall', 'Outer Walls', 350, 300, {
+        height: 10.0, thickness: 2.5, merlonWidth: 1.3, merlonHeight: 1.8,
+        merlonSpacing: 2.0, material: 'worn_stone', hasMachicolations: true,
+      }),
+      // Corner towers on outer wall
+      makeNode('tw-1', 'tower', 'Corner Towers', 350, 100, {
+        radius: 5.5, height: 18.0, topType: 'crenellated',
+        material: 'worn_stone', segments: 12, wallThickness: 1.0,
+      }),
+      // Inner keep
+      makeNode('f-keep', 'foundation', 'Inner Keep', 700, 300, {
+        width: 22, depth: 18, foundationShape: 'rectangle',
+      }),
+      makeNode('fl-keep', 'floors', 'Keep Walls', 1000, 300, {
+        count: 5, height: 4.2, winWidth: 1.0, winHeight: 1.6, winSpacing: 3.5,
+        doorWidth: 3.0, doorHeight: 4.0, doorSide: 'front',
+        windowType: 'arched', doorType: 'classic', material: 'worn_stone',
+        hasBalcony: false, hasRibs: false, plinthHeight: 0.8,
+      }),
+      makeNode('tw-keep', 'tower', 'Keep Tower', 1000, 100, {
+        radius: 4.0, height: 30.0, topType: 'crenellated',
+        material: 'worn_stone', segments: 12, wallThickness: 1.0,
+      }),
+      // Main gatehouse
+      makeNode('gate-1', 'gate_arch', 'Main Gatehouse', 350, 550, {
+        width: 7.0, height: 9.0, thickness: 5.0, archType: 'pointed',
+        material: 'worn_stone', towerWidth: 5.0, towerHeight: 16.0,
+      }),
+      // Ground platform
+      makeNode('pl-1', 'plinth', 'Castle Ground', 50, 600, {
+        height: 1.2, material: 'worn_stone',
+      }),
+      makeNode('st-1', 'stairs', 'Entry Steps', 50, 700, {
+        count: 5, stepHeight: 0.22, stepDepth: 0.4, width: 5.0, side: 'front',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-outer', target: 'cw-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-outer', target: 'tw-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'f-outer', target: 'gate-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e4', source: 'f-outer', target: 'pl-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'f-outer', target: 'st-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e6', source: 'f-keep',  target: 'fl-keep',sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e7', source: 'f-keep',  target: 'tw-keep',sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // ── 23. Cyberpunk Megablock ──────────────────────────────────────────────────
+  {
+    id: 'cyberpunk-megablock',
+    name: 'Cyberpunk Megablock',
+    description: 'Massive Cyberpunk 2077-style arcology block: twisted X-shape skyscraper with neon glass, deep ribs, holographic billboards, and layered urban sprawl.',
+    category: 'commercial',
+    icon: '🌆',
+    preview: '🌆',
+    nodes: [
+      makeNode('f-1', 'foundation', 'Mega Base', 50, 250, {
+        width: 50, depth: 50, foundationShape: 'X-shape',
+        taper: 0.7, twistBase: 0, twistMid: 8, twistTop: 18,
+      }),
+      makeNode('fl-1', 'floors', 'Lower Block', 380, 300, {
+        count: 20, height: 4.0, winWidth: 2.5, winHeight: 3.0, winSpacing: 3.0,
+        doorWidth: 5.0, doorHeight: 5.0, doorSide: 'all',
+        windowType: 'modern', doorType: 'glass', material: 'dark_metal',
+        hasBalcony: true, hasRibs: true, plinthHeight: 2.5,
+      }),
+      makeNode('xf-mid', 'transform_spline', 'Mid Section', 680, 250, {
+        x: 0, y: 82, z: 0, scale: 0.75, rotation: 15,
+      }),
+      makeNode('fl-2', 'floors', 'Upper Spire', 980, 300, {
+        count: 15, height: 4.5, winWidth: 2.0, winHeight: 3.0, winSpacing: 2.5,
+        doorWidth: 0, doorHeight: 0, doorSide: 'front',
+        windowType: 'modern', doorType: 'glass', material: 'metal',
+        hasBalcony: false, hasRibs: true, plinthHeight: 0,
+      }),
+      makeNode('r-1', 'roof', 'Roof', 980, 50, {
+        roofType: 'flat', height: 0.5, overhang: 0, color: '#111111',
+      }),
+      makeNode('pl-1', 'plinth', 'Mega Podium', 50, 600, {
+        height: 2.5, material: 'dark_metal',
+      }),
+      makeNode('st-1', 'stairs', 'Urban Access', 50, 750, {
+        count: 10, stepHeight: 0.25, stepDepth: 0.4, width: 8.0, side: 'all',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-1',    target: 'fl-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-1',    target: 'pl-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'f-1',    target: 'st-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e4', source: 'f-1',    target: 'xf-mid', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'xf-mid', target: 'fl-2',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e6', source: 'xf-mid', target: 'r-1',    sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e7', source: 'fl-2',   target: 'r-1',    sourceHandle: 'float',  targetHandle: 'float'  },
+    ],
+  },
+
+  // ── 24. Egyptian Pyramid Complex ─────────────────────────────────────────────
+  {
+    id: 'egyptian-pyramid',
+    name: 'Egyptian Pyramid Complex',
+    description: 'Great Pyramid of Giza with smooth sandstone sides, flanking smaller pyramids, and a colonnade entry processional.',
+    category: 'custom',
+    icon: '🔺',
+    preview: '🔺',
+    nodes: [
+      // Great Pyramid
+      makeNode('py-1', 'pyramid', 'Great Pyramid', 50, 200, {
+        baseWidth: 62, baseDepth: 62, height: 42, steps: 0, material: 'sandstone',
+      }),
+      // Left smaller pyramid
+      makeNode('py-2', 'pyramid', 'Pyramid 2', 50, 400, {
+        baseWidth: 38, baseDepth: 38, height: 26, steps: 0, material: 'sandstone',
+      }),
+      // Right smaller pyramid
+      makeNode('py-3', 'pyramid', 'Pyramid 3', 50, 600, {
+        baseWidth: 30, baseDepth: 30, height: 20, steps: 0, material: 'sandstone',
+      }),
+      // Entry colonnade
+      makeNode('f-col', 'foundation', 'Processional', 350, 450, {
+        width: 8, depth: 60, foundationShape: 'rectangle',
+      }),
+      makeNode('col-1', 'columns', 'Entry Columns', 650, 450, {
+        radius: 0.8, height: 6.0, spacing: 5.0, useCorners: true,
+        material: 'sandstone', zOffset: 0,
+      }),
+      makeNode('pl-1', 'plinth', 'Desert Platform', 350, 650, {
+        height: 0.8, material: 'sandstone',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-col', target: 'col-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-col', target: 'pl-1',  sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // ── 25. Gothic Fantasy Cathedral ─────────────────────────────────────────────
+  {
+    id: 'gothic-fantasy-cathedral',
+    name: 'Gothic Fantasy Cathedral',
+    description: 'AAA fantasy gothic cathedral: tall nave with flying buttresses, 4 corner spires, rose window, grand gate arch, and soaring gable roof.',
+    category: 'custom',
+    icon: '⛪',
+    preview: '⛪',
+    nodes: [
+      makeNode('f-1', 'foundation', 'Cathedral Nave', 50, 300, {
+        width: 22, depth: 60, foundationShape: 'rectangle',
+      }),
+      makeNode('fl-1', 'floors', 'Nave Walls', 380, 300, {
+        count: 10, height: 5.0, winWidth: 2.5, winHeight: 5.0, winSpacing: 4.5,
+        doorWidth: 6.0, doorHeight: 9.0, doorSide: 'front',
+        windowType: 'arched', doorType: 'classic', material: 'limestone',
+        hasBalcony: false, hasRibs: true, plinthHeight: 1.5,
+      }),
+      makeNode('r-1', 'roof', 'Cathedral Roof', 380, 50, {
+        roofType: 'gable', height: 18.0, overhang: 0.4, color: '#3a4050',
+      }),
+      // Flying buttresses
+      makeNode('off-butt', 'offset_spline', 'Buttress Ring', 680, 200, { offset: 5.0 }),
+      makeNode('butt-1', 'buttress', 'Flying Buttresses', 980, 200, {
+        span: 6.0, height: 28.0, thickness: 0.9, material: 'limestone',
+      }),
+      // Corner spires
+      makeNode('sp-1', 'spire', 'Corner Spires', 680, 500, {
+        baseRadius: 1.8, height: 30.0, segments: 8,
+        material: 'dark_metal', color: '#2a2a35',
+      }),
+      // Main portal gate
+      makeNode('gate-1', 'gate_arch', 'West Portal', 380, 650, {
+        width: 7.0, height: 12.0, thickness: 4.0, archType: 'pointed',
+        material: 'limestone', towerWidth: 5.0, towerHeight: 20.0,
+      }),
+      makeNode('pl-1', 'plinth', 'Foundation Base', 50, 600, {
+        height: 1.5, material: 'limestone',
+      }),
+      makeNode('st-1', 'stairs', 'Cathedral Steps', 50, 750, {
+        count: 6, stepHeight: 0.22, stepDepth: 0.45, width: 10.0, side: 'front',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-1',      target: 'fl-1',     sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-1',      target: 'r-1',      sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-1',     target: 'r-1',      sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e4', source: 'f-1',      target: 'off-butt', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'off-butt', target: 'butt-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e6', source: 'f-1',      target: 'sp-1',     sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e7', source: 'fl-1',     target: 'sp-1',     sourceHandle: 'float',  targetHandle: 'spline' },
+      { id: 'e8', source: 'f-1',      target: 'gate-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e9', source: 'f-1',      target: 'pl-1',     sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e10',source: 'f-1',      target: 'st-1',     sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // ── 26. Roman Colosseum ──────────────────────────────────────────────────────
+  {
+    id: 'roman-colosseum',
+    name: 'Roman Colosseum',
+    description: 'Procedural recreation of the Flavian Amphitheatre: elliptical arcade colonnade rings, arched outer walls, and stacked tiers.',
+    category: 'custom',
+    icon: '🏛️',
+    preview: '🏛️',
+    nodes: [
+      // Outer ellipse (circle approximation)
+      makeNode('f-out', 'foundation', 'Outer Ring', 50, 250, {
+        width: 80, depth: 60, foundationShape: 'circle',
+      }),
+      // Smooth for ellipse
+      makeNode('sm-1', 'smooth_spline', 'Ellipse Curve', 350, 250, {
+        tension: 0.5, points: 64, closed: true,
+      }),
+      // Outer arcade wall
+      makeNode('fl-1', 'floors', 'Outer Arcade Wall', 650, 250, {
+        count: 4, height: 5.8, winWidth: 3.5, winHeight: 4.8, winSpacing: 4.6,
+        doorWidth: 0, doorHeight: 0, doorSide: 'front',
+        windowType: 'arched', doorType: 'classic', material: 'travertine',
+        hasBalcony: false, hasRibs: false, plinthHeight: 1.0,
+      }),
+      // Arcade columns on outer ring
+      makeNode('col-out', 'columns', 'Outer Colonnade', 650, 50, {
+        radius: 0.5, height: 22.0, spacing: 4.5, useCorners: false,
+        material: 'travertine', arcade: true, zOffset: 0,
+      }),
+      // Inner offset
+      makeNode('off-1', 'offset_spline', 'Arena Floor', 350, 500, {
+        offset: -16.0,
+      }),
+      makeNode('pl-arena', 'plinth', 'Arena Floor', 650, 500, {
+        height: 0.5, material: 'sandstone',
+      }),
+      makeNode('pl-base', 'plinth', 'Base Platform', 50, 550, {
+        height: 1.0, material: 'concrete',
+      }),
+      makeNode('st-1', 'stairs', 'Entry Arches', 50, 700, {
+        count: 6, stepHeight: 0.2, stepDepth: 0.35, width: 6.0, side: 'all',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-out',  target: 'sm-1',    sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'sm-1',   target: 'fl-1',    sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'sm-1',   target: 'col-out', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e4', source: 'sm-1',   target: 'off-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'off-1',  target: 'pl-arena',sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e6', source: 'f-out',  target: 'pl-base', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e7', source: 'f-out',  target: 'st-1',    sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // ── 27. Mayan Temple ─────────────────────────────────────────────────────────
+  {
+    id: 'mayan-temple',
+    name: 'Mayan Temple (El Castillo)',
+    description: 'Kukulcán pyramid: 9 stepped platforms, staircase on all four sides, and a crowning temple chamber. Perfect for game environments.',
+    category: 'custom',
+    icon: '🗿',
+    preview: '🗿',
+    nodes: [
+      // Main stepped pyramid
+      makeNode('py-1', 'pyramid', 'Main Pyramid', 50, 200, {
+        baseWidth: 55, baseDepth: 55, height: 28, steps: 9, material: 'sandstone',
+      }),
+      // Top temple
+      makeNode('f-top', 'foundation', 'Top Temple', 380, 200, {
+        width: 12, depth: 10, foundationShape: 'rectangle',
+      }),
+      makeNode('fl-top', 'floors', 'Temple Chamber', 680, 200, {
+        count: 1, height: 5.5, winWidth: 0, winHeight: 0, winSpacing: 20,
+        doorWidth: 2.5, doorHeight: 3.5, doorSide: 'all',
+        windowType: 'classic', doorType: 'classic', material: 'sandstone',
+        hasBalcony: false, hasRibs: false, plinthHeight: 0,
+      }),
+      makeNode('r-top', 'roof', 'Temple Roof', 680, 50, {
+        roofType: 'flat', height: 1.2, overhang: 0.3, color: '#b8860b',
+      }),
+      // Staircase on 4 sides
+      makeNode('st-1', 'stairs', 'Grand Staircase', 50, 550, {
+        count: 18, stepHeight: 0.16, stepDepth: 0.32, width: 6.0, side: 'all',
+      }),
+      makeNode('f-base', 'foundation', 'Plaza', 380, 500, {
+        width: 80, depth: 80, foundationShape: 'rectangle',
+      }),
+      makeNode('pl-base', 'plinth', 'Base Platform', 680, 500, {
+        height: 0.4, material: 'sandstone',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-top',  target: 'fl-top',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-top',  target: 'r-top',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-top', target: 'r-top',   sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e4', source: 'f-base', target: 'st-1',    sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'f-base', target: 'pl-base', sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // ── 28. Suspension Bridge ────────────────────────────────────────────────────
+  {
+    id: 'suspension-bridge',
+    name: 'Suspension Bridge',
+    description: 'Golden Gate-style suspension bridge with H-frame pylons, catenary cable profile, and detailed concrete deck with parapets.',
+    category: 'custom',
+    icon: '🌉',
+    preview: '🌉',
+    nodes: [
+      makeNode('br-1', 'bridge', 'Main Span', 50, 250, {
+        span: 120.0, width: 12.0, deckHeight: 0.8, archCount: 1,
+        bridgeType: 'suspension', pylonHeight: 28.0,
+        material: 'concrete', deckMaterial: 'concrete', zOffset: 0,
+      }),
+    ],
+    edges: [],
+  },
+
+  // ── 29. Roman Arch Bridge ────────────────────────────────────────────────────
+  {
+    id: 'roman-arch-bridge',
+    name: 'Roman Arch Bridge',
+    description: 'A multi-span Roman arch bridge with 5 barrel vaults, sandstone piers, and a flat walking deck — ideal for ancient/historical environments.',
+    category: 'custom',
+    icon: '🌁',
+    preview: '🌁',
+    nodes: [
+      makeNode('br-1', 'bridge', 'Arch Bridge', 50, 250, {
+        span: 90.0, width: 9.0, deckHeight: 0.6, archCount: 5,
+        bridgeType: 'arch', archHeight: 9.0,
+        material: 'sandstone', deckMaterial: 'sandstone', zOffset: 0,
+      }),
+    ],
+    edges: [],
+  },
+
+  // ── 30. Fantasy Dragon Keep ───────────────────────────────────────────────────
+  {
+    id: 'fantasy-dragon-keep',
+    name: 'Fantasy Dragon Keep',
+    description: 'Imposing fantasy keep: U-shape inner ward with 6 round towers, outer curtain wall with battlements, two side gate arches, and onion-top central tower.',
+    category: 'custom',
+    icon: '🐉',
+    preview: '🐉',
+    nodes: [
+      // Outer curtain wall
+      makeNode('f-out', 'foundation', 'Curtain Wall', 50, 300, {
+        width: 90, depth: 70, foundationShape: 'rectangle',
+      }),
+      makeNode('cw-out', 'castle_wall', 'Outer Curtain', 380, 300, {
+        height: 12.0, thickness: 3.0, merlonWidth: 1.5, merlonHeight: 2.0,
+        merlonSpacing: 2.5, material: 'worn_stone', hasMachicolations: true,
+      }),
+      makeNode('tw-out', 'tower', 'Wall Towers', 380, 100, {
+        radius: 6.0, height: 22.0, topType: 'crenellated',
+        material: 'worn_stone', segments: 12,
+      }),
+      // Inner keep (U-shape)
+      makeNode('f-inner', 'foundation', 'Inner Ward', 700, 300, {
+        width: 40, depth: 35, foundationShape: 'U-shape',
+      }),
+      makeNode('fl-inner', 'floors', 'Great Hall', 1000, 300, {
+        count: 4, height: 5.0, winWidth: 1.2, winHeight: 2.0, winSpacing: 3.0,
+        doorWidth: 4.0, doorHeight: 5.5, doorSide: 'front',
+        windowType: 'arched', doorType: 'classic', material: 'worn_stone',
+        hasBalcony: false, hasRibs: true, plinthHeight: 1.0,
+      }),
+      // Central throne tower with onion top
+      makeNode('tw-central', 'tower', 'Throne Tower', 1000, 50, {
+        radius: 7.0, height: 35.0, topType: 'onion',
+        material: 'worn_stone', segments: 16,
+        conicalHeight: 8.0, conicalColor: '#3a1a0a',
+      }),
+      // Gate arches
+      makeNode('gate-1', 'gate_arch', 'Main Gate', 380, 600, {
+        width: 8.0, height: 10.0, thickness: 5.0, archType: 'pointed',
+        material: 'worn_stone', towerWidth: 5.0, towerHeight: 18.0,
+      }),
+      makeNode('pl-1', 'plinth', 'Foundation', 50, 700, {
+        height: 1.5, material: 'worn_stone',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-out',   target: 'cw-out',    sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-out',   target: 'tw-out',    sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'f-out',   target: 'gate-1',    sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e4', source: 'f-out',   target: 'pl-1',      sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'f-inner', target: 'fl-inner',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e6', source: 'f-inner', target: 'tw-central',sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
 ];
 

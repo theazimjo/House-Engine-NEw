@@ -741,6 +741,339 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
         output = scattered;
         break;
       }
+
+      // ── Castle Wall (Battlements) ─────────────────────────────────────────────
+      case 'castle_wall': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        if (!splineData || !Array.isArray(splineData.points)) break;
+        const {
+          height = 8.0, thickness = 2.0,
+          merlonWidth = 1.2, merlonHeight = 1.5, merlonSpacing = 2.4,
+          material = 'worn_stone', zOffset = 0, hasMachicolations = false
+        } = node.data.params;
+        const baseZ = (splineData.zOffset || 0) + zOffset;
+        const pts = splineData.points as [number, number][];
+        const wallParts: any[] = [];
+
+        for (let i = 0; i < pts.length; i++) {
+          const p1 = pts[i];
+          const p2 = pts[(i + 1) % pts.length];
+          const dx = p2[0] - p1[0];
+          const dz = p2[1] - p1[1];
+          const segLen = Math.sqrt(dx * dx + dz * dz);
+          const angle = Math.atan2(dz, dx);
+          const midX = (p1[0] + p2[0]) / 2;
+          const midZ = (p1[1] + p2[1]) / 2;
+
+          // Wall body
+          wallParts.push({
+            type: 'castle_wall_segment',
+            position: [midX, baseZ, midZ],
+            rotation: [0, -angle, 0],
+            length: segLen,
+            height,
+            thickness,
+            material,
+          });
+
+          // Merlons (crenellations) along top
+          const merlonGap = merlonWidth + merlonSpacing;
+          const merlonCount = Math.floor(segLen / merlonGap);
+          for (let m = 0; m < merlonCount; m++) {
+            const t = (m + 0.5) / merlonCount;
+            const nx = p1[0] + dx * t;
+            const nz = p1[1] + dz * t;
+            wallParts.push({
+              type: 'castle_merlon',
+              position: [nx, baseZ + height, nz],
+              rotation: [0, -angle, 0],
+              width: merlonWidth,
+              height: merlonHeight,
+              thickness: thickness + 0.2,
+              material,
+            });
+          }
+
+          // Machicolations (corbelled projection at top)
+          if (hasMachicolations) {
+            wallParts.push({
+              type: 'castle_machicolation',
+              position: [midX, baseZ + height - 0.4, midZ],
+              rotation: [0, -angle, 0],
+              length: segLen,
+              material,
+            });
+          }
+        }
+        output = wallParts;
+        break;
+      }
+
+      // ── Tower ─────────────────────────────────────────────────────────────────
+      case 'tower': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        const {
+          radius = 4.0, height = 20.0, topType = 'crenellated',
+          material = 'worn_stone', zOffset = 0, segments = 16,
+          wallThickness = 0.8, conicalHeight = 5.0, conicalColor = '#5a3a2a'
+        } = node.data.params;
+
+        // If spline connected, place tower at each corner point
+        let positions: [number, number][] = [[0, 0]];
+        const baseZ = (splineData?.zOffset || 0) + zOffset;
+        if (splineData?.points) {
+          positions = (splineData.points as [number, number][]);
+        }
+
+        const towerParts: any[] = [];
+        positions.forEach((pos, ti) => {
+          towerParts.push({
+            type: 'tower_mesh',
+            position: [pos[0], baseZ, pos[1]],
+            radius,
+            height,
+            topType,
+            material,
+            segments,
+            wallThickness,
+            conicalHeight,
+            conicalColor,
+            id: ti,
+          });
+        });
+        output = towerParts;
+        break;
+      }
+
+      // ── Bridge ────────────────────────────────────────────────────────────────
+      case 'bridge': {
+        const {
+          span = 40.0, width = 8.0, deckHeight = 0.6,
+          archCount = 3, archHeight = 8.0, bridgeType = 'arch',
+          material = 'sandstone', deckMaterial = 'concrete',
+          pylonHeight = 18.0, zOffset = 0
+        } = node.data.params;
+
+        const parts: any[] = [];
+        const spanPerArch = span / archCount;
+
+        // Bridge Deck
+        parts.push({
+          type: 'bridge_deck',
+          position: [0, zOffset + archHeight, 0],
+          span,
+          width,
+          deckHeight,
+          material: deckMaterial,
+        });
+
+        if (bridgeType === 'arch') {
+          // Arch piers and arches
+          for (let a = 0; a < archCount; a++) {
+            const xOffset = -span / 2 + spanPerArch * a + spanPerArch / 2;
+            parts.push({
+              type: 'bridge_arch',
+              position: [xOffset, zOffset, 0],
+              span: spanPerArch,
+              height: archHeight,
+              width,
+              material,
+            });
+          }
+          // Piers at each junction
+          for (let p = 1; p < archCount; p++) {
+            const px = -span / 2 + spanPerArch * p;
+            parts.push({
+              type: 'bridge_pier',
+              position: [px, zOffset, 0],
+              height: archHeight,
+              width,
+              material,
+            });
+          }
+        } else if (bridgeType === 'suspension' || bridgeType === 'cable') {
+          // Pylons
+          parts.push({
+            type: 'bridge_pylon',
+            position: [-span * 0.25, zOffset, 0],
+            height: pylonHeight,
+            width,
+            bridgeType,
+            material,
+          });
+          parts.push({
+            type: 'bridge_pylon',
+            position: [span * 0.25, zOffset, 0],
+            height: pylonHeight,
+            width,
+            bridgeType,
+            material,
+          });
+          // Deck
+          parts.push({
+            type: 'bridge_deck',
+            position: [0, zOffset + pylonHeight * 0.35, 0],
+            span,
+            width,
+            deckHeight,
+            material: deckMaterial,
+            bridgeType,
+          });
+        } else {
+          // Flat bridge - just supports
+          for (let p = 0; p <= archCount; p++) {
+            const px = -span / 2 + (span / archCount) * p;
+            parts.push({
+              type: 'bridge_pier',
+              position: [px, zOffset, 0],
+              height: archHeight * 0.6,
+              width,
+              material,
+            });
+          }
+        }
+        output = parts;
+        break;
+      }
+
+      // ── Gate Arch ────────────────────────────────────────────────────────────
+      case 'gate_arch': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        const {
+          width: gWidth = 6.0, height: gHeight = 8.0, thickness: gThick = 3.0,
+          archType = 'pointed', material = 'worn_stone', zOffset = 0,
+          towerWidth = 4.0, towerHeight = 14.0
+        } = node.data.params;
+        const baseZ = (splineData?.zOffset || 0) + zOffset;
+
+        // Find front-center from spline or use origin
+        let cx = 0, cz = 0;
+        if (splineData?.points && splineData.points.length >= 2) {
+          const pts = splineData.points as [number, number][];
+          // Use segment 2 (front face) midpoint
+          const idx = Math.floor(pts.length * 0.25);
+          const p1 = pts[idx], p2 = pts[(idx + 1) % pts.length];
+          cx = (p1[0] + p2[0]) / 2;
+          cz = (p1[1] + p2[1]) / 2;
+        }
+
+        output = [{
+          type: 'gate_arch_mesh',
+          position: [cx, baseZ, cz],
+          width: gWidth,
+          height: gHeight,
+          thickness: gThick,
+          archType,
+          material,
+          towerWidth,
+          towerHeight,
+        }];
+        break;
+      }
+
+      // ── Terrain ───────────────────────────────────────────────────────────────
+      case 'terrain': {
+        const {
+          width: tW = 200, depth: tD = 200, segments: tSeg = 40,
+          maxHeight = 12.0, seed = 42, material = 'grass'
+        } = node.data.params;
+        output = [{
+          type: 'terrain_mesh',
+          width: tW,
+          depth: tD,
+          segments: tSeg,
+          maxHeight,
+          seed,
+          material,
+        }];
+        break;
+      }
+
+      // ── Spire ────────────────────────────────────────────────────────────────
+      case 'spire': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        const {
+          baseRadius = 1.5, height: sHeight = 20.0, segments: sSeg = 8,
+          material = 'dark_metal', color: sColor = '#2a2a3a', zOffset: sZ = 0
+        } = node.data.params;
+        const baseZOff = (splineData?.zOffset || 0) + sZ;
+
+        // Place spire at centroid of spline, or origin
+        let cx = 0, cz = 0;
+        if (splineData?.points) {
+          const pts = splineData.points as [number, number][];
+          pts.forEach(p => { cx += p[0]; cz += p[1]; });
+          cx /= pts.length; cz /= pts.length;
+        }
+        output = [{
+          type: 'spire_mesh',
+          position: [cx, baseZOff, cz],
+          baseRadius,
+          height: sHeight,
+          segments: sSeg,
+          material,
+          color: sColor,
+        }];
+        break;
+      }
+
+      // ── Buttress ─────────────────────────────────────────────────────────────
+      case 'buttress': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        if (!splineData || !Array.isArray(splineData.points)) break;
+        const {
+          span: bSpan = 5.0, height: bH = 12.0, thickness: bThick = 0.8,
+          material = 'limestone', zOffset: bZ = 0
+        } = node.data.params;
+        const baseZ = (splineData.zOffset || 0) + bZ;
+        const pts = splineData.points as [number, number][];
+        const buttressParts: any[] = [];
+
+        for (let i = 0; i < pts.length; i++) {
+          const p1 = pts[i];
+          const p2 = pts[(i + 1) % pts.length];
+          // Normal direction (outward)
+          const dx = p2[0] - p1[0];
+          const dz = p2[1] - p1[1];
+          const len = Math.sqrt(dx * dx + dz * dz);
+          const nx = -dz / len;
+          const nz = dx / len;
+          const angle = Math.atan2(dz, dx);
+          // Midpoint
+          const midX = (p1[0] + p2[0]) / 2 + nx * bSpan * 0.5;
+          const midZ = (p1[1] + p2[1]) / 2 + nz * bSpan * 0.5;
+
+          buttressParts.push({
+            type: 'buttress_mesh',
+            position: [midX, baseZ, midZ],
+            rotation: [0, -angle, 0],
+            span: bSpan,
+            height: bH,
+            thickness: bThick,
+            material,
+          });
+        }
+        output = buttressParts;
+        break;
+      }
+
+      // ── Pyramid ───────────────────────────────────────────────────────────────
+      case 'pyramid': {
+        const {
+          baseWidth = 30.0, baseDepth = 30.0, height: pyH = 20.0,
+          steps = 0, material = 'sandstone'
+        } = node.data.params;
+        output = [{
+          type: 'pyramid_mesh',
+          position: [0, 0, 0],
+          baseWidth,
+          baseDepth,
+          height: pyH,
+          steps,
+          material,
+        }];
+        break;
+      }
     }
 
 
