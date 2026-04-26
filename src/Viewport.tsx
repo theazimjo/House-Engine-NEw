@@ -220,7 +220,7 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           ps.slice(1).forEach((p: any) => pShape.lineTo(p[0], p[1]));
           pShape.closePath();
           return (
-            <mesh key={`plinth-${idx}`} position={[ox || 0, (oy || 0) + pz + ph, oz || 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow castShadow>
+            <mesh key={`plinth-${idx}`} position={[ox || 0, (oy || 0) + pz, oz || 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow castShadow>
               <extrudeGeometry args={[pShape, { depth: ph, bevelEnabled: false }]} />
               <meshStandardMaterial color="#999" side={THREE.DoubleSide} roughness={0.5} metalness={0.2} />
             </mesh>
