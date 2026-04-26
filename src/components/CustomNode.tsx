@@ -45,6 +45,12 @@ const SELECT_OPTIONS: Record<string, { value: string; label: string }[]> = {
     { value: 'sides',     label: 'Sides' },
     { value: 'all',       label: 'All Sides' },
   ],
+  side: [
+    { value: 'front',     label: 'Front' },
+    { value: 'back',      label: 'Back' },
+    { value: 'frontback', label: 'Front + Back' },
+    { value: 'all',       label: 'All Sides' },
+  ],
   windowType: [
     { value: 'modern',  label: 'Modern' },
     { value: 'classic', label: 'Classic Grid' },

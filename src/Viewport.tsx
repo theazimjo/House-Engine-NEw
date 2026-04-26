@@ -310,11 +310,27 @@ export const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { 
                 vertices.push(p1B[0], p1B[1], 0, p2B[0], p2B[1], 0, p2T[0], p2T[1], h2);
                 vertices.push(p1B[0], p1B[1], 0, p2T[0], p2T[1], h2, p1T[0], p1T[1], h1);
               }
-              for (let i = 1; i < topPoints.length - 1; i++) {
-                const h0 = roofType === 'shed' ? (pts[0][0] + 7) * 0.2 : roofH;
-                const hi = roofType === 'shed' ? (pts[i][0] + 7) * 0.2 : roofH;
-                const hi1 = roofType === 'shed' ? (pts[i+1][0] + 7) * 0.2 : roofH;
-                vertices.push(topPoints[0][0], topPoints[0][1], h0, topPoints[i][0], topPoints[i][1], hi, topPoints[i+1][0], topPoints[i+1][1], hi1);
+              const contour = topPoints.map(p => new THREE.Vector2(p[0], p[1]));
+              let faces: number[][] = [];
+              try {
+                faces = THREE.ShapeUtils.triangulateShape(contour, []);
+              } catch(e) {
+                // fallback to fan if it fails
+                for(let i=1; i<topPoints.length-1; i++) faces.push([0, i, i+1]);
+              }
+              for (let i = 0; i < faces.length; i++) {
+                const face = faces[i];
+                // Three.js triangulateShape returns indices.
+                // We must ensure the normals point UP, so winding might need reverse.
+                // Earcut usually returns CCW. We want CCW from top down, which is what we need.
+                const h0 = roofType === 'shed' ? (pts[face[0]][0] + 7) * 0.2 : roofH;
+                const h1 = roofType === 'shed' ? (pts[face[1]][0] + 7) * 0.2 : roofH;
+                const h2 = roofType === 'shed' ? (pts[face[2]][0] + 7) * 0.2 : roofH;
+                vertices.push(
+                  topPoints[face[0]][0], topPoints[face[0]][1], h0,
+                  topPoints[face[1]][0], topPoints[face[1]][1], h1,
+                  topPoints[face[2]][0], topPoints[face[2]][1], h2
+                );
               }
 
               const geometry = new THREE.BufferGeometry();

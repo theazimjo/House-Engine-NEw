@@ -302,31 +302,31 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
     ],
   },
 
-  // ── 8. Twisted Skyscraper ──
+  // ── 8. Turning Torso (Malmö) ──
   {
-    id: 'twisted-skyscraper',
-    name: 'Twisted Skyscraper',
-    description: 'Futuristic 20-story tower with progressive twist deformation and tapered form.',
+    id: 'turning-torso',
+    name: 'Turning Torso (Malmö)',
+    description: 'A recreation of the famous Swedish neo-futurist skyscraper twisting exactly 90 degrees.',
     category: 'commercial',
-    icon: '🗼',
-    preview: '🗼',
+    icon: '🏢',
+    preview: '🏢',
     nodes: [
       makeNode('f-1', 'foundation', 'Foundation', 50, 250, {
         width: 30, depth: 30, foundationShape: 'rectangle',
-        twistBase: 0, twistMid: 15, twistTop: 45, taper: 0.6,
-        shearX: 0.5, shearY: 0,
+        twistBase: 0, twistMid: 45, twistTop: 90, taper: 1.0,
+        shearX: 0, shearY: 0,
       }),
       makeNode('fl-1', 'floors', 'Floors System', 380, 300, {
-        count: 30, height: 3.8, winWidth: 2.2, winHeight: 2.6, winSpacing: 2.5,
-        doorWidth: 4.0, doorHeight: 3.5, doorSide: 'all',
+        count: 54, height: 3.5, winWidth: 2.2, winHeight: 2.6, winSpacing: 3.0,
+        doorWidth: 4.0, doorHeight: 3.5, doorSide: 'front',
         windowType: 'modern', doorType: 'double', material: 'metal',
         hasBalcony: false, hasRibs: true, plinthHeight: 1.2,
       }),
       makeNode('r-1', 'roof', 'Roof System', 380, 50, {
-        roofType: 'flat', height: 0.5, overhang: 0.2, color: '#222222',
+        roofType: 'flat', height: 0.5, overhang: 0.0, color: '#f0f0f0',
       }),
       makeNode('pl-1', 'plinth', 'Plinth', 380, 600, {
-        height: 1.2, material: 'metal',
+        height: 1.2, material: 'concrete',
       }),
     ],
     edges: [
@@ -334,6 +334,111 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
       { id: 'e2', source: 'f-1', target: 'r-1', sourceHandle: 'spline', targetHandle: 'spline' },
       { id: 'e3', source: 'fl-1', target: 'r-1', sourceHandle: 'float', targetHandle: 'float' },
       { id: 'e4', source: 'f-1', target: 'pl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // ── 9. Transamerica Pyramid (San Francisco) ──
+  {
+    id: 'transamerica-pyramid',
+    name: 'Transamerica Pyramid',
+    description: 'Iconic San Francisco landmark demonstrating extreme tapering.',
+    category: 'commercial',
+    icon: '🔺',
+    preview: '🔺',
+    nodes: [
+      makeNode('f-1', 'foundation', 'Foundation', 50, 250, {
+        width: 50, depth: 50, foundationShape: 'rectangle',
+        taper: 0.1, twistBase: 0, twistMid: 0, twistTop: 0,
+      }),
+      makeNode('fl-1', 'floors', 'Floors System', 380, 300, {
+        count: 48, height: 4.0, winWidth: 1.5, winHeight: 2.5, winSpacing: 3.0,
+        doorWidth: 5.0, doorHeight: 4.0, doorSide: 'all',
+        windowType: 'industrial', doorType: 'modern', material: 'concrete',
+        hasBalcony: false, hasRibs: true, plinthHeight: 2.0,
+      }),
+      makeNode('r-1', 'roof', 'Roof System', 380, 50, {
+        roofType: 'flat', height: 0.2, overhang: 0, color: '#dddddd',
+      }),
+      makeNode('pl-1', 'plinth', 'Plinth', 380, 600, {
+        height: 2.0, material: 'concrete',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-1', target: 'fl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-1', target: 'r-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-1', target: 'r-1', sourceHandle: 'float', targetHandle: 'float' },
+      { id: 'e4', source: 'f-1', target: 'pl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // ── 10. Leaning Tower of Pisa ──
+  {
+    id: 'leaning-tower',
+    name: 'Leaning Tower of Pisa',
+    description: 'Famous Italian bell tower showcasing structural shear deformation and colonnades.',
+    category: 'custom',
+    icon: '🏛️',
+    preview: '🏛️',
+    nodes: [
+      makeNode('f-1', 'foundation', 'Foundation', 50, 250, {
+        width: 15, depth: 15, foundationShape: 'circle',
+        shearX: 0.15, shearY: 0, taper: 1.0,
+      }),
+      makeNode('fl-1', 'floors', 'Floors System', 380, 300, {
+        count: 8, height: 4.5, winWidth: 1.2, winHeight: 2.4, winSpacing: 2.0,
+        doorWidth: 2.5, doorHeight: 3.0, doorSide: 'front',
+        windowType: 'arched', doorType: 'classic', material: 'concrete',
+        hasBalcony: true, hasRibs: false, plinthHeight: 1.0,
+      }),
+      makeNode('r-1', 'roof', 'Roof System', 380, 50, {
+        roofType: 'flat', height: 0.5, overhang: 1.0, color: '#e0e0e0',
+      }),
+      makeNode('pl-1', 'plinth', 'Plinth', 380, 600, {
+        height: 1.0, material: 'concrete',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-1', target: 'fl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-1', target: 'r-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-1', target: 'r-1', sourceHandle: 'float', targetHandle: 'float' },
+      { id: 'e4', source: 'f-1', target: 'pl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // ── 11. X-Shape Medical Center ──
+  {
+    id: 'x-shape-hospital',
+    name: 'X-Shape Medical Center',
+    description: 'Massive modern hospital complex with 4 radiating wings forming an X.',
+    category: 'commercial',
+    icon: '🏥',
+    preview: '🏥',
+    nodes: [
+      makeNode('f-1', 'foundation', 'Foundation', 50, 250, {
+        width: 80, depth: 80, foundationShape: 'X-shape',
+      }),
+      makeNode('fl-1', 'floors', 'Floors System', 380, 300, {
+        count: 5, height: 3.8, winWidth: 2.5, winHeight: 2.0, winSpacing: 4.0,
+        doorWidth: 4.0, doorHeight: 3.0, doorSide: 'frontback',
+        windowType: 'modern', doorType: 'double', material: 'metal',
+        hasBalcony: false, hasRibs: false, plinthHeight: 0.8,
+      }),
+      makeNode('r-1', 'roof', 'Roof System', 380, 50, {
+        roofType: 'flat', height: 0.8, overhang: 0.5, color: '#aaaaaa',
+      }),
+      makeNode('pl-1', 'plinth', 'Plinth', 380, 600, {
+        height: 0.8, material: 'concrete',
+      }),
+      makeNode('st-1', 'stairs', 'Stairs', 700, 500, {
+        count: 5, stepHeight: 0.16, stepDepth: 0.35, width: 6.0, side: 'frontback',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-1', target: 'fl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-1', target: 'r-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-1', target: 'r-1', sourceHandle: 'float', targetHandle: 'float' },
+      { id: 'e4', source: 'f-1', target: 'pl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'f-1', target: 'st-1', sourceHandle: 'spline', targetHandle: 'spline' },
     ],
   },
 ];

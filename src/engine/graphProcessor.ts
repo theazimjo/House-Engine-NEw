@@ -94,46 +94,58 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
         const splineData = inputs.find(i => i.handle === 'spline')?.data;
         if (!splineData || !Array.isArray(splineData.points)) break;
         // Find if there's a connected plinth height to match
-        const { count = 4, stepHeight = 0.2, stepDepth = 0.3, width = 2.5 } = node.data.params;
+        const { count = 4, stepHeight = 0.2, stepDepth = 0.3, width = 2.5, side = 'front' } = node.data.params;
         const zOffset = splineData.zOffset || 0;
 
         const shape = splineData.foundationShape || 'rectangle';
-        let segIdx = 2; // Default front for rectangle
-        if (shape === 'U-shape') segIdx = 4;
-        else if (shape === 'L-shape') segIdx = 2;
-        else if (shape === 'C-shape') segIdx = 4;
-        else if (shape === 'X-shape') segIdx = 6;
         
-        if (segIdx >= splineData.points.length) segIdx = 0;
+        const getIndices = () => {
+          let front = 2, back = 0;
+          if (shape === 'U-shape') { front = 4; back = 0; }
+          else if (shape === 'L-shape') { front = 2; back = 0; }
+          else if (shape === 'C-shape') { front = 4; back = 0; }
+          else if (shape === 'X-shape') { front = 0; back = 7; }
+          else if (shape === 'hexagon') { front = 3; back = 0; }
+          
+          if (side === 'front') return [front];
+          if (side === 'back') return [back];
+          if (side === 'frontback') return [front, back];
+          if (side === 'all') return Array.from({length: splineData.points.length}, (_, i) => i);
+          return [front];
+        };
 
-        const p1 = splineData.points[segIdx];
-        const p2 = splineData.points[(segIdx + 1) % splineData.points.length];
-        const midX = (p1[0] + p2[0]) / 2;
-        const midZ = (p1[1] + p2[1]) / 2;
+        const indices = getIndices();
+        const stairParts: any[] = [];
 
-        // Calculate segment direction for rotation
-        const dx = p2[0] - p1[0];
-        const dz = p2[1] - p1[1];
-        const angle = Math.atan2(dz, dx);
-        const normal = angle + Math.PI / 2;
+        indices.forEach(idx => {
+          const segIdx = idx >= splineData.points.length ? 0 : idx;
+          const p1 = splineData.points[segIdx];
+          const p2 = splineData.points[(segIdx + 1) % splineData.points.length];
+          const midX = (p1[0] + p2[0]) / 2;
+          const midZ = (p1[1] + p2[1]) / 2;
 
-        const stairParts = [];
-        for (let i = 0; i < count; i++) {
-          const h = (i + 1) * stepHeight;
-          const d = (count - i) * stepDepth;
-          const distOut = d / 2 + 0.1; // Offset from wall
+          const dx = p2[0] - p1[0];
+          const dz = p2[1] - p1[1];
+          const angle = Math.atan2(dz, dx);
+          const normal = angle + Math.PI / 2;
 
-          stairParts.push({
-            type: 'stairs_step',
-            position: [
-              midX + Math.cos(normal) * distOut,
-              zOffset,
-              midZ + Math.sin(normal) * distOut
-            ],
-            rotation: [0, -angle, 0],
-            args: [width, h, d]
-          });
-        }
+          for (let i = 0; i < count; i++) {
+            const h = (i + 1) * stepHeight;
+            const d = (count - i) * stepDepth;
+            const distOut = d / 2 + 0.1;
+
+            stairParts.push({
+              type: 'stairs_step',
+              position: [
+                midX + Math.cos(normal) * distOut,
+                zOffset,
+                midZ + Math.sin(normal) * distOut
+              ],
+              rotation: [0, -angle, 0],
+              args: [width, h, d]
+            });
+          }
+        });
         output = stairParts;
         break;
       }
@@ -224,7 +236,12 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
             hasRibs: node.data.params.hasRibs || false,
             doorSegmentIndex: (() => {
               const shape = splineData.foundationShape || 'rectangle';
-              if (doorSide === 'back') return 0;
+              if (doorSide === 'frontback' || doorSide === 'all' || doorSide === 'sides') return undefined;
+
+              if (doorSide === 'back') {
+                if (shape === 'X-shape') return 7;
+                return 0;
+              }
               if (doorSide === 'right') return 1;
               if (doorSide === 'left') {
                 if (shape === 'U-shape' || shape === 'C-shape') return 7;
@@ -236,7 +253,8 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
               if (shape === 'U-shape') return 4;
               if (shape === 'L-shape') return 2;
               if (shape === 'C-shape') return 4;
-              if (shape === 'X-shape') return 6;
+              if (shape === 'X-shape') return 0;
+              if (shape === 'hexagon') return 3;
               return 2;
             })(),
             plinthHeight: 0,
