@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Environment, ContactShadows, Grid } from '@react-three/drei';
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
+import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter.js';
 import { ProceduralWall } from './engine/ProceduralWall';
 import { materialLib } from './engine/MaterialLibrary';
 import { processGraph } from './engine/graphProcessor';
@@ -249,6 +250,35 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           );
         }
 
+        // ── Primitives ──
+        if (part.type === 'primitive_box') {
+          return (
+            <mesh key={`pbox-${idx}`} position={part.position} castShadow receiveShadow>
+              <boxGeometry args={part.args} />
+              <meshStandardMaterial color="#888" roughness={0.7} />
+            </mesh>
+          );
+        }
+
+        if (part.type === 'primitive_cylinder') {
+          return (
+            <mesh key={`pcyl-${idx}`} position={part.position} castShadow receiveShadow>
+              <cylinderGeometry args={part.args} />
+              <meshStandardMaterial color="#888" roughness={0.7} />
+            </mesh>
+          );
+        }
+
+        // ── Boolean Subtract (Fallback just renders Mesh A for now if CSG is too heavy, but we installed three-bvh-csg!) ──
+        if (part.type === 'boolean_subtract') {
+           // Basic fallback: just render A
+           return (
+             <group key={`csg-${idx}`}>
+               <BuildingRenderer nodes={nodes} edges={edges} customOutputs={part.meshA} />
+             </group>
+           );
+        }
+
         // ── Scatter Instance (tree / prop placeholder) ──
         if (part.type === 'scatter_instance') {
           const { position, scale = 1, rotation: rot = 0 } = part;
@@ -296,9 +326,13 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
 // ── Scene (for export access) ─────────────────────────────────────────────────
 interface SceneProps extends ViewportProps {
   onSceneReady: (scene: THREE.Scene) => void;
+  customOutputs?: any[];
 }
 
-const SceneCapture = ({ nodes, edges, onSceneReady }: SceneProps) => {
+const SceneRenderer = ({ nodes, edges, customOutputs, onSceneReady }: SceneProps) => {
+  const meshOutputs = customOutputs || useMemo(() => {
+    return processGraph(nodes, edges);
+  }, [nodes, edges]);
   const groupRef = useRef<THREE.Group>(null);
 
   React.useEffect(() => {
@@ -317,6 +351,7 @@ const SceneCapture = ({ nodes, edges, onSceneReady }: SceneProps) => {
 // ── Viewport ──────────────────────────────────────────────────────────────────
 export interface ViewportHandle {
   exportGLTF: () => void;
+  exportOBJ: () => void;
 }
 
 export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edges }, ref) => {
@@ -341,6 +376,18 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
         { binary: true }
       );
     },
+    exportOBJ: () => {
+      if (!sceneRef.current) { alert('Scene not ready'); return; }
+      const exporter = new OBJExporter();
+      const result = exporter.parse(sceneRef.current);
+      const blob = new Blob([result], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'building.obj';
+      a.click();
+      URL.revokeObjectURL(url);
+    },
   }));
 
   return (
@@ -353,7 +400,7 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
         <directionalLight position={[10, 20, 10]} intensity={1.5} castShadow shadow-mapSize={[2048, 2048]} />
         <spotLight position={[-10, 20, 10]} angle={0.2} penumbra={1} intensity={1} castShadow />
 
-        <SceneCapture nodes={nodes} edges={edges} onSceneReady={(s) => { sceneRef.current = s; }} />
+        <SceneRenderer nodes={nodes} edges={edges} onSceneReady={(s) => { sceneRef.current = s; }} />
 
         {/* Ground */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>

@@ -20,6 +20,8 @@ const NODE_CATEGORIES: NodeCategory[] = [
     icon: '🏗️',
     nodes: [
       { type: 'foundation', label: 'Foundation', description: 'Building footprint shape' },
+      { type: 'primitive_box', label: 'Primitive Box', description: 'Simple 3D box mesh' },
+      { type: 'primitive_cylinder', label: 'Primitive Cylinder', description: 'Simple 3D cylinder mesh' },
     ]
   },
   {
@@ -40,6 +42,7 @@ const NODE_CATEGORIES: NodeCategory[] = [
       { type: 'offset_spline',    label: 'Offset Spline',    description: 'Inset / outset a shape' },
       { type: 'transform_spline', label: 'Transform Spline', description: 'Move, scale, rotate shape' },
       { type: 'mirror_spline',    label: 'Mirror Spline',    description: 'Mirror shape on X or Z axis' },
+      { type: 'boolean_subtract', label: 'Boolean Subtract', description: 'Subtract Mesh B from Mesh A' },
     ]
   },
   {
@@ -62,40 +65,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ onAddNode }) => {
   };
 
   return (
-    <div className="sidebar-overlay">
+    <div className="absolute top-4 left-4 z-10 w-64">
       <motion.div 
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        className="glass-panel" 
-        style={{ padding: '15px', width: '230px', maxHeight: 'calc(100vh - 40px)', overflowY: 'auto' }}
+        className="bg-[#0f0f13]/80 backdrop-blur-xl border border-white/10 rounded-xl p-4 shadow-2xl flex flex-col max-h-[calc(100vh-2rem)] overflow-y-auto overflow-x-hidden custom-scrollbar"
       >
-        <h1 className="gradient-text" style={{ fontSize: '1.1rem', marginBottom: '2px', fontWeight: 800, letterSpacing: '0.08em' }}>HOUSE ENGINE</h1>
-        <p style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', marginBottom: '18px', letterSpacing: '0.15em' }}>PROCEDURAL ARCHITECTURE</p>
+        <h1 className="text-lg font-black tracking-widest text-white mb-0.5">HOUSE/ENGINE</h1>
+        <p className="text-[9px] text-white/40 tracking-[0.25em] mb-6 uppercase font-bold">Node Library</p>
         
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div className="flex flex-col gap-2">
           {NODE_CATEGORIES.map((cat) => (
-            <div key={cat.label}>
+            <div key={cat.label} className="flex flex-col">
               <button
                 onClick={() => toggleCategory(cat.label)}
-                style={{
-                  width: '100%',
-                  background: 'none',
-                  border: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '6px 4px',
-                  cursor: 'pointer',
-                  color: 'rgba(255,255,255,0.35)',
-                  fontSize: '0.6rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                }}
+                className="flex items-center gap-2 py-2 px-1 text-[10px] font-bold text-white/40 tracking-[0.15em] uppercase hover:text-white transition-colors"
               >
                 {collapsed[cat.label]
-                  ? <ChevronRight size={10} />
-                  : <ChevronDown size={10} />}
+                  ? <ChevronRight size={12} className="opacity-70" />
+                  : <ChevronDown size={12} className="opacity-70" />}
                 <span>{cat.icon}</span>
                 <span>{cat.label}</span>
               </button>
@@ -106,38 +94,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ onAddNode }) => {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.18 }}
-                    style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '4px', paddingBottom: '6px' }}
+                    transition={{ duration: 0.2 }}
+                    className="flex flex-col gap-1.5 overflow-hidden pb-3"
                   >
                     {cat.nodes.map((opt) => (
                       <motion.button
                         key={opt.type}
-                        whileHover={{ x: 3, scale: 1.01 }}
-                        whileTap={{ scale: 0.97 }}
+                        whileHover={{ x: 4, scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => onAddNode(opt.type)}
-                        className="glass-card"
-                        style={{
-                          padding: '8px 10px',
-                          color: '#fff',
-                          textAlign: 'left',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          cursor: 'pointer',
-                          border: 'none',
-                          width: '100%',
-                        }}
+                        className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-lg p-2.5 flex items-center gap-3 text-left w-full transition-colors group"
                       >
-                        <div style={{
-                          width: '8px',
-                          height: '8px',
-                          background: NODE_HEADER_COLORS[opt.type] || '#555',
-                          borderRadius: '2px',
-                          flexShrink: 0,
-                        }} />
-                        <div>
-                          <div style={{ fontSize: '0.72rem', fontWeight: 600 }}>{opt.label}</div>
-                          <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', marginTop: '1px' }}>{opt.description}</div>
+                        <div 
+                          className="w-2.5 h-2.5 rounded-sm shrink-0 shadow-sm"
+                          style={{ background: NODE_HEADER_COLORS[opt.type] || '#555' }} 
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-semibold text-white/90 truncate group-hover:text-white transition-colors">{opt.label}</div>
+                          <div className="text-[9px] text-white/40 mt-0.5 truncate">{opt.description}</div>
                         </div>
                       </motion.button>
                     ))}
@@ -148,11 +122,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onAddNode }) => {
           ))}
         </div>
 
-        <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <p style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.2)', lineHeight: 1.6 }}>
-            💡 Drag nodes to canvas<br />
-            🔗 Connect pins by type<br />
-            🗑️ Press Del to remove
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <p className="text-[10px] text-white/30 leading-relaxed font-medium">
+            <span className="inline-block w-4">💡</span> Drag nodes to canvas<br />
+            <span className="inline-block w-4">🔗</span> Connect pins by type<br />
+            <span className="inline-block w-4">🗑️</span> Press Del to remove
           </p>
         </div>
       </motion.div>

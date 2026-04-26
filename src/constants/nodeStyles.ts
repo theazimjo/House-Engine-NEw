@@ -17,6 +17,8 @@ export const PIN_COLORS: Record<PinType, string> = {
 export const NODE_HEADER_COLORS: Record<NodeType | string, string> = {
   // Generators
   foundation:       '#c64321',
+  primitive_box:    '#d97706',
+  primitive_cylinder:'#ea580c',
   // Structure
   floors:           '#1d4ed8',
   roof:             '#7f1d1d',
@@ -27,6 +29,7 @@ export const NODE_HEADER_COLORS: Record<NodeType | string, string> = {
   offset_spline:    '#0f766e',
   transform_spline: '#7e22ce',
   mirror_spline:    '#0e7490',
+  boolean_subtract: '#b91c1c',
   // Utilities
   math_node:        '#78350f',
   merge_mesh:       '#1e3a5f',

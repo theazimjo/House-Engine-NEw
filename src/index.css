@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -49,42 +51,47 @@ body {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* React Flow Custom Styles - Industrial Blueprint Design */
+/* React Flow Custom Styles - Industrial Premium Design */
 .react-flow__node-buildingNode {
-  border: 1px solid #000 !important;
-  border-radius: 4px !important;
-  background: #2b2b2b !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  background: rgba(20, 20, 25, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
   padding: 0 !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
-  width: 200px !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255,255,255,0.02) inset !important;
+  width: 210px !important;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.react-flow__node-buildingNode:hover {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255,255,255,0.05) inset !important;
 }
 
 .node-header {
-  padding: 6px 10px;
-  color: #ddd;
-  font-weight: 700;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
+  padding: 8px 12px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #1a1a1a;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
   text-transform: uppercase;
-  cursor: move;
-  border-radius: 4px 4px 0 0;
+  cursor: grab;
 }
 
-/* Header Colors */
-.header-foundation { background-color: #7a2d1a; border-bottom: 1px solid #c64321; }
-.header-extrude { background-color: #003d5c; border-bottom: 1px solid #005682; }
-.header-scatter { background-color: #a67c00; border-bottom: 1px solid #f2b705; color: #fff !important; }
-.header-output { background-color: #111; border-bottom: 1px solid #333; }
+.node-header:active {
+  cursor: grabbing;
+}
 
 .node-body {
-  padding: 8px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   cursor: default;
 }
 
@@ -93,33 +100,36 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  height: 22px;
+  height: 24px;
 }
 
 .input-label {
   font-size: 0.6rem;
-  font-weight: 600;
-  color: #999;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.05em;
   flex: 1;
 }
 
 .node-input, .node-select {
   flex: 1;
   min-width: 0;
-  background: #1e1e1e;
-  border: 1px solid #444;
-  padding: 2px 4px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 3px 6px;
   font-size: 0.7rem;
   font-weight: 600;
   text-align: right;
   outline: none;
-  color: #eee !important;
-  border-radius: 2px;
-  appearance: none !important;
-  -webkit-appearance: none !important;
-  -moz-appearance: textfield !important;
+  color: #fff !important;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.node-input:focus, .node-select:focus {
+  border-color: rgba(255,255,255,0.3);
+  background: rgba(0,0,0,0.5);
 }
 
 .node-input::-webkit-outer-spin-button,
@@ -128,48 +138,14 @@ body {
   margin: 0 !important;
 }
 
-.input-with-unit {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  width: 70px;
-  flex-shrink: 0;
-  justify-content: flex-end;
-}
-
-.unit-label {
-  font-size: 0.6rem;
-  font-weight: 600;
-  color: #555;
-  width: 10px;
-  text-align: left;
-  flex-shrink: 0;
-}
-
 .node-select {
   text-align: left;
-  width: 70px;
-  flex-shrink: 0;
   font-size: 0.65rem;
-  padding: 1px 4px;
+  padding: 2px 6px;
 }
-
-.node-ports-left, .node-ports-right {
-  position: absolute;
-  top: 0;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  pointer-events: none;
-}
-
-.node-ports-left { left: 0; }
-.node-ports-right { right: 0; }
 
 .node-delete-btn {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
   padding: 4px;
   cursor: pointer;
@@ -177,36 +153,41 @@ body {
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  color: rgba(255,255,255,0.7);
 }
 
 .node-delete-btn:hover {
   background: #ef4444;
+  color: white;
   transform: scale(1.1);
 }
 
 .react-flow__handle {
-  width: 10px !important;
-  height: 10px !important;
-  border-radius: 2px !important;
-  border: 1.5px solid #1a1a1a !important;
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 3px !important;
+  border: 2px solid #1a1a24 !important;
   pointer-events: all;
-  transition: transform 0.1s ease;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
 }
 
 .react-flow__handle:hover {
-  transform: scale(1.3);
+  transform: scale(1.4);
+  box-shadow: 0 0 8px currentColor;
 }
 
 /* Cable Colors based on source handle type */
 .react-flow__edge-path {
   stroke-width: 3 !important;
   stroke-dasharray: none !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
 }
 
 .react-flow__background {
-  background-color: #d1d1d1 !important;
-  background-image: radial-gradient(#a3a3a3 1px, transparent 1px) !important;
-  background-size: 20px 20px !important;
+  background-color: #1a1a1f !important;
+  background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px) !important;
+  background-size: 24px 24px !important;
 }
 
 /* UI Layout */
@@ -223,69 +204,79 @@ body {
 }
 
 .preview-pane {
-  width: 480px;
   flex-shrink: 0;
   border-left: 1px solid rgba(255, 255, 255, 0.08);
-  background: #0a0a0e;
+  background: #0a0a0c;
   position: relative;
-}
-
-.sidebar-overlay {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  z-index: 10;
+  box-shadow: -20px 0 50px rgba(0,0,0,0.5);
+  z-index: 20;
 }
 
 /* ── Viewport Toolbar ── */
 .viewport-toolbar {
   position: absolute;
-  bottom: 16px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
   white-space: nowrap;
 }
 
+.viewport-toolbar .glass-panel {
+  background: rgba(15, 15, 20, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 8px 16px !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
 .toolbar-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 6px;
-  color: rgba(255,255,255,0.7);
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 8px;
+  color: rgba(255,255,255,0.6);
   font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .toolbar-btn:hover {
-  background: rgba(255,255,255,0.08);
-  border-color: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
   color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.toolbar-btn:active {
+  transform: translateY(1px);
 }
 
 .toolbar-btn--primary {
-  background: rgba(79, 70, 229, 0.2);
-  border-color: rgba(79, 70, 229, 0.4);
-  color: #a5b4fc;
+  background: rgba(255, 68, 0, 0.15);
+  border-color: rgba(255, 68, 0, 0.3);
+  color: #ff8855;
 }
 
 .toolbar-btn--primary:hover {
-  background: rgba(79, 70, 229, 0.35);
-  border-color: rgba(99, 102, 241, 0.6);
-  color: #c7d2fe;
+  background: rgba(255, 68, 0, 0.3);
+  border-color: rgba(255, 68, 0, 0.6);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(255, 68, 0, 0.2);
 }
 
 .toolbar-divider {
   width: 1px;
-  height: 20px;
+  height: 24px;
   background: rgba(255,255,255,0.1);
-  margin: 0 2px;
+  margin: 0 4px;
 }
 
 /* Typography */
@@ -294,36 +285,31 @@ h1, h2, h3 {
   letter-spacing: -0.02em;
 }
 
-.gradient-text {
-  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.45) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
 /* Animations */
 @keyframes pulse-glow {
-  0%   { box-shadow: 0 0 0 0   rgba(79, 70, 229, 0.4); }
-  70%  { box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
-  100% { box-shadow: 0 0 0 0   rgba(79, 70, 229, 0); }
+  0%   { box-shadow: 0 0 0 0   rgba(255, 68, 0, 0.4); }
+  70%  { box-shadow: 0 0 0 10px rgba(255, 68, 0, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(255, 68, 0, 0); }
 }
-
-.active-node { animation: pulse-glow 2s infinite; }
 
 /* Edge Highlights */
 .react-flow__edge.selected .react-flow__edge-path {
-  stroke: #f59e0b !important;
-  stroke-width: 5px !important;
-  filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.5));
+  stroke: #ff4400 !important;
+  stroke-width: 4px !important;
+  filter: drop-shadow(0 0 8px rgba(255, 68, 0, 0.6));
 }
 
 .react-flow__edge-path {
-  transition: stroke 0.2s, stroke-width 0.2s;
+  transition: stroke 0.2s, stroke-width 0.2s, filter 0.2s;
 }
 
 /* Checkbox */
 .node-checkbox {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   cursor: pointer;
-  accent-color: #4ade80;
+  accent-color: #ff4400;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
 }

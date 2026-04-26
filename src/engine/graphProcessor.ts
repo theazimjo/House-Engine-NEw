@@ -378,6 +378,33 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
         break;
       }
 
+      // ── Primitive Box ────────────────────────────────────────────────────────
+      case 'primitive_box': {
+        const { width = 2, height = 2, depth = 2 } = node.data.params;
+        output = [{ type: 'primitive_box', args: [width, height, depth], position: [0, height / 2, 0] }];
+        break;
+      }
+
+      // ── Primitive Cylinder ───────────────────────────────────────────────────
+      case 'primitive_cylinder': {
+        const { radius = 1, height = 2, radialSegments = 32 } = node.data.params;
+        output = [{ type: 'primitive_cylinder', args: [radius, radius, height, radialSegments], position: [0, height / 2, 0] }];
+        break;
+      }
+
+      // ── Boolean Subtract ─────────────────────────────────────────────────────
+      case 'boolean_subtract': {
+        const meshInputs = inputs.filter(i => i.handle === 'mesh');
+        const a = meshInputs[0]?.data;
+        const b = meshInputs[1]?.data;
+        if (a && b) {
+          output = [{ type: 'boolean_subtract', meshA: Array.isArray(a) ? a : [a], meshB: Array.isArray(b) ? b : [b] }];
+        } else {
+          output = a || b || null;
+        }
+        break;
+      }
+
       // ── Mirror Spline ────────────────────────────────────────────────────────
       case 'mirror_spline': {
         const splineData = inputs.find(i => i.handle === 'spline')?.data;

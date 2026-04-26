@@ -18,6 +18,8 @@ export type PinType =
 export type NodeType =
   // Generators
   | 'foundation'
+  | 'primitive_box'
+  | 'primitive_cylinder'
   // Structure
   | 'floors'
   | 'roof'
@@ -128,6 +130,19 @@ export const DEFAULT_PARAMS: Record<NodeType, Record<string, any>> = {
     valueA: 1.0,
     valueB: 1.0,
   },
+  primitive_box: {
+    width: 2,
+    height: 2,
+    depth: 2,
+  },
+  primitive_cylinder: {
+    radius: 1,
+    height: 2,
+    radialSegments: 32,
+  },
+  boolean_subtract: {
+    operation: 'subtract',
+  },
   merge_mesh: {},
   scatter_points: {
     count: 20,
@@ -140,6 +155,8 @@ export const DEFAULT_PARAMS: Record<NodeType, Record<string, any>> = {
 // ── Node Pin Definitions ──────────────────────────────────────────────────────
 export const NODE_PINS: Record<NodeType, { inputs: PinType[]; outputs: PinType[] }> = {
   foundation:       { inputs: [],                          outputs: ['spline'] },
+  primitive_box:    { inputs: [],                          outputs: ['mesh'] },
+  primitive_cylinder:{ inputs: [],                         outputs: ['mesh'] },
   floors:           { inputs: ['spline'],                   outputs: ['mesh', 'window', 'float'] },
   roof:             { inputs: ['spline', 'float'],          outputs: ['mesh'] },
   columns:          { inputs: ['spline'],                   outputs: ['mesh'] },
@@ -148,6 +165,7 @@ export const NODE_PINS: Record<NodeType, { inputs: PinType[]; outputs: PinType[]
   offset_spline:    { inputs: ['spline'],                   outputs: ['spline'] },
   transform_spline: { inputs: ['spline'],                   outputs: ['spline'] },
   mirror_spline:    { inputs: ['spline'],                   outputs: ['spline'] },
+  boolean_subtract: { inputs: ['mesh', 'mesh'],             outputs: ['mesh'] },
   math_node:        { inputs: ['float', 'float'],           outputs: ['float'] },
   merge_mesh:       { inputs: ['mesh', 'mesh'],             outputs: ['mesh'] },
   scatter_points:   { inputs: ['spline'],                   outputs: ['mesh'] },
