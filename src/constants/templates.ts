@@ -540,4 +540,312 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
       { id: 'e4', source: 'f-1', target: 'sc-1', sourceHandle: 'spline', targetHandle: 'spline' },
     ],
   },
+
+  // \u2500\u2500 14. Gothic Cathedral \u2500\u2500
+  {
+    id: 'gothic-cathedral',
+    name: 'Gothic Cathedral',
+    description: 'A soaring Gothic cathedral with tall nave, flanking aisles via offset splines, flying-buttress columns, and steep gable roofs.',
+    category: 'custom',
+    icon: '\u26ea',
+    preview: '\u26ea',
+    nodes: [
+      // Main nave footprint \u2014 tall and narrow
+      makeNode('f-1', 'foundation', 'Nave', 50, 250, {
+        width: 16, depth: 50, foundationShape: 'rectangle',
+      }),
+      // Outer walls + windows (Gothic lancet = arched)
+      makeNode('fl-1', 'floors', 'Nave Walls', 380, 300, {
+        count: 8, height: 4.5, winWidth: 2.0, winHeight: 4.0, winSpacing: 4.0,
+        doorWidth: 5.0, doorHeight: 7.0, doorSide: 'front',
+        windowType: 'arched', doorType: 'classic', material: 'limestone',
+        hasBalcony: false, hasRibs: true, plinthHeight: 1.2,
+      }),
+      // Steep gable roof over nave
+      makeNode('r-1', 'roof', 'Nave Roof', 380, 50, {
+        roofType: 'gable', height: 14.0, overhang: 0.3, color: '#5a6070',
+      }),
+      // Aisle \u2014 outer ring via offset (wider spline = flying buttresses outside)
+      makeNode('off-1', 'offset_spline', 'Aisle Offset', 680, 150, {
+        offset: 4.5,
+      }),
+      makeNode('col-1', 'columns', 'Flying Buttresses', 980, 150, {
+        radius: 0.4, height: 22.0, spacing: 4.0, useCorners: false,
+        material: 'limestone', zOffset: 0,
+      }),
+      // Grand raised entrance platform
+      makeNode('pl-1', 'plinth', 'Foundation Platform', 50, 500, {
+        height: 1.2, material: 'limestone',
+      }),
+      makeNode('st-1', 'stairs', 'Cathedral Steps', 50, 650, {
+        count: 5, stepHeight: 0.24, stepDepth: 0.45, width: 8.0, side: 'front',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-1',   target: 'fl-1',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-1',   target: 'r-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-1',  target: 'r-1',   sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e4', source: 'f-1',   target: 'off-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'off-1', target: 'col-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e6', source: 'f-1',   target: 'pl-1',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e7', source: 'f-1',   target: 'st-1',  sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // \u2500\u2500 15. Baroque Palace \u2500\u2500
+  {
+    id: 'baroque-palace',
+    name: 'Baroque Palace',
+    description: 'A U-shaped royal palace with inner courtyard, ornate colonnades, travertine walls, pitched hip roof, and grand symmetrical entry stairs.',
+    category: 'residential',
+    icon: '\ud83c\udfdb\ufe0f',
+    preview: '\ud83c\udfdb\ufe0f',
+    nodes: [
+      // U-shape for courtyard layout
+      makeNode('f-1', 'foundation', 'Palace Wings', 50, 250, {
+        width: 45, depth: 38, foundationShape: 'U-shape',
+      }),
+      makeNode('fl-1', 'floors', 'Palace Walls', 380, 300, {
+        count: 3, height: 5.5, winWidth: 1.8, winHeight: 3.2, winSpacing: 3.5,
+        doorWidth: 5.0, doorHeight: 6.0, doorSide: 'front',
+        windowType: 'arched', doorType: 'double', material: 'travertine',
+        hasBalcony: true, hasRibs: true, plinthHeight: 1.5,
+      }),
+      makeNode('r-1', 'roof', 'Palace Roof', 380, 50, {
+        roofType: 'hip', height: 4.0, overhang: 1.2, color: '#6a4a3a',
+      }),
+      // Inner courtyard colonnade (offset inward = inside U)
+      makeNode('off-1', 'offset_spline', 'Courtyard Edge', 680, 150, {
+        offset: -2.5,
+      }),
+      makeNode('col-1', 'columns', 'Inner Colonnade', 980, 150, {
+        radius: 0.4, height: 8.0, spacing: 3.5, useCorners: true,
+        material: 'marble', zOffset: 1.5,
+      }),
+      makeNode('pl-1', 'plinth', 'Stylobate', 50, 500, {
+        height: 1.5, material: 'travertine',
+      }),
+      makeNode('st-1', 'stairs', 'Grand Staircase', 50, 650, {
+        count: 7, stepHeight: 0.21, stepDepth: 0.48, width: 10.0, side: 'front',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-1',   target: 'fl-1',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-1',   target: 'r-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-1',  target: 'r-1',   sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e4', source: 'f-1',   target: 'off-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'off-1', target: 'col-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e6', source: 'f-1',   target: 'pl-1',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e7', source: 'f-1',   target: 'st-1',  sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // \u2500\u2500 16. Art Deco Skyscraper \u2500\u2500
+  {
+    id: 'art-deco-tower',
+    name: 'Art Deco Skyscraper',
+    description: 'A 1930s New York-style Art Deco tower with stepped setbacks (taper), dark metal cladding, and a dramatic sunburst crown.',
+    category: 'commercial',
+    icon: '\ud83c\udfd9\ufe0f',
+    preview: '\ud83c\udfd9\ufe0f',
+    nodes: [
+      // Wide base tapering to narrow crown \u2014 Art Deco setback silhouette
+      makeNode('f-1', 'foundation', 'Tower Base', 50, 250, {
+        width: 28, depth: 28, foundationShape: 'rectangle',
+        taper: 0.35, twistBase: 0, twistMid: 0, twistTop: 0,
+      }),
+      makeNode('fl-1', 'floors', 'Tower Skin', 380, 300, {
+        count: 32, height: 3.8, winWidth: 1.4, winHeight: 2.6, winSpacing: 2.2,
+        doorWidth: 5.0, doorHeight: 4.5, doorSide: 'front',
+        windowType: 'modern', doorType: 'glass', material: 'dark_metal',
+        hasBalcony: false, hasRibs: true, plinthHeight: 2.0,
+      }),
+      makeNode('r-1', 'roof', 'Crown', 380, 50, {
+        roofType: 'pitched', height: 8.0, overhang: 0.0, color: '#c8a030',
+      }),
+      makeNode('pl-1', 'plinth', 'Base Podium', 50, 500, {
+        height: 2.0, material: 'granite',
+      }),
+      makeNode('st-1', 'stairs', 'Entry Steps', 50, 650, {
+        count: 8, stepHeight: 0.25, stepDepth: 0.4, width: 8.0, side: 'front',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-1',  target: 'fl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-1',  target: 'r-1',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-1', target: 'r-1',  sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e4', source: 'f-1',  target: 'pl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'f-1',  target: 'st-1', sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // \u2500\u2500 17. Brutalist Government Building \u2500\u2500
+  {
+    id: 'brutalist-gov',
+    name: 'Brutalist Government Complex',
+    description: 'A Soviet-era C-shaped brutalist complex: exposed board-formed concrete, deep horizontal ribs, flat roof, and monumental stairs.',
+    category: 'commercial',
+    icon: '\ud83c\udfd7\ufe0f',
+    preview: '\ud83c\udfd7\ufe0f',
+    nodes: [
+      makeNode('f-1', 'foundation', 'C-Wing Layout', 50, 250, {
+        width: 50, depth: 40, foundationShape: 'C-shape',
+      }),
+      makeNode('fl-1', 'floors', 'Brutalist Facade', 380, 300, {
+        count: 9, height: 3.6, winWidth: 1.6, winHeight: 1.8, winSpacing: 3.0,
+        doorWidth: 4.0, doorHeight: 3.5, doorSide: 'front',
+        windowType: 'industrial', doorType: 'modern', material: 'concrete',
+        hasBalcony: false, hasRibs: true, plinthHeight: 0.5,
+      }),
+      makeNode('r-1', 'roof', 'Flat Roof', 380, 50, {
+        roofType: 'flat', height: 0.6, overhang: 0.0, color: '#606060',
+      }),
+      makeNode('pl-1', 'plinth', 'Raised Podium', 50, 500, {
+        height: 1.8, material: 'concrete',
+      }),
+      makeNode('st-1', 'stairs', 'Monumental Stairs', 50, 650, {
+        count: 9, stepHeight: 0.2, stepDepth: 0.5, width: 12.0, side: 'front',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-1',  target: 'fl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-1',  target: 'r-1',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-1', target: 'r-1',  sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e4', source: 'f-1',  target: 'pl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'f-1',  target: 'st-1', sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // \u2500\u2500 18. Ottoman Mosque \u2500\u2500
+  {
+    id: 'ottoman-mosque',
+    name: 'Ottoman Mosque',
+    description: 'An Ottoman-style mosque with a central marble dome, hexagonal courtyard colonnade, sandstone walls, and twin minaret cylinders.',
+    category: 'custom',
+    icon: '\ud83d\udd4c',
+    preview: '\ud83d\udd4c',
+    nodes: [
+      // Square prayer hall
+      makeNode('f-1', 'foundation', 'Prayer Hall', 50, 250, {
+        width: 22, depth: 22, foundationShape: 'hexagon',
+      }),
+      makeNode('fl-1', 'floors', 'Prayer Walls', 380, 300, {
+        count: 2, height: 5.0, winWidth: 2.5, winHeight: 4.0, winSpacing: 5.0,
+        doorWidth: 4.5, doorHeight: 5.5, doorSide: 'front',
+        windowType: 'arched', doorType: 'classic', material: 'sandstone',
+        hasBalcony: false, hasRibs: false, plinthHeight: 1.0,
+      }),
+      // Central great dome
+      makeNode('dome-1', 'dome', 'Great Dome', 680, 100, {
+        radius: 9.0, segments: 32, material: 'travertine', zOffset: 9.5, color: '#d8cdb0',
+      }),
+      // Outer colonnaded portico (slightly inset)
+      makeNode('off-1', 'offset_spline', 'Portico Ring', 680, 350, {
+        offset: 2.5,
+      }),
+      makeNode('col-1', 'columns', 'Portico Colonnade', 980, 350, {
+        radius: 0.35, height: 7.5, spacing: 4.0, useCorners: true,
+        material: 'marble', zOffset: 1.0,
+      }),
+      // Minarets as tall thin cylinders (placed manually via primitives)
+      makeNode('min-1', 'primitive_cylinder', 'Minaret Left', 50, 550, {
+        radius: 0.9, height: 28.0, radialSegments: 12,
+      }),
+      makeNode('min-2', 'primitive_cylinder', 'Minaret Right', 50, 700, {
+        radius: 0.9, height: 28.0, radialSegments: 12,
+      }),
+      makeNode('pl-1', 'plinth', 'Platform', 380, 550, {
+        height: 1.0, material: 'travertine',
+      }),
+      makeNode('st-1', 'stairs', 'Entry Steps', 380, 700, {
+        count: 4, stepHeight: 0.25, stepDepth: 0.42, width: 6.0, side: 'front',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-1',   target: 'fl-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-1',   target: 'dome-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'f-1',   target: 'off-1',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e4', source: 'off-1', target: 'col-1',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'f-1',   target: 'pl-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e6', source: 'f-1',   target: 'st-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // \u2500\u2500 19. Japanese Pagoda \u2500\u2500
+  {
+    id: 'japanese-pagoda',
+    name: 'Japanese Pagoda',
+    description: 'A 5-tiered Japanese pagoda using stacked transform_spline nodes with diminishing scale, each tier with a hip roof and curved eaves.',
+    category: 'custom',
+    icon: '\ud83d\uded0',
+    preview: '\ud83d\uded0',
+    nodes: [
+      // Ground floor base
+      makeNode('f-1', 'foundation', 'Ground Floor', 50, 250, {
+        width: 14, depth: 14, foundationShape: 'rectangle',
+      }),
+      // Tier 1 \u2014 full size
+      makeNode('fl-1', 'floors', 'Tier 1 Walls', 380, 300, {
+        count: 1, height: 4.5, winWidth: 0, winHeight: 0, winSpacing: 20,
+        doorWidth: 2.5, doorHeight: 3.5, doorSide: 'all',
+        windowType: 'classic', doorType: 'classic', material: 'aged_wood',
+        hasBalcony: false, hasRibs: false, plinthHeight: 0.6,
+      }),
+      makeNode('r-1', 'roof', 'Tier 1 Roof', 380, 50, {
+        roofType: 'hip', height: 3.0, overhang: 2.5, color: '#1a1a2e',
+      }),
+      // Scale down for Tier 2: 75%
+      makeNode('xf-2', 'transform_spline', 'Tier 2 Scale', 680, 200, {
+        x: 0, y: 5.8, z: 0, scale: 0.75, rotation: 0,
+      }),
+      makeNode('fl-2', 'floors', 'Tier 2 Walls', 980, 250, {
+        count: 1, height: 4.0, winWidth: 0, winHeight: 0, winSpacing: 20,
+        doorWidth: 2.0, doorHeight: 3.0, doorSide: 'all',
+        windowType: 'classic', doorType: 'classic', material: 'aged_wood',
+        hasBalcony: false, hasRibs: false, plinthHeight: 0.4,
+      }),
+      makeNode('r-2', 'roof', 'Tier 2 Roof', 980, 50, {
+        roofType: 'hip', height: 2.5, overhang: 2.0, color: '#1a1a2e',
+      }),
+      // Scale down for Tier 3: 56%
+      makeNode('xf-3', 'transform_spline', 'Tier 3 Scale', 1280, 200, {
+        x: 0, y: 5.3, z: 0, scale: 0.75, rotation: 0,
+      }),
+      makeNode('fl-3', 'floors', 'Tier 3 Walls', 1580, 250, {
+        count: 1, height: 3.5, winWidth: 0, winHeight: 0, winSpacing: 20,
+        doorWidth: 0, doorHeight: 0, doorSide: 'front',
+        windowType: 'classic', doorType: 'classic', material: 'aged_wood',
+        hasBalcony: false, hasRibs: false, plinthHeight: 0.3,
+      }),
+      makeNode('r-3', 'roof', 'Tier 3 Roof', 1580, 50, {
+        roofType: 'hip', height: 2.0, overhang: 1.6, color: '#1a1a2e',
+      }),
+      // Stone base platform
+      makeNode('pl-1', 'plinth', 'Stone Base', 50, 500, {
+        height: 0.8, material: 'worn_stone',
+      }),
+      makeNode('st-1', 'stairs', 'Stone Steps', 50, 650, {
+        count: 3, stepHeight: 0.26, stepDepth: 0.4, width: 4.0, side: 'all',
+      }),
+    ],
+    edges: [
+      // Tier 1 uses base foundation
+      { id: 'e1',  source: 'f-1',  target: 'fl-1',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2',  source: 'f-1',  target: 'r-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3',  source: 'fl-1', target: 'r-1',   sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e4',  source: 'f-1',  target: 'pl-1',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5',  source: 'f-1',  target: 'st-1',  sourceHandle: 'spline', targetHandle: 'spline' },
+      // Tier 2 chains through transform_spline
+      { id: 'e6',  source: 'f-1',  target: 'xf-2',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e7',  source: 'xf-2', target: 'fl-2',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e8',  source: 'xf-2', target: 'r-2',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e9',  source: 'fl-2', target: 'r-2',   sourceHandle: 'float',  targetHandle: 'float'  },
+      // Tier 3 chains through second transform_spline
+      { id: 'e10', source: 'xf-2', target: 'xf-3',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e11', source: 'xf-3', target: 'fl-3',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e12', source: 'xf-3', target: 'r-3',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e13', source: 'fl-3', target: 'r-3',   sourceHandle: 'float',  targetHandle: 'float'  },
+    ],
+  },
 ];
+

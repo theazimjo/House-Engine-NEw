@@ -23,6 +23,7 @@ export type NodeType =
   // Structure
   | 'floors'
   | 'roof'
+  | 'dome'
   | 'columns'
   | 'stairs'
   | 'plinth'
@@ -111,6 +112,13 @@ export const DEFAULT_PARAMS: Record<NodeType, Record<string, any>> = {
     height: 0.8,
     material: 'concrete',
   },
+  dome: {
+    radius: 6.0,
+    segments: 24,
+    material: 'marble',
+    zOffset: 0,
+    color: '#e8dfc8',
+  },
   offset_spline: {
     amount: -1.0,
   },
@@ -162,6 +170,7 @@ export const NODE_PINS: Record<NodeType, { inputs: PinType[]; outputs: PinType[]
   columns:          { inputs: ['spline'],                   outputs: ['mesh'] },
   stairs:           { inputs: ['spline'],                   outputs: ['mesh'] },
   plinth:           { inputs: ['spline'],                   outputs: ['mesh'] },
+  dome:             { inputs: ['spline'],                   outputs: ['mesh'] },
   offset_spline:    { inputs: ['spline'],                   outputs: ['spline'] },
   transform_spline: { inputs: ['spline'],                   outputs: ['spline'] },
   mirror_spline:    { inputs: ['spline'],                   outputs: ['spline'] },

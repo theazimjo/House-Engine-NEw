@@ -328,6 +328,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
             baseHeight,
             spline: roofSpline.points,
             foundationShape: roofSpline.foundationShape,
+            zOffset: roofSpline.zOffset || 0,
             deformation: {
               twist: roofSpline.twist,
               taper: roofSpline.taper,
@@ -432,6 +433,30 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
         break;
       }
 
+      // ── Dome ───────────────────────────────────────────────────────────
+      case 'dome': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        const { radius: domR = 6, segments: domSeg = 24,
+                material: domMat = 'marble', zOffset: domZ = 0, color: domColor = '#e8dfc8' } = node.data.params;
+        // Compute centroid from spline if connected, otherwise use (0,0)
+        let cx = 0, cz = 0;
+        const baseZOffset = splineData?.zOffset || 0;
+        if (splineData?.points) {
+          const pts = splineData.points as [number,number][];
+          pts.forEach(p => { cx += p[0]; cz += p[1]; });
+          cx /= pts.length; cz /= pts.length;
+        }
+        output = [{
+          type: 'dome_mesh',
+          position: [cx, baseZOffset + domZ, cz],
+          radius: domR,
+          segments: domSeg,
+          material: domMat,
+          color: domColor,
+        }];
+        break;
+      }
+
       // ── Boolean Subtract ─────────────────────────────────────────────────────
       case 'boolean_subtract': {
         const meshInputs = inputs.filter(i => i.handle === 'mesh');
@@ -491,7 +516,28 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
         break;
       }
 
-      // ── Mirror Spline ────────────────────────────────────────────────────────
+      // ── Transform Spline ────────────────────────────────────────────────────
+      case 'transform_spline': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        if (!splineData || !Array.isArray(splineData.points)) break;
+        const tx = node.data.params.x || 0;
+        const tz = node.data.params.z || 0;
+        const scale = node.data.params.scale || 1;
+        const rotDeg = node.data.params.rotation || 0;
+        const rotRad = (rotDeg * Math.PI) / 180;
+        const cosR = Math.cos(rotRad), sinR = Math.sin(rotRad);
+        const newPts = (splineData.points as [number,number][]).map(p => {
+          const sx = p[0] * scale;
+          const sz = p[1] * scale;
+          return [
+            sx * cosR - sz * sinR + tx,
+            sx * sinR + sz * cosR + tz,
+          ] as [number, number];
+        });
+        const newZOffset = (splineData.zOffset || 0) + (node.data.params.y || 0);
+        output = { ...splineData, points: newPts, zOffset: newZOffset };
+        break;
+      }
       case 'mirror_spline': {
         const splineData = inputs.find(i => i.handle === 'spline')?.data;
         if (!splineData || !Array.isArray(splineData.points)) break;

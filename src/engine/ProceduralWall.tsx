@@ -168,10 +168,19 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
         <extrudeGeometry args={extrudeArgs} />
       </mesh>
 
-      <mesh position={[0, height + 0.07, 0]}>
-        <boxGeometry args={[width + 0.15, 0.14, thickness + 0.3]} />
-        <meshStandardMaterial color="#d8d8dc" roughness={0.5} metalness={0.1} />
+      {/* Cornice / Frieze Band at top of wall */}
+      <mesh position={[0, height + 0.05, 0]}>
+        <boxGeometry args={[width + 0.1, 0.1, thickness + 0.2]} />
+        <meshStandardMaterial color="#c0c0c5" roughness={0.7} />
       </mesh>
+      
+      {/* Heavy base rustication (if plinthHeight > 0 or base floor) */}
+      {plinthHeight !== undefined && plinthHeight > 0 && (
+        <mesh position={[0, plinthHeight / 2, 0]}>
+          <boxGeometry args={[width + 0.15, plinthHeight, thickness + 0.3]} />
+          <meshStandardMaterial color="#b0b0b0" roughness={0.8} />
+        </mesh>
+      )}
 
       {/* WINDOW FRAMES & SILLS (Instanced) */}
       {windowPositions.length > 0 && (

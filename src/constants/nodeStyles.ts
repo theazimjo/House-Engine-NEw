@@ -22,6 +22,7 @@ export const NODE_HEADER_COLORS: Record<NodeType | string, string> = {
   // Structure
   floors:           '#1d4ed8',
   roof:             '#7f1d1d',
+  dome:             '#7c2d12',
   columns:          '#6d28d9',
   stairs:           '#be185d',
   plinth:           '#064e3b',

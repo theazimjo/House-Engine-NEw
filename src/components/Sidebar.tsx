@@ -30,6 +30,7 @@ const NODE_CATEGORIES: NodeCategory[] = [
     nodes: [
       { type: 'floors',   label: 'Floors System',     description: 'Multi-floor walls & windows' },
       { type: 'roof',     label: 'Roof System',        description: 'Pitched, hip, flat & more' },
+      { type: 'dome',     label: 'Dome Generator',     description: 'Hemispherical dome (Islamic/Roman)' },
       { type: 'columns',  label: 'Column Generator',   description: 'Structural columns' },
       { type: 'stairs',   label: 'Stairs Generator',   description: 'Entry staircase' },
       { type: 'plinth',   label: 'Plinth Generator',   description: 'Base plinth slab' },

@@ -411,16 +411,29 @@ export const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { 
           );
         }
 
-        // ── Column ──
+        // ── Column (with capital block at top) ──
         if (part.type === 'column') {
           const { position, radius, height, material = 'concrete' } = part;
           const colMat = wireframe
             ? new THREE.MeshStandardMaterial({ color: '#888', wireframe: true })
             : materialLib.getMaterial(material);
+          const capH = radius * 0.6;
+          const capW = radius * 2.8;
           return (
-            <mesh key={`col-${idx}`} position={[position[0], position[1] + height / 2, position[2]]} material={colMat} castShadow>
-              <cylinderGeometry args={[radius, radius, height, 16]} />
-            </mesh>
+            <group key={`col-${idx}`} castShadow>
+              {/* Shaft */}
+              <mesh position={[position[0], position[1] + height / 2, position[2]]} material={colMat} castShadow>
+                <cylinderGeometry args={[radius * 0.85, radius, height, 16]} />
+              </mesh>
+              {/* Capital (Abacus) */}
+              <mesh position={[position[0], position[1] + height + capH / 2, position[2]]} material={colMat} castShadow>
+                <boxGeometry args={[capW, capH, capW]} />
+              </mesh>
+              {/* Base */}
+              <mesh position={[position[0], position[1] + radius * 0.2, position[2]]} material={colMat} castShadow>
+                <cylinderGeometry args={[radius * 1.1, radius * 1.15, radius * 0.4, 16]} />
+              </mesh>
+            </group>
           );
         }
 
@@ -440,6 +453,31 @@ export const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { 
               <cylinderGeometry args={part.args} />
               <meshStandardMaterial color="#888" roughness={0.7} wireframe={wireframe} />
             </mesh>
+          );
+        }
+
+        // ── Dome ──
+        if (part.type === 'dome_mesh') {
+          const { position: dPos, radius: dR = 6, segments: dSeg = 24, material: dMat = 'marble', color: dColor = '#e8dfc8' } = part;
+          const domeMat = wireframe
+            ? new THREE.MeshStandardMaterial({ color: '#aaa', wireframe: true })
+            : materialLib.getMaterial(dMat, dColor);
+          return (
+            <group key={`dome-${idx}`}>
+              {/* Drum (cylindrical base) */}
+              <mesh position={[dPos[0], dPos[1] + dR * 0.18, dPos[2]]} material={domeMat} castShadow>
+                <cylinderGeometry args={[dR, dR * 1.02, dR * 0.36, dSeg]} />
+              </mesh>
+              {/* Hemisphere */}
+              <mesh position={[dPos[0], dPos[1] + dR * 0.36, dPos[2]]} material={domeMat} castShadow>
+                <sphereGeometry args={[dR, dSeg, dSeg, 0, Math.PI * 2, 0, Math.PI / 2]} />
+              </mesh>
+              {/* Lantern at apex */}
+              <mesh position={[dPos[0], dPos[1] + dR * 1.38, dPos[2]]} castShadow>
+                <cylinderGeometry args={[dR * 0.08, dR * 0.1, dR * 0.2, 8]} />
+                <meshStandardMaterial color={dColor} roughness={0.5} wireframe={wireframe} />
+              </mesh>
+            </group>
           );
         }
 
@@ -592,16 +630,39 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
         <PerspectiveCamera makeDefault position={[25, 25, 25]} fov={45} far={2000} />
         <CameraController preset={cameraPreset} onDone={() => setCameraPreset(null)} />
 
-        <ambientLight intensity={0.4} />
-        <directionalLight position={[10, 20, 10]} intensity={1.5} castShadow shadow-mapSize={[2048, 2048]} />
-        <spotLight position={[-10, 20, 10]} angle={0.2} penumbra={1} intensity={1} />
+        {/* ── Lighting: Golden-Hour Dramatic Scene ── */}
+        <ambientLight intensity={0.25} color="#ffeedd" />
+        {/* Sky/Ground bounce */}
+        <hemisphereLight args={['#b0d4ff', '#c8a060', 0.6]} />
+        {/* Key sun — golden hour angle */}
+        <directionalLight
+          position={[40, 60, 20]}
+          intensity={2.2}
+          color="#fff5e0"
+          castShadow
+          shadow-mapSize={[4096, 4096]}
+          shadow-camera-near={0.5}
+          shadow-camera-far={500}
+          shadow-camera-left={-80}
+          shadow-camera-right={80}
+          shadow-camera-top={80}
+          shadow-camera-bottom={-80}
+          shadow-bias={-0.001}
+        />
+        {/* Fill light — cool blue from opposite side */}
+        <directionalLight position={[-30, 20, -20]} intensity={0.5} color="#c8d8ff" />
+        {/* Ground-bounce fill */}
+        <pointLight position={[0, -2, 0]} intensity={0.3} color="#d4b896" distance={80} />
+
+        {/* Atmospheric fog for depth */}
+        <fogExp2 attach="fog" color="#1a1820" density={0.004} />
 
         <SceneRenderer nodes={nodes} edges={edges} wireframe={wireframe} onSceneReady={(s) => { sceneRef.current = s; }} />
 
-        {/* Ground */}
+        {/* Ground — tiled plaza */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
-          <planeGeometry args={[1000, 1000]} />
-          <meshStandardMaterial color="#111111" roughness={0.9} />
+          <planeGeometry args={[800, 800, 80, 80]} />
+          <meshStandardMaterial color="#1c1c20" roughness={0.95} metalness={0.05} />
         </mesh>
 
         {gridVisible && (
@@ -625,7 +686,7 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
         </GizmoHelper>
 
         <Environment preset={envPreset as any} />
-        <ContactShadows position={[0, 0, 0]} opacity={0.5} scale={50} blur={2} far={12} frames={1} resolution={512} />
+        <ContactShadows position={[0, 0, 0]} opacity={0.7} scale={80} blur={2.5} far={20} frames={1} resolution={1024} />
       </Canvas>
     </div>
   );
