@@ -139,32 +139,57 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
 
           const basePoints = spline.map((p: any) => getTransformedPoint(p, 1.0));
           
-          // For hip roof, the top is a small version of the base
-          const topScale = roofType === 'flat' ? 1.0 : (roofType === 'mansard' ? 0.6 : 0.05);
-          const topPoints = spline.map((p: any) => getTransformedPoint(p, topScale));
+          let topScaleX = 1.0;
+          let topScaleZ = 1.0;
+          let topOffsetZ = 0;
+          
+          if (roofType === 'hip') {
+            topScaleX = 0.05;
+            topScaleZ = 0.05;
+          } else if (roofType === 'gable' || roofType === 'pitched') {
+            topScaleX = 0.01; // Ridge line
+            topScaleZ = 1.0; 
+          } else if (roofType === 'mansard') {
+            topScaleX = 0.6;
+            topScaleZ = 0.6;
+          }
+
+          const topPoints = spline.map((p: any) => getTransformedPoint(p, topScaleX));
+          const vertices = [];
           const roofH = roofType === 'flat' ? 0.1 : height;
 
-          const vertices = [];
           for (let i = 0; i < basePoints.length; i++) {
             const next = (i + 1) % basePoints.length;
             
-            // Side face (Quad as two triangles)
+            const p1Base = basePoints[i];
+            const p2Base = basePoints[next];
+            
+            const p1Top = roofType === 'shed' ? [p1Base[0], p1Base[1]] : topPoints[i]; 
+            const p2Top = roofType === 'shed' ? [p2Base[0], p2Base[1]] : topPoints[next];
+
+            const h1 = (roofType === 'shed') ? (p1Base[0] + 7) * 0.2 : roofH;
+            const h2 = (roofType === 'shed') ? (p2Base[0] + 7) * 0.2 : roofH;
+
             // Triangle 1
-            vertices.push(...basePoints[i], 0);
-            vertices.push(...basePoints[next], 0);
-            vertices.push(...topPoints[next], roofH);
+            vertices.push(p1Base[0], p1Base[1], 0);
+            vertices.push(p2Base[0], p2Base[1], 0);
+            vertices.push(p2Top[0], p2Top[1], h2);
             
             // Triangle 2
-            vertices.push(...basePoints[i], 0);
-            vertices.push(...topPoints[next], roofH);
-            vertices.push(...topPoints[i], roofH);
+            vertices.push(p1Base[0], p1Base[1], 0);
+            vertices.push(p2Top[0], p2Top[1], h2);
+            vertices.push(p1Top[0], p1Top[1], h1);
           }
 
           // Top face to close any holes at the peak
           for (let i = 1; i < topPoints.length - 1; i++) {
-            vertices.push(...topPoints[0], roofH);
-            vertices.push(...topPoints[i], roofH);
-            vertices.push(...topPoints[i+1], roofH);
+            const h0 = (roofType === 'shed') ? (topPoints[0][0] + 7) * 0.2 : roofH;
+            const hi = (roofType === 'shed') ? (topPoints[i][0] + 7) * 0.2 : roofH;
+            const hi1 = (roofType === 'shed') ? (topPoints[i+1][0] + 7) * 0.2 : roofH;
+
+            vertices.push(topPoints[0][0], topPoints[0][1], h0);
+            vertices.push(topPoints[i][0], topPoints[i][1], hi);
+            vertices.push(topPoints[i+1][0], topPoints[i+1][1], hi1);
           }
 
           const geometry = new THREE.BufferGeometry();

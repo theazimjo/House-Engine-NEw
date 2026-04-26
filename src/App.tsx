@@ -68,10 +68,11 @@ const initialEdges: Edge[] = [
   { id: 'e3', source: 'fl-1', target: 'r-1', sourceHandle: 'float', targetHandle: 'float' }
 ];
 
+const nodeTypes = {
+  buildingNode: CustomNode,
+};
+
 export default function App() {
-  const nodeTypes = useMemo(() => ({
-    buildingNode: CustomNode,
-  }), []);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
