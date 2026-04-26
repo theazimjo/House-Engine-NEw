@@ -1,8 +1,8 @@
 import { memo } from 'react';
-import { Handle, Position, type NodeProps } from 'reactflow';
+import { Handle, Position, useEdges, type NodeProps } from 'reactflow';
 import type { NodeData } from '../types';
 import { PIN_COLORS, NODE_HEADER_COLORS } from '../constants/nodeStyles';
-import { X, GripVertical } from 'lucide-react';
+import { X, GripVertical, AlertCircle } from 'lucide-react';
 
 // ── Pin Label Map ─────────────────────────────────────────────────────────────
 const PIN_LABELS: Record<string, string> = {
@@ -78,9 +78,31 @@ const SELECT_OPTIONS: Record<string, { value: string; label: string }[]> = {
 
 const BOOLEAN_KEYS = new Set(['hasBalcony', 'showWindow', 'hasDoor', 'hasRibs', 'useCorners']);
 
+// ── Nodes that require inputs to function ─────────────────────────────────────
+const REQUIRES_INPUT: Record<string, boolean> = {
+  floors: true,
+  roof: true,
+  columns: true,
+  stairs: true,
+  plinth: true,
+  offset_spline: true,
+  transform_spline: true,
+  mirror_spline: true,
+  boolean_subtract: true,
+  merge_mesh: true,
+  scatter_points: true,
+};
+
 // ── CustomNode ────────────────────────────────────────────────────────────────
 export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
   const headerColor = NODE_HEADER_COLORS[data.type] ?? '#333';
+  const edges = useEdges();
+  
+  // Check if required inputs are connected
+  const hasInputs = data.inputs && data.inputs.length > 0;
+  const requiresInput = REQUIRES_INPUT[data.type] || false;
+  const connectedInputs = edges.filter(e => e.target === id);
+  const missingInputs = requiresInput && hasInputs && connectedInputs.length === 0;
 
   const handleParamChange = (name: string, value: any) => {
     data.onChange(id, { ...data.params, [name]: value });
@@ -91,7 +113,14 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
   };
 
   return (
-    <div className="custom-node">
+    <div className={`custom-node ${missingInputs ? 'node-error' : ''}`}>
+      {/* ── Error Badge ── */}
+      {missingInputs && (
+        <div className="node-error-badge" title="Missing required input connection">
+          <AlertCircle size={10} />
+        </div>
+      )}
+
       {/* ── Header ── */}
       <div
         className="node-header"
@@ -166,42 +195,60 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
 
       {/* ── Input Handles (Left) ── */}
       {data.inputs?.map((pin, i) => (
-        <Handle
-          key={`in-${pin}-${i}`}
-          type="target"
-          position={Position.Left}
-          id={pin}   // ← ID = pin type name, NOT index
-          style={{
-            background: PIN_COLORS[pin] ?? '#aaa',
-            top: `${52 + i * 22}px`,
-            left: '-7px',
-            width: '12px',
-            height: '12px',
-            borderRadius: '3px',
-            border: '2px solid #111',
-          }}
-          title={PIN_LABELS[pin] ?? pin}
-        />
+        <div key={`in-wrap-${pin}-${i}`}>
+          <Handle
+            key={`in-${pin}-${i}`}
+            type="target"
+            position={Position.Left}
+            id={pin}
+            style={{
+              background: PIN_COLORS[pin] ?? '#aaa',
+              top: `${52 + i * 22}px`,
+              left: '-7px',
+              width: '12px',
+              height: '12px',
+              borderRadius: '3px',
+              border: '2px solid #111',
+            }}
+            title={PIN_LABELS[pin] ?? pin}
+          />
+          {/* Pin label */}
+          <div
+            className="pin-label pin-label--left"
+            style={{ top: `${48 + i * 22}px` }}
+          >
+            {PIN_LABELS[pin] ?? pin}
+          </div>
+        </div>
       ))}
 
       {/* ── Output Handles (Right) ── */}
       {data.outputs?.map((pin, i) => (
-        <Handle
-          key={`out-${pin}-${i}`}
-          type="source"
-          position={Position.Right}
-          id={pin}   // ← ID = pin type name, NOT index
-          style={{
-            background: PIN_COLORS[pin] ?? '#aaa',
-            top: `${52 + i * 22}px`,
-            right: '-7px',
-            width: '12px',
-            height: '12px',
-            borderRadius: '3px',
-            border: '2px solid #111',
-          }}
-          title={PIN_LABELS[pin] ?? pin}
-        />
+        <div key={`out-wrap-${pin}-${i}`}>
+          <Handle
+            key={`out-${pin}-${i}`}
+            type="source"
+            position={Position.Right}
+            id={pin}
+            style={{
+              background: PIN_COLORS[pin] ?? '#aaa',
+              top: `${52 + i * 22}px`,
+              right: '-7px',
+              width: '12px',
+              height: '12px',
+              borderRadius: '3px',
+              border: '2px solid #111',
+            }}
+            title={PIN_LABELS[pin] ?? pin}
+          />
+          {/* Pin label */}
+          <div
+            className="pin-label pin-label--right"
+            style={{ top: `${48 + i * 22}px` }}
+          >
+            {PIN_LABELS[pin] ?? pin}
+          </div>
+        </div>
       ))}
     </div>
   );

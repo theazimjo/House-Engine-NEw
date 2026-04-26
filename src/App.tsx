@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import ReactFlow, {
   addEdge,
   Background,
   Controls,
+  MiniMap,
   useNodesState,
   useEdgesState,
   type Node,
@@ -15,8 +16,12 @@ import './index.css';
 import { CustomNode } from './components/CustomNode';
 import { Viewport } from './Viewport';
 import { Sidebar } from './components/Sidebar';
+import { StatusBar } from './components/StatusBar';
+import { useToast } from './components/Toast';
 import type { NodeData, NodeType } from './types';
 import { DEFAULT_PARAMS, NODE_PINS } from './types';
+import { PIN_COLORS } from './constants/nodeStyles';
+import { useUndoRedo } from './hooks/useUndoRedo';
 import { Play, Download, Save, FolderOpen, ArrowLeft } from 'lucide-react';
 import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from 'react-resizable-panels';
 
@@ -80,15 +85,101 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 const nodeTypes = { buildingNode: CustomNode };
 
+// ── Edge Style by Pin Type ───────────────────────────────────────────────────
+const getEdgeStyle = (sourceHandle: string | null | undefined) => {
+  const pinType = sourceHandle || 'mesh';
+  const color = PIN_COLORS[pinType as keyof typeof PIN_COLORS] || '#888';
+  return {
+    strokeWidth: 2.5,
+    stroke: color,
+  };
+};
+
+// ── Vertex Estimation ────────────────────────────────────────────────────────
+const estimateVertices = (nodes: Node<NodeData>[]): number => {
+  let total = 0;
+  nodes.forEach(n => {
+    switch (n.data.type) {
+      case 'foundation': total += 8; break;
+      case 'floors': total += (n.data.params.count || 5) * 200; break;
+      case 'roof': total += 120; break;
+      case 'columns': total += 64; break;
+      case 'stairs': total += (n.data.params.count || 4) * 24; break;
+      case 'plinth': total += 40; break;
+      case 'primitive_box': total += 24; break;
+      case 'primitive_cylinder': total += 128; break;
+      case 'scatter_points': total += (n.data.params.count || 20) * 60; break;
+      default: total += 10;
+    }
+  });
+  return total;
+};
+
 // ── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const projectId = id || null;
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const viewportRef = useRef<{ exportGLTF: () => void; exportOBJ: () => void } | null>(null);
+
+  const [projectName, setProjectName] = useState('Untitled Project');
+
+  // ── Undo/Redo ──────────────────────────────────────────────────────────────
+  const undoRedo = useUndoRedo<{ nodes: Node<NodeData>[]; edges: Edge[] }>({ nodes: initialNodes, edges: initialEdges });
+  const historyDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const pushHistory = useCallback(() => {
+    if (historyDebounce.current) clearTimeout(historyDebounce.current);
+    historyDebounce.current = setTimeout(() => {
+      undoRedo.setState({ nodes, edges });
+    }, 300);
+  }, [nodes, edges, undoRedo]);
+
+  // Track changes for history
+  useEffect(() => { pushHistory(); }, [nodes, edges, pushHistory]);
+
+  // ── Auto-Save ──────────────────────────────────────────────────────────────
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!projectId) return;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      setAutoSaveStatus('saving');
+      const projectData = { version: '1.0', nodes, edges };
+      localStorage.setItem(`house_engine_project_${projectId}`, JSON.stringify(projectData));
+      
+      // Update index
+      const saved = localStorage.getItem('house_engine_projects');
+      const projects = saved ? JSON.parse(saved) : [];
+      const existingIndex = projects.findIndex((p: any) => p.id === projectId);
+      if (existingIndex >= 0) {
+        projects[existingIndex].lastModified = Date.now();
+        projects[existingIndex].name = projectName;
+        localStorage.setItem('house_engine_projects', JSON.stringify(projects));
+      }
+      
+      setAutoSaveStatus('saved');
+      setTimeout(() => setAutoSaveStatus('idle'), 2000);
+    }, 2000);
+
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+  }, [nodes, edges, projectId, projectName]);
+
+  // ── Cook Time Measurement ──────────────────────────────────────────────────
+  const [cookTime, setCookTime] = useState(0);
+  useEffect(() => {
+    const start = performance.now();
+    // Graph is processed in Viewport via useMemo, this estimates the same cost
+    requestAnimationFrame(() => {
+      setCookTime(performance.now() - start);
+    });
+  }, [nodes, edges]);
 
   // ── Param Update ────────────────────────────────────────────────────────────
   const updateNodeParams = useCallback((nodeId: string, params: Record<string, any>) => {
@@ -115,6 +206,15 @@ export default function App() {
   useEffect(() => {
     // If we have a projectId, load it
     if (projectId) {
+      const savedIndex = localStorage.getItem('house_engine_projects');
+      if (savedIndex) {
+        try {
+          const projects = JSON.parse(savedIndex);
+          const p = projects.find((x: any) => x.id === projectId);
+          if (p && p.name) setProjectName(p.name);
+        } catch(e) {}
+      }
+
       const saved = localStorage.getItem(`house_engine_project_${projectId}`);
       if (saved) {
         try {
@@ -140,14 +240,19 @@ export default function App() {
       const nodeId = (e as CustomEvent).detail;
       setNodes((nds) => nds.filter((n) => n.id !== nodeId));
       setEdges((eds) => eds.filter((ed) => ed.source !== nodeId && ed.target !== nodeId));
+      toast('Node deleted', 'info');
     };
     window.addEventListener('delete-node', handler);
     return () => window.removeEventListener('delete-node', handler);
-  }, [setNodes, setEdges]);
+  }, [setNodes, setEdges, toast]);
 
   // ── Connect ─────────────────────────────────────────────────────────────────
   const onConnect = useCallback(
-    (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
+    (params: Connection | Edge) => setEdges((eds) => addEdge({
+      ...params,
+      style: getEdgeStyle(params.sourceHandle),
+      animated: false,
+    }, eds)),
     [setEdges]
   );
 
@@ -185,7 +290,8 @@ export default function App() {
       },
     };
     setNodes((nds) => nds.concat(newNode));
-  }, [setNodes, updateNodeParams]);
+    toast(`Added ${LABELS[type]}`, 'success');
+  }, [setNodes, updateNodeParams, toast]);
 
   // ── Save / Load ─────────────────────────────────────────────────────────────
   const currentProjectId = useRef(projectId || `proj_${Date.now()}`);
@@ -202,7 +308,7 @@ export default function App() {
     
     const projMeta = {
       id: currentProjectId.current,
-      name: existingIndex >= 0 ? projects[existingIndex].name : `Project ${projects.length + 1}`,
+      name: projectName,
       lastModified: Date.now()
     };
     
@@ -214,16 +320,8 @@ export default function App() {
     
     localStorage.setItem('house_engine_projects', JSON.stringify(projects));
     
-    // 3. Keep old behavior of downloading file just in case
-    const data = JSON.stringify(projectData, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${projMeta.name.replace(/ /g, '_')}.hengine`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [nodes, edges]);
+    toast('Project saved successfully', 'success');
+  }, [nodes, edges, projectName, toast]);
 
   const handleLoad = useCallback(() => {
     const input = document.createElement('input');
@@ -249,24 +347,82 @@ export default function App() {
             }));
             setNodes(rehydrated);
             setEdges(parsed.edges);
+            toast('Project loaded successfully', 'success');
           }
         } catch {
-          alert('Invalid .hengine file');
+          toast('Invalid .hengine file', 'error');
         }
       };
       reader.readAsText(file);
     };
     input.click();
-  }, [setNodes, setEdges, updateNodeParams]);
+  }, [setNodes, setEdges, updateNodeParams, toast]);
 
   // ── Export ─────────────────────────────────────────────────────────────
   const handleExportGLTF = useCallback(() => {
     viewportRef.current?.exportGLTF();
-  }, []);
+    toast('Exporting .GLB file...', 'info');
+  }, [toast]);
 
   const handleExportOBJ = useCallback(() => {
     viewportRef.current?.exportOBJ();
-  }, []);
+    toast('Exporting .OBJ file...', 'info');
+  }, [toast]);
+
+  // ── Keyboard Shortcuts ─────────────────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const isCtrl = e.ctrlKey || e.metaKey;
+      
+      // Ctrl+Z — Undo
+      if (isCtrl && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        const prev = undoRedo.undo();
+        if (prev) {
+          setNodes(attachOnChange(prev.nodes));
+          setEdges(prev.edges);
+          toast('Undo', 'info', 1500);
+        }
+      }
+      
+      // Ctrl+Y or Ctrl+Shift+Z — Redo
+      if (isCtrl && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        const next = undoRedo.redo();
+        if (next) {
+          setNodes(attachOnChange(next.nodes));
+          setEdges(next.edges);
+          toast('Redo', 'info', 1500);
+        }
+      }
+      
+      // Ctrl+S — Save
+      if (isCtrl && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+      }
+
+      // Ctrl+D — Duplicate selected nodes
+      if (isCtrl && e.key === 'd') {
+        e.preventDefault();
+        const selectedNodes = nodes.filter(n => n.selected);
+        if (selectedNodes.length > 0) {
+          const newNodes = selectedNodes.map(n => ({
+            ...n,
+            id: `${n.data.type}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            position: { x: n.position.x + 50, y: n.position.y + 50 },
+            selected: false,
+            data: { ...n.data, onChange: updateNodeParams },
+          }));
+          setNodes(nds => [...nds.map(n => ({ ...n, selected: false })), ...newNodes]);
+          toast(`Duplicated ${selectedNodes.length} node(s)`, 'success');
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [undoRedo, attachOnChange, setNodes, setEdges, handleSave, nodes, updateNodeParams, toast]);
 
   // ── Connection Validation ───────────────────────────────────────────────────
   const isValidConnection = useCallback((connection: Connection) => {
@@ -281,16 +437,44 @@ export default function App() {
     return srcHandle === tgtHandle;
   }, [nodes]);
 
+  // ── MiniMap Node Color ─────────────────────────────────────────────────────
+  const minimapNodeColor = useCallback((node: Node) => {
+    const nd = node.data as NodeData;
+    const type = nd?.type;
+    const colors: Record<string, string> = {
+      foundation: '#c64321', floors: '#1d4ed8', roof: '#7f1d1d',
+      columns: '#6d28d9', stairs: '#be185d', plinth: '#064e3b',
+      offset_spline: '#0f766e', transform_spline: '#7e22ce',
+      mirror_spline: '#0e7490', boolean_subtract: '#b91c1c',
+      math_node: '#78350f', merge_mesh: '#1e3a5f',
+      scatter_points: '#14532d', primitive_box: '#d97706',
+      primitive_cylinder: '#ea580c',
+    };
+    return colors[type] || '#555';
+  }, []);
+
+  // ── Edge Defaults with Color ───────────────────────────────────────────────
+  const styledEdges = useMemo(() => {
+    return edges.map(e => ({
+      ...e,
+      style: getEdgeStyle(e.sourceHandle),
+      animated: false,
+    }));
+  }, [edges]);
+
+  // ── Stats ──────────────────────────────────────────────────────────────────
+  const vertexEstimate = useMemo(() => estimateVertices(nodes), [nodes]);
+
   return (
     <div className="app-container overflow-hidden">
-      <PanelGroup direction="horizontal">
+      <PanelGroup orientation="horizontal">
         {/* ── Node Editor ── */}
-        <Panel defaultSize={60} minSize={25} className="editor-pane relative">
+        <Panel defaultSize={60} minSize={20} id="editor" className="editor-pane relative">
           <Sidebar onAddNode={addNode} />
 
           <ReactFlow
             nodes={nodes}
-            edges={edges}
+            edges={styledEdges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
@@ -298,14 +482,36 @@ export default function App() {
             isValidConnection={isValidConnection}
             defaultEdgeOptions={{
               style: { strokeWidth: 2.5, stroke: 'rgba(255,255,255,0.25)' },
-              animated: true,
+              animated: false,
             }}
             deleteKeyCode={['Backspace', 'Delete']}
             fitView
           >
             <Background color="#242428" gap={20} size={1} />
             <Controls />
+            <MiniMap
+              nodeColor={minimapNodeColor}
+              maskColor="rgba(0, 0, 0, 0.7)"
+              style={{
+                background: 'rgba(15, 15, 20, 0.85)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '8px',
+              }}
+              pannable
+              zoomable
+            />
           </ReactFlow>
+
+          {/* Status Bar */}
+          <StatusBar
+            nodeCount={nodes.length}
+            edgeCount={edges.length}
+            vertexEstimate={vertexEstimate}
+            cookTime={cookTime}
+            canUndo={undoRedo.canUndo()}
+            canRedo={undoRedo.canRedo()}
+            autoSaveStatus={autoSaveStatus}
+          />
         </Panel>
 
         {/* ── Resizer ── */}
@@ -314,12 +520,21 @@ export default function App() {
         </PanelResizeHandle>
 
         {/* ── 3D Viewport ── */}
-        <Panel defaultSize={40} minSize={25} className="preview-pane relative">
+        <Panel defaultSize={40} minSize={20} id="viewport" className="preview-pane relative">
           <Viewport nodes={nodes} edges={edges} ref={viewportRef} />
 
           {/* Bottom Toolbar */}
-          <div className="viewport-toolbar w-[90%] max-w-[650px]">
+          <div className="viewport-toolbar w-[90%] max-w-[700px]">
             <div className="glass-panel w-full" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <input
+                type="text"
+                value={projectName}
+                onChange={e => setProjectName(e.target.value)}
+                className="bg-transparent border-b border-transparent hover:border-white/20 focus:border-[#c64321] text-xs font-bold text-white outline-none px-2 py-1 transition-all w-32 focus:w-48 placeholder:text-white/30"
+                placeholder="Project Name"
+                title="Rename Project"
+              />
+              <div className="toolbar-divider hidden sm:block" />
               <button
                 className="toolbar-btn"
                 title="Back to Hub"

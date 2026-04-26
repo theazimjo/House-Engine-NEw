@@ -69,6 +69,11 @@ body {
   box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255,255,255,0.05) inset !important;
 }
 
+.react-flow__node-buildingNode.selected {
+  border-color: rgba(255, 68, 0, 0.5) !important;
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 68, 0, 0.3) inset, 0 0 20px rgba(255, 68, 0, 0.1) !important;
+}
+
 .node-header {
   padding: 8px 12px;
   color: #fff;
@@ -312,4 +317,310 @@ h1, h2, h3 {
   background: rgba(0,0,0,0.3);
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: 4px;
+}
+
+/* ── Status Bar ── */
+.status-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background: rgba(12, 12, 16, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 100;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.04em;
+}
+
+.status-bar-group {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px;
+  height: 28px;
+  transition: color 0.15s;
+}
+
+.status-item:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.status-divider {
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  transition: background 0.3s;
+}
+
+/* ── Viewport Overlay Controls ── */
+.viewport-overlay-top-right {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 50;
+  pointer-events: auto;
+}
+
+.viewport-overlay-top-left {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 50;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.viewport-ctrl-group {
+  display: flex;
+  gap: 2px;
+  background: rgba(12, 12, 16, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 3px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.viewport-ctrl-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0;
+}
+
+.viewport-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.viewport-ctrl-btn:active {
+  transform: scale(0.92);
+}
+
+.viewport-ctrl-btn--active {
+  background: rgba(255, 68, 0, 0.2) !important;
+  color: #ff6633 !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 68, 0, 0.3);
+}
+
+.viewport-ctrl-btn--active:hover {
+  background: rgba(255, 68, 0, 0.3) !important;
+  color: #fff !important;
+}
+
+/* Environment Preset Panel */
+.viewport-env-panel {
+  background: rgba(12, 12, 16, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 140px;
+}
+
+.viewport-env-label {
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.15em;
+  padding: 4px 8px 6px;
+  text-transform: uppercase;
+}
+
+.viewport-env-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-align: left;
+  width: 100%;
+}
+
+.viewport-env-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.viewport-env-btn--active {
+  background: rgba(255, 68, 0, 0.15) !important;
+  color: #ff8855 !important;
+}
+
+/* ── MiniMap Override ── */
+.react-flow__minimap {
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ── Custom Scrollbar ── */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Keyboard Shortcut Hint ── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.shortcut-hint {
+  animation: fadeInUp 0.2s ease-out;
+}
+
+/* ── Node Error Indicator ── */
+.node-error {
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  box-shadow: 0 10px 30px -10px rgba(239, 68, 68, 0.2), 0 0 0 1px rgba(239, 68, 68, 0.15) inset !important;
+}
+
+.node-error-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  background: #ef4444;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  z-index: 10;
+  animation: error-pulse 2s ease-in-out infinite;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.6);
+  border: 2px solid #1a1a24;
+}
+
+@keyframes error-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.85; }
+}
+
+/* ── Pin Labels ── */
+.pin-label {
+  position: absolute;
+  font-size: 0.45rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.25);
+  text-transform: uppercase;
+  pointer-events: none;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+.pin-label--left {
+  left: 10px;
+}
+
+.pin-label--right {
+  right: 10px;
+  text-align: right;
+}
+
+.custom-node:hover .pin-label {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* ── Edge Glow on Hover ── */
+.react-flow__edge:hover .react-flow__edge-path {
+  filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  stroke-width: 3.5px !important;
+}
+
+/* ── Animated Edge for active connections ── */
+.react-flow__edge.animated .react-flow__edge-path {
+  stroke-dasharray: 5 !important;
+  animation: edge-flow 1s linear infinite;
+}
+
+@keyframes edge-flow {
+  to { stroke-dashoffset: -10; }
+}
+
+/* ── React Flow Controls Override ── */
+.react-flow__controls {
+  background: rgba(12, 12, 16, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  overflow: hidden;
+  bottom: 40px !important;
+}
+
+.react-flow__controls-button {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  fill: rgba(255, 255, 255, 0.45) !important;
+  transition: all 0.15s !important;
+}
+
+.react-flow__controls-button:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  fill: rgba(255, 255, 255, 0.9) !important;
 }

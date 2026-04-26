@@ -1,6 +1,6 @@
-import React, { useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Environment, ContactShadows, Grid } from '@react-three/drei';
+import React, { useMemo, useRef, forwardRef, useImperativeHandle, useState, useCallback } from 'react';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera, Environment, ContactShadows, Grid, GizmoHelper, GizmoViewport } from '@react-three/drei';
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter.js';
@@ -8,9 +8,44 @@ import { ProceduralWall } from './engine/ProceduralWall';
 import { materialLib } from './engine/MaterialLibrary';
 import { processGraph } from './engine/graphProcessor';
 import type { ViewportProps } from './types';
+import { ViewportOverlay } from './components/ViewportOverlay';
+
+// ── Camera Controller (for presets) ──────────────────────────────────────────
+const CameraController = forwardRef<any, { preset: string | null; onDone: () => void }>(
+  ({ preset, onDone }, ref) => {
+    const { camera } = useThree();
+    const controlsRef = useRef<any>(null);
+
+    React.useImperativeHandle(ref, () => controlsRef.current);
+
+    React.useEffect(() => {
+      if (!preset || !controlsRef.current) return;
+
+      const dist = 35;
+      const ctrl = controlsRef.current;
+      let pos: [number, number, number] = [25, 25, 25];
+
+      switch (preset) {
+        case 'top':         pos = [0, dist * 1.5, 0.01]; break;
+        case 'front':       pos = [0, dist * 0.4, dist]; break;
+        case 'right':       pos = [dist, dist * 0.4, 0]; break;
+        case 'reset':
+        case 'perspective': pos = [25, 25, 25]; break;
+      }
+
+      camera.position.set(...pos);
+      ctrl.target.set(0, 8, 0);
+      ctrl.update();
+      onDone();
+    }, [preset, camera, onDone]);
+
+    return <OrbitControls ref={controlsRef} makeDefault minDistance={5} maxDistance={1000} target={[0, 8, 0]} />;
+  }
+);
+CameraController.displayName = 'CameraController';
 
 // ── Building Renderer ────────────────────────────────────────────────────────
-const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
+const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { wireframe?: boolean }) => {
   const processedBuilding = useMemo(() => processGraph(nodes, edges), [nodes, edges]);
 
   return (
@@ -68,7 +103,7 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
                   position={[pRot[0] + ox + shearOffsetX + jitterX, floorY + floorHeight / 2, pRot[1] + oz + shearOffsetZ + jitterZ]}
                 >
                   <boxGeometry args={[wallThickness * 1.1, floorHeight, wallThickness * 1.1]} />
-                  <meshStandardMaterial color="#ccc" />
+                  <meshStandardMaterial color="#ccc" wireframe={wireframe} />
                 </mesh>
               );
             });
@@ -175,7 +210,9 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           for (let i = 0; i < vertices.length; i += 3) uvs.push(vertices[i] * 0.5, vertices[i + 1] * 0.5);
           geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
           geometry.computeVertexNormals();
-          const roofMat = materialLib.getMaterial('roof_tiles', color);
+          const roofMat = wireframe
+            ? new THREE.MeshStandardMaterial({ color, wireframe: true })
+            : materialLib.getMaterial('roof_tiles', color);
 
           elements.push(
             <mesh key={`roof-${idx}`} position={[ox, roofY + 0.01, oz]} rotation={[-Math.PI / 2, 0, 0]} castShadow geometry={geometry} material={roofMat} />
@@ -192,7 +229,7 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           return (
             <mesh key={`slab-${idx}`} position={[ox, oy + baseHeight + 0.02, oz]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
               <extrudeGeometry args={[shape, { depth: 0.1, bevelEnabled: false }]} />
-              <meshStandardMaterial color="#333" roughness={0.7} />
+              <meshStandardMaterial color="#333" roughness={0.7} wireframe={wireframe} />
             </mesh>
           );
         }
@@ -206,8 +243,8 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           const size = bbox.getSize(new THREE.Vector2());
           return (
             <group key={`interior-${idx}`} position={[ox + center.x, oy + baseHeight + fh / 2, oz + center.y]}>
-              <mesh><boxGeometry args={[size.x * 0.98, fh, 0.2]} /><meshStandardMaterial color="#f5e6d3" side={THREE.DoubleSide} /></mesh>
-              <mesh rotation={[0, Math.PI / 2, 0]}><boxGeometry args={[size.y * 0.98, fh, 0.2]} /><meshStandardMaterial color="#f5e6d3" side={THREE.DoubleSide} /></mesh>
+              <mesh><boxGeometry args={[size.x * 0.98, fh, 0.2]} /><meshStandardMaterial color="#f5e6d3" side={THREE.DoubleSide} wireframe={wireframe} /></mesh>
+              <mesh rotation={[0, Math.PI / 2, 0]}><boxGeometry args={[size.y * 0.98, fh, 0.2]} /><meshStandardMaterial color="#f5e6d3" side={THREE.DoubleSide} wireframe={wireframe} /></mesh>
             </group>
           );
         }
@@ -223,7 +260,7 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           return (
             <mesh key={`plinth-${idx}`} position={[ox || 0, (oy || 0) + pz, oz || 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow castShadow>
               <extrudeGeometry args={[pShape, { depth: ph, bevelEnabled: false }]} />
-              <meshStandardMaterial color="#999" side={THREE.DoubleSide} roughness={0.5} metalness={0.2} />
+              <meshStandardMaterial color="#999" side={THREE.DoubleSide} roughness={0.5} metalness={0.2} wireframe={wireframe} />
             </mesh>
           );
         }
@@ -234,7 +271,7 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           return (
             <mesh key={`stairs-${idx}`} position={[position[0], position[1] + args[1] / 2, position[2]]} rotation={rotation} castShadow receiveShadow>
               <boxGeometry args={args} />
-              <meshStandardMaterial color="#666" />
+              <meshStandardMaterial color="#666" wireframe={wireframe} />
             </mesh>
           );
         }
@@ -242,7 +279,9 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
         // ── Column ──
         if (part.type === 'column') {
           const { position, radius, height, material = 'concrete' } = part;
-          const colMat = materialLib.getMaterial(material);
+          const colMat = wireframe
+            ? new THREE.MeshStandardMaterial({ color: '#888', wireframe: true })
+            : materialLib.getMaterial(material);
           return (
             <mesh key={`col-${idx}`} position={[position[0], position[1] + height / 2, position[2]]} material={colMat} castShadow>
               <cylinderGeometry args={[radius, radius, height, 16]} />
@@ -255,7 +294,7 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           return (
             <mesh key={`pbox-${idx}`} position={part.position} castShadow receiveShadow>
               <boxGeometry args={part.args} />
-              <meshStandardMaterial color="#888" roughness={0.7} />
+              <meshStandardMaterial color="#888" roughness={0.7} wireframe={wireframe} />
             </mesh>
           );
         }
@@ -264,22 +303,21 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           return (
             <mesh key={`pcyl-${idx}`} position={part.position} castShadow receiveShadow>
               <cylinderGeometry args={part.args} />
-              <meshStandardMaterial color="#888" roughness={0.7} />
+              <meshStandardMaterial color="#888" roughness={0.7} wireframe={wireframe} />
             </mesh>
           );
         }
 
-        // ── Boolean Subtract (Fallback just renders Mesh A for now if CSG is too heavy, but we installed three-bvh-csg!) ──
+        // ── Boolean Subtract ──
         if (part.type === 'boolean_subtract') {
-           // Basic fallback: just render A
            return (
              <group key={`csg-${idx}`}>
-               <BuildingRenderer nodes={nodes} edges={edges} customOutputs={part.meshA} />
+               <BuildingRenderer nodes={nodes} edges={edges} wireframe={wireframe} />
              </group>
            );
         }
 
-        // ── Scatter Instance (tree / prop placeholder) ──
+        // ── Scatter Instance ──
         if (part.type === 'scatter_instance') {
           const { position, scale = 1, rotation: rot = 0 } = part;
           const h = 2.5 * scale;
@@ -289,16 +327,16 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
               {/* Trunk */}
               <mesh position={[0, h * 0.3, 0]} castShadow>
                 <cylinderGeometry args={[r * 0.25, r * 0.35, h * 0.6, 6]} />
-                <meshStandardMaterial color="#5d4037" roughness={0.9} />
+                <meshStandardMaterial color="#5d4037" roughness={0.9} wireframe={wireframe} />
               </mesh>
               {/* Canopy */}
               <mesh position={[0, h * 0.75, 0]} castShadow>
                 <coneGeometry args={[r * 1.6, h * 0.7, 7]} />
-                <meshStandardMaterial color="#2e7d32" roughness={0.85} />
+                <meshStandardMaterial color="#2e7d32" roughness={0.85} wireframe={wireframe} />
               </mesh>
               <mesh position={[0, h * 0.95, 0]} castShadow>
                 <coneGeometry args={[r * 1.1, h * 0.55, 6]} />
-                <meshStandardMaterial color="#388e3c" roughness={0.85} />
+                <meshStandardMaterial color="#388e3c" roughness={0.85} wireframe={wireframe} />
               </mesh>
             </group>
           );
@@ -312,7 +350,7 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           elements.push(
             <mesh key={`slab-${idx}`} position={[ox, oy, oz]} rotation={[-Math.PI / 2, 0, 0]}>
               <extrudeGeometry args={[slabShape, { depth: 0.1, bevelEnabled: false }]} />
-              <meshStandardMaterial color={isModern ? '#fff' : part.type === 'foundation_slab' ? '#1e1e24' : '#222'} roughness={0.8} />
+              <meshStandardMaterial color={isModern ? '#fff' : part.type === 'foundation_slab' ? '#1e1e24' : '#222'} roughness={0.8} wireframe={wireframe} />
             </mesh>
           );
         }
@@ -326,13 +364,11 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
 // ── Scene (for export access) ─────────────────────────────────────────────────
 interface SceneProps extends ViewportProps {
   onSceneReady: (scene: THREE.Scene) => void;
+  wireframe?: boolean;
   customOutputs?: any[];
 }
 
-const SceneRenderer = ({ nodes, edges, customOutputs, onSceneReady }: SceneProps) => {
-  const meshOutputs = customOutputs || useMemo(() => {
-    return processGraph(nodes, edges);
-  }, [nodes, edges]);
+const SceneRenderer = ({ nodes, edges, customOutputs, onSceneReady, wireframe }: SceneProps) => {
   const groupRef = useRef<THREE.Group>(null);
 
   React.useEffect(() => {
@@ -343,7 +379,7 @@ const SceneRenderer = ({ nodes, edges, customOutputs, onSceneReady }: SceneProps
 
   return (
     <group ref={groupRef}>
-      <BuildingRenderer nodes={nodes} edges={edges} />
+      <BuildingRenderer nodes={nodes} edges={edges} wireframe={wireframe} />
     </group>
   );
 };
@@ -356,6 +392,10 @@ export interface ViewportHandle {
 
 export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edges }, ref) => {
   const sceneRef = useRef<THREE.Scene | null>(null);
+  const [wireframe, setWireframe] = useState(false);
+  const [gridVisible, setGridVisible] = useState(true);
+  const [envPreset, setEnvPreset] = useState<string>('city');
+  const [cameraPreset, setCameraPreset] = useState<string | null>(null);
 
   useImperativeHandle(ref, () => ({
     exportGLTF: () => {
@@ -390,17 +430,32 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
     },
   }));
 
+  const handleCameraPreset = useCallback((preset: string) => {
+    setCameraPreset(preset);
+  }, []);
+
   return (
-    <div style={{ width: '100%', height: '100%', background: '#0a0a0c' }}>
+    <div style={{ width: '100%', height: '100%', background: '#0a0a0c', position: 'relative' }}>
+      {/* Viewport Overlay Controls */}
+      <ViewportOverlay
+        onCameraPreset={handleCameraPreset}
+        onToggleWireframe={() => setWireframe(w => !w)}
+        onToggleGrid={() => setGridVisible(g => !g)}
+        onSetEnvironment={setEnvPreset}
+        wireframe={wireframe}
+        gridVisible={gridVisible}
+        currentEnv={envPreset}
+      />
+
       <Canvas shadows dpr={[1, 2]}>
         <PerspectiveCamera makeDefault position={[25, 25, 25]} fov={45} far={2000} />
-        <OrbitControls makeDefault minDistance={5} maxDistance={1000} />
+        <CameraController preset={cameraPreset} onDone={() => setCameraPreset(null)} />
 
         <ambientLight intensity={0.4} />
         <directionalLight position={[10, 20, 10]} intensity={1.5} castShadow shadow-mapSize={[2048, 2048]} />
         <spotLight position={[-10, 20, 10]} angle={0.2} penumbra={1} intensity={1} castShadow />
 
-        <SceneRenderer nodes={nodes} edges={edges} onSceneReady={(s) => { sceneRef.current = s; }} />
+        <SceneRenderer nodes={nodes} edges={edges} wireframe={wireframe} onSceneReady={(s) => { sceneRef.current = s; }} />
 
         {/* Ground */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
@@ -408,20 +463,27 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
           <meshStandardMaterial color="#111111" roughness={0.9} />
         </mesh>
 
-        <Grid
-          args={[100, 100]}
-          position={[0, 0, 0]}
-          cellSize={1}
-          cellThickness={0.5}
-          cellColor="#1a1a2e"
-          sectionSize={5}
-          sectionThickness={1}
-          sectionColor="#16213e"
-          fadeDistance={80}
-          fadeStrength={1}
-        />
+        {gridVisible && (
+          <Grid
+            args={[100, 100]}
+            position={[0, 0, 0]}
+            cellSize={1}
+            cellThickness={0.5}
+            cellColor="#1a1a2e"
+            sectionSize={5}
+            sectionThickness={1}
+            sectionColor="#16213e"
+            fadeDistance={80}
+            fadeStrength={1}
+          />
+        )}
 
-        <Environment preset="city" />
+        {/* Gizmo Helper (Axis Widget) */}
+        <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
+          <GizmoViewport labelColor="white" axisHeadScale={0.8} />
+        </GizmoHelper>
+
+        <Environment preset={envPreset as any} />
         <ContactShadows position={[0, 0, 0]} opacity={0.5} scale={50} blur={2} far={12} />
       </Canvas>
     </div>
