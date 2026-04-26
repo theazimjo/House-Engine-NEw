@@ -366,10 +366,21 @@ export const Hub: React.FC = () => {
                     className="border border-[#111]/10 bg-white hover:border-[#111]/40 hover:shadow-xl transition-all flex flex-col cursor-pointer group relative overflow-hidden"
                   >
                     {/* Template Visual */}
-                    <div className="h-44 bg-gradient-to-br from-[#f4f4ec] to-[#e8e8e0] relative overflow-hidden flex items-center justify-center border-b border-[#111]/5">
-                      {/* Large emoji icon */}
-                      <div className="text-7xl opacity-60 group-hover:scale-110 transition-transform duration-300">
-                        {template.icon}
+                    <div className="h-44 bg-[#e8e8e8] relative overflow-hidden flex items-center justify-center border-b border-[#111]/5">
+                      <div className="absolute inset-0 z-0 pointer-events-none group-hover:scale-105 transition-transform duration-700">
+                        <img 
+                          src={`/src/assets/templates/${template.id}.png`} 
+                          alt={template.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const fallback = e.currentTarget.parentElement?.querySelector('.fallback-icon');
+                            if (fallback) fallback.classList.remove('hidden');
+                          }}
+                        />
+                        <div className="fallback-icon hidden absolute inset-0 flex items-center justify-center text-7xl opacity-60">
+                          {template.icon}
+                        </div>
                       </div>
 
                       {/* Category badge */}

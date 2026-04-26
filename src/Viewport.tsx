@@ -45,7 +45,7 @@ const CameraController = forwardRef<any, { preset: string | null; onDone: () => 
 CameraController.displayName = 'CameraController';
 
 // ── Building Renderer ────────────────────────────────────────────────────────
-const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { wireframe?: boolean }) => {
+export const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { wireframe?: boolean }) => {
   // Stringify node data (ignoring positions) and edges to prevent re-renders when simply dragging nodes
   const nodesDataStr = useMemo(() => JSON.stringify(nodes.map(n => ({ id: n.id, data: n.data, type: n.type }))), [nodes]);
   const edgesStr = useMemo(() => JSON.stringify(edges.map(e => ({ source: e.source, target: e.target, sourceHandle: e.sourceHandle, targetHandle: e.targetHandle }))), [edges]);
