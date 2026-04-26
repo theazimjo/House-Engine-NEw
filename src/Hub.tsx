@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Clock, Trash2, Pencil, Check, X, Sparkles, Building2, Factory, Shapes } from 'lucide-react';
+import { ArrowLeft, Plus, Clock, Trash2, Pencil, Check, X, Sparkles, Building2, Factory, Shapes, Gamepad2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from './components/Toast';
 import { BUILDING_TEMPLATES, type BuildingTemplate } from './constants/templates';
@@ -17,6 +17,7 @@ const CATEGORY_CONFIG: Record<string, { label: string; icon: React.ReactNode; co
   commercial:  { label: 'Commercial',  icon: <Sparkles size={12} />,  color: '#3b82f6' },
   industrial:  { label: 'Industrial',  icon: <Factory size={12} />,   color: '#f59e0b' },
   custom:      { label: 'Custom',      icon: <Shapes size={12} />,    color: '#a855f7' },
+  game:        { label: 'Game',        icon: <Gamepad2 size={12} />,  color: '#ef4444' },
 };
 
 export const Hub: React.FC = () => {
@@ -358,7 +359,7 @@ export const Hub: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredTemplates.map(template => {
-                const catCfg = CATEGORY_CONFIG[template.category];
+                const catCfg = CATEGORY_CONFIG[template.category] ?? { label: template.category, icon: null, color: '#888888' };
                 return (
                   <div
                     key={template.id}

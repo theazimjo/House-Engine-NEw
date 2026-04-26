@@ -29,7 +29,7 @@ export interface BuildingTemplate {
   id: string;
   name: string;
   description: string;
-  category: 'residential' | 'commercial' | 'industrial' | 'custom';
+  category: 'residential' | 'commercial' | 'industrial' | 'custom' | 'game';
   icon: string;
   preview: string; // emoji or ASCII art
   nodes: Node<NodeData>[];
@@ -1319,5 +1319,285 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
       { id: 'e6', source: 'f-inner', target: 'tw-central',sourceHandle: 'spline', targetHandle: 'spline' },
     ],
   },
-];
+  // ── 31. RDR2 Western Town ─────────────────────────────────────────────────
+  {
+    id: 'rdr2-western-town',
+    name: 'RDR2 Western Town',
+    description: 'Red Dead Redemption 2-style frontier town: saloon, sheriff office, bank, and general store with weathered wood, cracked plaster, and tin roofs.',
+    category: 'game',
+    icon: '🤠',
+    preview: '🤠',
+    nodes: [
+      // ── Saloon (main large building)
+      makeNode('f-sal', 'foundation', 'Saloon', 50, 100, {
+        width: 18, depth: 12, foundationShape: 'rectangle',
+      }),
+      makeNode('fl-sal', 'floors', 'Saloon Walls', 350, 100, {
+        count: 2, height: 3.8, winWidth: 1.8, winHeight: 2.2, winSpacing: 3.5,
+        doorWidth: 2.8, doorHeight: 3.2, doorSide: 'front',
+        windowType: 'classic', doorType: 'double', material: 'weathered_wood',
+        hasBalcony: true, hasRibs: false, plinthHeight: 0.5,
+      }),
+      makeNode('r-sal', 'roof', 'Saloon Facade Roof', 350, 0, {
+        roofType: 'flat', height: 0.4, overhang: 1.2, color: '#5a3a1a',
+      }),
+      makeNode('pl-sal', 'plinth', 'Saloon Base', 350, 300, {
+        height: 0.5, material: 'weathered_wood',
+      }),
+      // ── Sheriff Office
+      makeNode('f-sh', 'foundation', 'Sheriff Office', 50, 350, {
+        width: 10, depth: 8, foundationShape: 'rectangle',
+      }),
+      makeNode('fl-sh', 'floors', 'Sheriff Walls', 350, 350, {
+        count: 1, height: 3.5, winWidth: 1.2, winHeight: 1.5, winSpacing: 3.0,
+        doorWidth: 1.8, doorHeight: 2.4, doorSide: 'front',
+        windowType: 'classic', doorType: 'classic', material: 'cracked_plaster',
+        hasBalcony: false, hasRibs: false, plinthHeight: 0.3,
+      }),
+      makeNode('r-sh', 'roof', 'Sheriff Roof', 350, 250, {
+        roofType: 'gable', height: 2.0, overhang: 0.6, color: '#4a3020',
+      }),
+      // ── General Store
+      makeNode('f-gs', 'foundation', 'General Store', 50, 550, {
+        width: 12, depth: 8, foundationShape: 'rectangle',
+      }),
+      makeNode('fl-gs', 'floors', 'Store Walls', 350, 550, {
+        count: 1, height: 4.0, winWidth: 2.0, winHeight: 2.0, winSpacing: 4.0,
+        doorWidth: 2.2, doorHeight: 2.8, doorSide: 'front',
+        windowType: 'classic', doorType: 'double', material: 'painted_wood',
+        hasBalcony: false, hasRibs: false, plinthHeight: 0.4,
+      }),
+      makeNode('r-gs', 'roof', 'Store Roof', 350, 450, {
+        roofType: 'shed', height: 1.5, overhang: 0.8, color: '#3a2810',
+      }),
+      // ── Scatter trees
+      makeNode('sc-1', 'scatter_points', 'Desert Scrub', 700, 400, {
+        count: 25, seed: 99, minScale: 0.5, maxScale: 1.0,
+      }),
+      // ── Stairs
+      makeNode('st-sal', 'stairs', 'Saloon Steps', 700, 100, {
+        count: 2, stepHeight: 0.2, stepDepth: 0.45, width: 3.0, side: 'front',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-sal', target: 'fl-sal', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-sal', target: 'r-sal',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-sal',target: 'r-sal',  sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e4', source: 'f-sal', target: 'pl-sal', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'f-sal', target: 'st-sal', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e6', source: 'f-sh',  target: 'fl-sh',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e7', source: 'f-sh',  target: 'r-sh',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e8', source: 'fl-sh', target: 'r-sh',   sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e9', source: 'f-gs',  target: 'fl-gs',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e10',source: 'f-gs',  target: 'r-gs',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e11',source: 'fl-gs', target: 'r-gs',   sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e12',source: 'f-sal', target: 'sc-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
 
+  // ── 32. Cyberpunk Night City Block ────────────────────────────────────────
+  {
+    id: 'cyberpunk-city-block',
+    name: 'Cyberpunk Night City Block',
+    description: 'Cyberpunk 2077-style urban block: neon-lit megabuildings, holographic panels, asphalt streets, wet concrete podium, and scattered neon signage.',
+    category: 'game',
+    icon: '🌃',
+    preview: '🌃',
+    nodes: [
+      // ── Main mega tower
+      makeNode('f-main', 'foundation', 'Main Tower Base', 50, 200, {
+        width: 30, depth: 25, foundationShape: 'rectangle',
+        taper: 0.8, twistBase: 0, twistMid: 5, twistTop: 12,
+      }),
+      makeNode('fl-main', 'floors', 'Tower Skin', 380, 200, {
+        count: 35, height: 4.2, winWidth: 2.8, winHeight: 3.2, winSpacing: 3.2,
+        doorWidth: 5.0, doorHeight: 5.0, doorSide: 'all',
+        windowType: 'modern', doorType: 'glass', material: 'wet_concrete',
+        hasBalcony: true, hasRibs: true, plinthHeight: 3.0,
+      }),
+      makeNode('r-main', 'roof', 'Tower Roof', 380, 50, {
+        roofType: 'flat', height: 0.8, overhang: 0, color: '#0a0a0c',
+      }),
+      // ── Side building (neon-covered)
+      makeNode('f-side', 'foundation', 'Side Block', 50, 500, {
+        width: 18, depth: 20, foundationShape: 'rectangle',
+      }),
+      makeNode('fl-side', 'floors', 'Neon Block', 380, 500, {
+        count: 18, height: 3.8, winWidth: 2.0, winHeight: 2.5, winSpacing: 2.8,
+        doorWidth: 0, doorHeight: 0, doorSide: 'front',
+        windowType: 'modern', doorType: 'glass', material: 'rust_panel',
+        hasBalcony: false, hasRibs: true, plinthHeight: 2.0,
+      }),
+      makeNode('r-side', 'roof', 'Side Roof', 380, 400, {
+        roofType: 'flat', height: 0.4, overhang: 0, color: '#111111',
+      }),
+      // ── Podium platform (street level)
+      makeNode('f-pod', 'foundation', 'Street Podium', 700, 200, {
+        width: 80, depth: 60, foundationShape: 'rectangle',
+      }),
+      makeNode('pl-pod', 'plinth', 'Asphalt Base', 1000, 200, {
+        height: 0.3, material: 'asphalt',
+      }),
+      // ── Neon accent tower (billboard tower)
+      makeNode('f-bill', 'foundation', 'Billboard Tower', 50, 750, {
+        width: 4, depth: 4, foundationShape: 'rectangle',
+      }),
+      makeNode('fl-bill', 'floors', 'Billboard Panel', 380, 750, {
+        count: 8, height: 5.0, winWidth: 0, winHeight: 0, winSpacing: 20,
+        doorWidth: 0, doorHeight: 0, doorSide: 'front',
+        windowType: 'modern', doorType: 'modern', material: 'neon_blue',
+        hasBalcony: false, hasRibs: false, plinthHeight: 0,
+      }),
+      // ── Scatter (urban debris/props)
+      makeNode('sc-1', 'scatter_points', 'Urban Props', 700, 500, {
+        count: 40, seed: 777, minScale: 0.3, maxScale: 0.8,
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-main', target: 'fl-main', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-main', target: 'r-main',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-main',target: 'r-main',  sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e4', source: 'f-side', target: 'fl-side', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'f-side', target: 'r-side',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e6', source: 'fl-side',target: 'r-side',  sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e7', source: 'f-pod',  target: 'pl-pod',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e8', source: 'f-pod',  target: 'sc-1',    sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e9', source: 'f-bill', target: 'fl-bill', sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // ── 33. Wild West Ranch ───────────────────────────────────────────────────
+  {
+    id: 'wild-west-ranch',
+    name: 'Wild West Ranch',
+    description: 'RDR2-style ranch: main house, large red barn, stable block, water tower cylinder, stone corral fence ring, and scattered trees.',
+    category: 'game',
+    icon: '🐎',
+    preview: '🐎',
+    nodes: [
+      // ── Farmhouse
+      makeNode('f-house', 'foundation', 'Ranch House', 50, 150, {
+        width: 14, depth: 10, foundationShape: 'rectangle',
+      }),
+      makeNode('fl-house', 'floors', 'House Walls', 350, 150, {
+        count: 1, height: 3.6, winWidth: 1.2, winHeight: 1.5, winSpacing: 3.0,
+        doorWidth: 1.8, doorHeight: 2.4, doorSide: 'front',
+        windowType: 'classic', doorType: 'classic', material: 'painted_wood',
+        hasBalcony: true, hasRibs: false, plinthHeight: 0.4,
+      }),
+      makeNode('r-house', 'roof', 'House Roof', 350, 50, {
+        roofType: 'gable', height: 3.0, overhang: 0.7, color: '#3a2010',
+      }),
+      makeNode('pl-house', 'plinth', 'Porch Base', 350, 350, {
+        height: 0.4, material: 'weathered_wood',
+      }),
+      makeNode('st-house', 'stairs', 'Porch Steps', 700, 150, {
+        count: 2, stepHeight: 0.18, stepDepth: 0.4, width: 2.5, side: 'front',
+      }),
+      // ── Red Barn
+      makeNode('f-barn', 'foundation', 'Barn', 50, 450, {
+        width: 22, depth: 12, foundationShape: 'rectangle',
+      }),
+      makeNode('fl-barn', 'floors', 'Barn Walls', 350, 450, {
+        count: 1, height: 6.0, winWidth: 1.5, winHeight: 1.2, winSpacing: 5.0,
+        doorWidth: 4.0, doorHeight: 4.5, doorSide: 'frontback',
+        windowType: 'classic', doorType: 'double', material: 'red_barn',
+        hasBalcony: false, hasRibs: false, plinthHeight: 0.3,
+      }),
+      makeNode('r-barn', 'roof', 'Barn Roof', 350, 350, {
+        roofType: 'gable', height: 4.0, overhang: 0.5, color: '#1a0f08',
+      }),
+      // ── Water Tower
+      makeNode('cyl-wt', 'primitive_cylinder', 'Water Tower Tank', 50, 700, {
+        radius: 2.2, height: 4.0, radialSegments: 12,
+      }),
+      // ── Scatter
+      makeNode('sc-trees', 'scatter_points', 'Ranch Trees', 700, 450, {
+        count: 30, seed: 555, minScale: 0.7, maxScale: 1.5,
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-house', target: 'fl-house', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-house', target: 'r-house',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-house',target: 'r-house',  sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e4', source: 'f-house', target: 'pl-house', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'f-house', target: 'st-house', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e6', source: 'f-barn',  target: 'fl-barn',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e7', source: 'f-barn',  target: 'r-barn',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e8', source: 'fl-barn', target: 'r-barn',   sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e9', source: 'f-house', target: 'sc-trees', sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // ── 34. Cyberpunk Alley (Street Canyon) ──────────────────────────────────
+  {
+    id: 'cyberpunk-alley',
+    name: 'Cyberpunk Alley',
+    description: 'Narrow Cyberpunk 2077 street canyon: towering rust-paneled walls, neon pink & blue signage, wet asphalt ground, and overcrowded fire escapes.',
+    category: 'game',
+    icon: '🌉',
+    preview: '🌉',
+    nodes: [
+      // ── Left wall block
+      makeNode('f-left', 'foundation', 'Left Block', 50, 200, {
+        width: 15, depth: 40, foundationShape: 'rectangle',
+      }),
+      makeNode('fl-left', 'floors', 'Left Facade', 380, 200, {
+        count: 22, height: 4.0, winWidth: 1.5, winHeight: 2.0, winSpacing: 2.5,
+        doorWidth: 0, doorHeight: 0, doorSide: 'front',
+        windowType: 'modern', doorType: 'modern', material: 'rust_panel',
+        hasBalcony: true, hasRibs: true, plinthHeight: 1.5,
+      }),
+      makeNode('r-left', 'roof', 'Left Roof', 380, 80, {
+        roofType: 'flat', height: 0.5, overhang: 0, color: '#0a0a0a',
+      }),
+      // ── Neon accent strips on left
+      makeNode('off-left', 'offset_spline', 'Neon Strip Offset', 680, 200, { offset: -0.5 }),
+      makeNode('pl-neon-l', 'plinth', 'Neon Strip L', 980, 200, {
+        height: 0.4, material: 'neon_pink',
+      }),
+      // ── Right wall block
+      makeNode('f-right', 'foundation', 'Right Block', 50, 550, {
+        width: 15, depth: 40, foundationShape: 'rectangle',
+      }),
+      makeNode('fl-right', 'floors', 'Right Facade', 380, 550, {
+        count: 18, height: 4.0, winWidth: 1.5, winHeight: 2.0, winSpacing: 2.5,
+        doorWidth: 2.0, doorHeight: 3.0, doorSide: 'front',
+        windowType: 'modern', doorType: 'glass', material: 'wet_concrete',
+        hasBalcony: true, hasRibs: true, plinthHeight: 1.5,
+      }),
+      makeNode('r-right', 'roof', 'Right Roof', 380, 430, {
+        roofType: 'flat', height: 0.5, overhang: 0, color: '#0a0a0a',
+      }),
+      // ── Street level (asphalt)
+      makeNode('f-street', 'foundation', 'Street Ground', 700, 400, {
+        width: 12, depth: 45, foundationShape: 'rectangle',
+      }),
+      makeNode('pl-street', 'plinth', 'Asphalt Road', 1000, 400, {
+        height: 0.15, material: 'asphalt',
+      }),
+      // ── Neon billboard tower
+      makeNode('f-sign', 'foundation', 'Neon Sign', 50, 800, {
+        width: 3, depth: 3, foundationShape: 'rectangle',
+      }),
+      makeNode('fl-sign', 'floors', 'Neon Billboard', 380, 800, {
+        count: 5, height: 4.0, winWidth: 0, winHeight: 0, winSpacing: 20,
+        doorWidth: 0, doorHeight: 0, doorSide: 'front',
+        windowType: 'modern', doorType: 'modern', material: 'neon_blue',
+        hasBalcony: false, hasRibs: false, plinthHeight: 0,
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-left',   target: 'fl-left',    sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-left',   target: 'r-left',     sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-left',  target: 'r-left',     sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e4', source: 'f-left',   target: 'off-left',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'off-left', target: 'pl-neon-l',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e6', source: 'f-right',  target: 'fl-right',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e7', source: 'f-right',  target: 'r-right',    sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e8', source: 'fl-right', target: 'r-right',    sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e9', source: 'f-street', target: 'pl-street',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e10',source: 'f-sign',   target: 'fl-sign',    sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+];
