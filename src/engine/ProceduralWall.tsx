@@ -87,8 +87,9 @@ const DoorModel = ({ w, h, type }: { w: number, h: number, type: string }) => {
       {type === 'modern' && (
         <group>
           <mesh position={[-w*0.2, 0, 0]}><boxGeometry args={[0.1, h*0.8, depth + 0.02]} /><meshStandardMaterial color="#aaddff" transparent opacity={0.6} side={THREE.DoubleSide} /></mesh>
-          <mesh position={[w*0.35, 0, depth/2]}><boxGeometry args={[0.04, h*0.4, 0.06]} /><meshStandardMaterial color="#c0c0c0" metalness={1} side={THREE.DoubleSide} /></mesh>
-          <mesh position={[w*0.35, 0, -depth/2]}><boxGeometry args={[0.04, h*0.4, 0.06]} /><meshStandardMaterial color="#c0c0c0" metalness={1} side={THREE.DoubleSide} /></mesh>
+          {/* Single elegant handle */}
+          <mesh position={[w*0.35, 0, depth/2 + 0.05]}><boxGeometry args={[0.04, h*0.6, 0.08]} /><meshStandardMaterial color="#ffffff" metalness={1} roughness={0.1} side={THREE.DoubleSide} /></mesh>
+          <mesh position={[w*0.35, 0, -depth/2 - 0.05]}><boxGeometry args={[0.04, h*0.6, 0.08]} /><meshStandardMaterial color="#ffffff" metalness={1} roughness={0.1} side={THREE.DoubleSide} /></mesh>
         </group>
       )}
 
@@ -153,7 +154,7 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
 }) => {
   const wallMaterial = React.useMemo(() => materialLib.getMaterial(materialType, isModern ? "#e2e2e2" : "#f0f0f0"), [materialType, isModern]);
 
-  const { shape, plinthShape, windowPositions, doorPos } = React.useMemo(() => {
+  const { shape, windowPositions, doorPos } = React.useMemo(() => {
     const s = new THREE.Shape();
     s.moveTo(-width / 2, 0);
     s.lineTo(width / 2, 0);
@@ -161,40 +162,29 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
     s.lineTo(-width / 2, height);
     s.closePath();
 
-    const pS = new THREE.Shape();
-    if (plinthHeight > 0) {
-      pS.moveTo(-width / 2 - 0.1, 0);
-      pS.lineTo(width / 2 + 0.1, 0);
-      pS.lineTo(width / 2 + 0.1, plinthHeight);
-      pS.lineTo(-width / 2 - 0.1, plinthHeight);
-      pS.closePath();
-    }
-
-    const wCount = Math.floor(width / windowSpacing);
+    const wCount = Math.floor((width - 1) / windowSpacing);
     const w = windowSize[0];
     const h = windowSize[1];
     const winPos = [];
 
-    const doorMin = hasDoor ? doorOffset - doorWidth / 2 - 0.2 : 9999;
-    const doorMax = hasDoor ? doorOffset + doorWidth / 2 + 0.2 : -9999;
+    const doorMin = hasDoor ? doorOffset - doorWidth / 2 - 0.4 : 9999;
+    const doorMax = hasDoor ? doorOffset + doorWidth / 2 + 0.4 : -9999;
 
-    // Ensure windows are above plinth
-    const actualSillHeight = Math.max(sillHeight, plinthHeight + 0.2);
+    // Use a fixed startX based on width to ensure alignment
+    const startX = -(wCount - 1) * windowSpacing / 2;
 
-    if (wCount > 0) {
-      const startX = -(wCount - 1) * windowSpacing / 2;
-      for (let i = 0; i < wCount; i++) {
-        const x = startX + i * windowSpacing;
-        if (!(hasDoor && x + w / 2 > doorMin && x - w / 2 < doorMax)) {
-          const hole = new THREE.Path();
-          hole.moveTo(x - w / 2, actualSillHeight);
-          hole.lineTo(x + w / 2, actualSillHeight);
-          hole.lineTo(x + w / 2, actualSillHeight + h);
-          hole.lineTo(x - w / 2, actualSillHeight + h);
-          hole.closePath();
-          s.holes.push(hole);
-          winPos.push({ x, y: actualSillHeight + h/2 });
-        }
+    for (let i = 0; i < wCount; i++) {
+      const x = startX + i * windowSpacing;
+      if (!(hasDoor && x + w / 2 > doorMin && x - w / 2 < doorMax)) {
+        const hole = new THREE.Path();
+        const y = sillHeight;
+        hole.moveTo(x - w / 2, y);
+        hole.lineTo(x + w / 2, y);
+        hole.lineTo(x + w / 2, y + h);
+        hole.lineTo(x - w / 2, y + h);
+        hole.closePath();
+        s.holes.push(hole);
+        winPos.push({ x, y: y + h / 2 });
       }
     }
 
@@ -206,39 +196,16 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
       hole.lineTo(doorOffset - doorWidth / 2, doorHeight);
       hole.closePath();
       s.holes.push(hole);
-
-      if (plinthHeight > 0) {
-        const ph = new THREE.Path();
-        ph.moveTo(doorOffset - doorWidth / 2 - 0.05, 0);
-        ph.lineTo(doorOffset + doorWidth / 2 + 0.05, 0);
-        ph.lineTo(doorOffset + doorWidth / 2 + 0.05, plinthHeight);
-        ph.lineTo(doorOffset - doorWidth / 2 - 0.05, plinthHeight);
-        ph.closePath();
-        pS.holes.push(ph);
-      }
     }
 
-    return { shape: s, plinthShape: pS, windowPositions: winPos, doorPos: doorOffset };
-  }, [width, height, windowSpacing, windowSize, sillHeight, hasDoor, doorWidth, doorHeight, doorOffset, plinthHeight]);
+    return { shape: s, windowPositions: winPos, doorPos: doorOffset };
+  }, [width, height, windowSpacing, windowSize, sillHeight, hasDoor, doorWidth, doorHeight, doorOffset]);
 
   return (
     <group>
       <mesh castShadow receiveShadow position={[0, 0, -thickness/2]} material={wallMaterial}>
         <extrudeGeometry args={[shape, { depth: thickness, bevelEnabled: false }]} />
       </mesh>
-
-      {/* Foundation Plinth (Base) with Door Cutout */}
-      {plinthHeight > 0 && (
-        <mesh position={[0, 0, -thickness/2 - 0.1]}>
-          <extrudeGeometry args={[plinthShape, { depth: thickness + 0.2, bevelEnabled: false }]} />
-          <meshStandardMaterial 
-            color="#333" 
-            polygonOffset
-            polygonOffsetFactor={-1}
-            polygonOffsetUnits={-1}
-          />
-        </mesh>
-      )}
 
       {/* Decorative Cornice (Top trim) */}
       <mesh position={[0, height, 0.05]}>

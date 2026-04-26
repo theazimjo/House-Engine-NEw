@@ -1,7 +1,7 @@
 import type { Node, Edge } from 'reactflow';
 import type { NodeData } from '../types';
 
-export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
+export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
   const results = new Map<string, any>();
 
   const resolveNode = (nodeId: string): any => {
@@ -14,7 +14,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
     const inputs = inputEdges.map(edge => {
       const sourceNode = nodes.find(n => n.id === edge.source);
       let sourceData = resolveNode(edge.source);
-      
+
       // If the source node outputs an array (multiple pins), we must pick the right one
       if (Array.isArray(sourceData) && sourceNode?.data.outputs) {
         const outputIndex = sourceNode.data.outputs.indexOf(edge.sourceHandle as any);
@@ -36,7 +36,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
         const splineData = inputs.find(i => i.handle === 'spline')?.data;
         if (!splineData || !Array.isArray(splineData.points)) break;
         const amount = node.data.params.amount || 0;
-        
+
         const center = splineData.points.reduce((acc: any, p: any) => [acc[0] + p[0], acc[1] + p[1]], [0, 0]);
         center[0] /= splineData.points.length;
         center[1] /= splineData.points.length;
@@ -57,7 +57,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
         if (!splineData || !Array.isArray(splineData.points)) break;
         const { x = 0, y = 0, z = 0, scale = 1.0, rotation = 0 } = node.data.params;
         const rad = rotation * (Math.PI / 180);
-        
+
         const newPoints = splineData.points.map((p: any) => {
           const sx = p[0] * scale;
           const sy = p[1] * scale;
@@ -66,64 +66,120 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
           return [rx + x, ry + y];
         });
 
-        output = { 
-          ...splineData, 
+        output = {
+          ...splineData,
           points: newPoints,
-          zOffset: (splineData.zOffset || 0) + z 
+          zOffset: (splineData.zOffset || 0) + z
         };
         break;
       }
 
-        case 'columns': {
-          const splineData = inputs.find(i => i.handle === 'spline')?.data;
-          if (!splineData || !Array.isArray(splineData.points)) break;
-          const { radius = 0.3, height = 4.0, spacing = 3.0, useCorners = true, material = 'concrete' } = node.data.params;
-          const zOffset = splineData.zOffset || 0;
-          
-          const columnMeshes: any[] = [];
-          const pts = splineData.points;
-          
-          const addColumn = (p: [number, number]) => {
-            columnMeshes.push({
-              type: 'column',
-              position: [p[0], zOffset, p[1]],
-              radius,
-              height,
-              material
-            });
-          };
+      case 'plinth': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        if (!splineData || !Array.isArray(splineData.points)) break;
+        const { height = 0.8, material = 'concrete' } = node.data.params;
+        const zOffset = splineData.zOffset || 0;
 
-          for (let i = 0; i < pts.length; i++) {
-            const p1 = pts[i];
-            const p2 = pts[(i + 1) % pts.length];
-            
-            if (useCorners) addColumn(p1);
+        output = [{
+          type: 'plinth_mesh',
+          spline: splineData.points,
+          height,
+          zOffset,
+          material
+        }];
+        break;
+      }
 
-            if (spacing > 0) {
-              const dist = Math.sqrt(Math.pow(p2[0] - p1[0], 2) + Math.pow(p2[1] - p1[1], 2));
-              const count = Math.floor(dist / spacing);
-              for (let j = 1; j < count; j++) {
-                const t = j / count;
-                const interP: [number, number] = [
-                  p1[0] + (p2[0] - p1[0]) * t,
-                  p1[1] + (p2[1] - p1[1]) * t
-                ];
-                addColumn(interP);
-              }
+      case 'stairs': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        if (!splineData || !Array.isArray(splineData.points)) break;
+        // Find if there's a connected plinth height to match
+        const { count = 4, stepHeight = 0.2, stepDepth = 0.3, width = 2.5 } = node.data.params;
+        const zOffset = splineData.zOffset || 0;
+
+        // Place stairs at the center of the first segment
+        const p1 = splineData.points[0];
+        const p2 = splineData.points[1];
+        const midX = (p1[0] + p2[0]) / 2;
+        const midZ = (p1[1] + p2[1]) / 2;
+
+        // Calculate segment direction for rotation
+        const dx = p2[0] - p1[0];
+        const dz = p2[1] - p1[1];
+        const angle = Math.atan2(dz, dx);
+        const normal = angle + Math.PI / 2;
+
+        const stairParts = [];
+        for (let i = 0; i < count; i++) {
+          const h = (i + 1) * stepHeight;
+          const d = (count - i) * stepDepth;
+          const distOut = d / 2 + 0.1; // Offset from wall
+
+          stairParts.push({
+            type: 'stairs_step',
+            position: [
+              midX + Math.cos(normal) * distOut,
+              zOffset,
+              midZ + Math.sin(normal) * distOut
+            ],
+            rotation: [0, -angle, 0],
+            args: [width, h, d]
+          });
+        }
+        output = stairParts;
+        break;
+      }
+
+      case 'columns': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        if (!splineData || !Array.isArray(splineData.points)) break;
+        const { radius = 0.3, height = 4.0, spacing = 3.0, useCorners = true, material = 'concrete' } = node.data.params;
+        const zOffset = splineData.zOffset || 0;
+
+        const columnMeshes: any[] = [];
+        const pts = splineData.points;
+
+        const addColumn = (p: [number, number]) => {
+          columnMeshes.push({
+            type: 'column',
+            position: [p[0], zOffset, p[1]],
+            radius,
+            height,
+            material
+          });
+        };
+
+        for (let i = 0; i < pts.length; i++) {
+          const p1 = pts[i];
+          const p2 = pts[(i + 1) % pts.length];
+
+          if (useCorners) addColumn(p1);
+
+          if (spacing > 0) {
+            const dist = Math.sqrt(Math.pow(p2[0] - p1[0], 2) + Math.pow(p2[1] - p1[1], 2));
+            const count = Math.floor(dist / spacing);
+            for (let j = 1; j < count; j++) {
+              const t = j / count;
+              const interP: [number, number] = [
+                p1[0] + (p2[0] - p1[0]) * t,
+                p1[1] + (p2[1] - p1[1]) * t
+              ];
+              addColumn(interP);
             }
           }
-          output = columnMeshes;
-          break;
         }
+        output = columnMeshes;
+        break;
+      }
 
-        case 'floors':
+      case 'floors':
         const splineData = inputs.find(i => i.handle === 'spline')?.data;
         const count = inputs.find(i => i.handle === 'param-count')?.data || node.data.params.count;
         const height = inputs.find(i => i.handle === 'param-height')?.data || node.data.params.height;
         const winWidth = inputs.find(i => i.handle === 'param-winWidth')?.data || node.data.params.winWidth || 1.2;
         const winHeight = inputs.find(i => i.handle === 'param-winHeight')?.data || node.data.params.winHeight || 1.8;
         const winSpacing = inputs.find(i => i.handle === 'param-winSpacing')?.data || node.data.params.winSpacing || 2.5;
-        
+
         const doorWidth = inputs.find(i => i.handle === 'param-doorWidth')?.data || node.data.params.doorWidth || 1.8;
         const doorHeight = inputs.find(i => i.handle === 'param-doorHeight')?.data || node.data.params.doorHeight || 2.4;
         const doorOffset = inputs.find(i => i.handle === 'param-doorOffset')?.data || node.data.params.doorOffset || 0;
@@ -132,14 +188,16 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
         const totalBuildingHeight = count * height;
 
         if (!splineData) {
-          output = { 
-            count, height, winWidth, winHeight, winSpacing, 
+          output = {
+            count, height, winWidth, winHeight, winSpacing,
             doorWidth, doorHeight, doorOffset, doorSide,
             totalHeight: totalBuildingHeight,
-            showWindow: node.data.params.showWindow 
+            showWindow: node.data.params.showWindow
           };
         } else {
           // If we have a spline, we generate the actual building geometry
+          const plinthHeight = node.data.params.plinthHeight || 0;
+
           const buildingData = {
             spline: splineData.points,
             floors: count,
@@ -156,7 +214,8 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
             material: node.data.params.material || 'bricks',
             hasBalcony: node.data.params.hasBalcony !== undefined ? node.data.params.hasBalcony : true,
             hasRibs: node.data.params.hasRibs || false,
-            plinthHeight: node.data.params.plinthHeight || 0,
+            plinthHeight: 0, // No longer used inside ProceduralWall
+            zOffset: (splineData.zOffset || 0) + plinthHeight,
             twist: splineData.twist,
             taper: splineData.taper,
             shear: splineData.shear,
@@ -204,9 +263,9 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
               ...interiorWalls
             ],
             // Index 1: Window (Light Blue Pin)
-            null, 
+            null,
             // Index 2: Float (Orange Pin) - Height
-            totalBuildingHeight
+            totalBuildingHeight + plinthHeight
           ];
         }
         break;
@@ -283,22 +342,22 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
           case 'U-shape':
             const ut = Math.min(width, depth) * 0.3;
             points = [
-              [-w2, d2], [w2, d2], [w2, -d2], [w2 - ut, -d2], 
+              [-w2, d2], [w2, d2], [w2, -d2], [w2 - ut, -d2],
               [w2 - ut, d2 - ut], [-w2 + ut, d2 - ut], [-w2 + ut, -d2], [-w2, -d2]
             ];
             break;
           case 'C-shape':
             const ct = Math.min(width, depth) * 0.3;
             points = [
-              [w2, d2], [w2, d2 - ct], [-w2 + ct, d2 - ct], 
+              [w2, d2], [w2, d2 - ct], [-w2 + ct, d2 - ct],
               [-w2 + ct, -d2 + ct], [w2, -d2 + ct], [w2, -d2], [-w2, -d2], [-w2, d2]
             ];
             break;
           case 'X-shape':
             const xt = Math.min(width, depth) * 0.25;
             points = [
-              [-xt, xt], [xt, xt], [w2, d2], [w2, d2 - xt], [xt, 0], [w2, -d2 + xt], 
-              [w2, -d2], [xt, -xt], [-xt, -xt], [-w2, -d2], [-w2, -d2 + xt], [-xt, 0], 
+              [-xt, xt], [xt, xt], [w2, d2], [w2, d2 - xt], [xt, 0], [w2, -d2 + xt],
+              [w2, -d2], [xt, -xt], [-xt, -xt], [-w2, -d2], [-w2, -d2 + xt], [-xt, 0],
               [-w2, d2 - xt], [-w2, d2]
             ];
             break;
@@ -324,7 +383,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
   };
 
   const allOutputs: any[] = [];
-  
+
   const collectRenderables = (data: any) => {
     if (!data) return;
     if (Array.isArray(data)) {

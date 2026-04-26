@@ -275,6 +275,33 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           );
         }
 
+        if (part.type === 'plinth_mesh') {
+          const { spline: pSpline, height: pHeight, zOffset: pZ = 0 } = part;
+          if (!pSpline || pSpline.length < 3) return null;
+          
+          const pShape = new THREE.Shape();
+          pShape.moveTo(pSpline[0][0], pSpline[0][1]);
+          pSpline.slice(1).forEach((p: any) => pShape.lineTo(p[0], p[1]));
+          pShape.closePath();
+
+          return (
+            <mesh key={`plinth-${idx}`} position={[ox || 0, (oy || 0) + pZ + pHeight, oz || 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow castShadow>
+              <extrudeGeometry args={[pShape, { depth: pHeight, bevelEnabled: false }]} />
+              <meshStandardMaterial color="#999" side={THREE.DoubleSide} roughness={0.5} metalness={0.2} />
+            </mesh>
+          );
+        }
+
+        if (part.type === 'stairs_step') {
+          const { position, rotation, args } = part;
+          return (
+            <mesh key={`stairs-${idx}`} position={[position[0], position[1] + args[1] / 2, position[2]]} rotation={rotation} castShadow receiveShadow>
+              <boxGeometry args={args} />
+              <meshStandardMaterial color="#666" />
+            </mesh>
+          );
+        }
+
         if (part.type === 'column') {
           const { position, radius, height, material = 'concrete' } = part;
           const colMaterial = materialLib.getMaterial(material);
@@ -361,7 +388,12 @@ export const Viewport: React.FC<ViewportProps> = ({ nodes, edges }) => {
 
         <BuildingRenderer nodes={nodes} edges={edges} />
 
-        <Grid infiniteGrid fadeDistance={50} fadeStrength={5} sectionSize={1} sectionColor="#2a2a30" />
+        {/* Large Flat Ground */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
+          <planeGeometry args={[1000, 1000]} />
+          <meshStandardMaterial color="#111111" roughness={0.9} />
+        </mesh>
+        
         <Environment preset="city" />
         <ContactShadows position={[0, 0, 0]} opacity={0.4} scale={40} blur={2} far={10} />
       </Canvas>

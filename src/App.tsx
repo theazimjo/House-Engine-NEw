@@ -104,6 +104,32 @@ const initialNodes: Node<NodeData>[] = [
     }
   },
   {
+    id: 'pl-1',
+    type: 'buildingNode',
+    position: { x: 400, y: 750 },
+    data: {
+      label: 'Plinth Generator',
+      type: 'plinth',
+      params: { height: 0.8, material: 'concrete' },
+      onChange: () => {},
+      inputs: ['spline'],
+      outputs: ['mesh']
+    }
+  },
+  {
+    id: 'st-1',
+    type: 'buildingNode',
+    position: { x: 700, y: 550 },
+    data: {
+      label: 'Stairs Generator',
+      type: 'stairs',
+      params: { count: 4, stepHeight: 0.2, stepDepth: 0.3, width: 2.5 },
+      onChange: () => {},
+      inputs: ['spline'],
+      outputs: ['mesh']
+    }
+  },
+  {
     id: 'r-1',
     type: 'buildingNode',
     position: { x: 400, y: 50 },
@@ -121,7 +147,9 @@ const initialNodes: Node<NodeData>[] = [
 const initialEdges: Edge[] = [
   { id: 'e1', source: 'f-1', target: 'fl-1', sourceHandle: 'spline', targetHandle: 'spline' },
   { id: 'e2', source: 'f-1', target: 'r-1', sourceHandle: 'spline', targetHandle: 'spline' },
-  { id: 'e3', source: 'fl-1', target: 'r-1', sourceHandle: 'float', targetHandle: 'float' }
+  { id: 'e3', source: 'fl-1', target: 'r-1', sourceHandle: 'float', targetHandle: 'float' },
+  { id: 'e4', source: 'f-1', target: 'st-1', sourceHandle: 'spline', targetHandle: 'spline' },
+  { id: 'e5', source: 'f-1', target: 'pl-1', sourceHandle: 'spline', targetHandle: 'spline' }
 ];
 
 const nodeTypes = {
