@@ -275,7 +275,7 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
     preview: '🏫',
     nodes: [
       makeNode('f-1', 'foundation', 'Foundation', 50, 250, {
-        width: 24, depth: 16, foundationShape: 'U-shape',
+        width: 50, depth: 30, foundationShape: 'U-shape',
       }),
       makeNode('fl-1', 'floors', 'Floors System', 380, 300, {
         count: 3, height: 3.3, winWidth: 1.3, winHeight: 1.8, winSpacing: 2.2,
