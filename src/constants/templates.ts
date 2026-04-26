@@ -90,20 +90,20 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
       makeNode('fl-1', 'floors', 'Floors System', 380, 300, {
         count: 2, height: 3.6, winWidth: 1.2, winHeight: 1.8, winSpacing: 2.5,
         doorWidth: 2.4, doorHeight: 2.8, doorSide: 'front',
-        windowType: 'classic', doorType: 'classic', material: 'bricks',
+        windowType: 'classic', doorType: 'classic', material: 'stucco',
         hasBalcony: false, hasRibs: false, plinthHeight: 0.5,
       }),
       makeNode('r-1', 'roof', 'Roof System', 380, 50, {
-        roofType: 'pitched', height: 4, overhang: 0.8, color: '#8e2b2b',
+        roofType: 'pitched', height: 4, overhang: 0.8, color: '#7a3a2a',
       }),
       makeNode('pl-1', 'plinth', 'Plinth', 380, 600, {
-        height: 0.5, material: 'concrete',
+        height: 0.5, material: 'sandstone',
       }),
       makeNode('st-1', 'stairs', 'Stairs', 700, 500, {
         count: 3, stepHeight: 0.18, stepDepth: 0.4, width: 3.0,
       }),
       makeNode('col-1', 'columns', 'Columns', 700, 200, {
-        radius: 0.25, height: 7.0, spacing: 5.0, useCorners: true, material: 'concrete',
+        radius: 0.25, height: 7.0, spacing: 5.0, useCorners: true, material: 'travertine',
       }),
     ],
     edges: [
@@ -139,7 +139,7 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
         roofType: 'hip', height: 2.5, overhang: 0.3, color: '#333333',
       }),
       makeNode('pl-1', 'plinth', 'Plinth', 380, 600, {
-        height: 1.0, material: 'metal',
+        height: 1.0, material: 'dark_metal',
       }),
       makeNode('st-1', 'stairs', 'Stairs', 700, 500, {
         count: 6, stepHeight: 0.17, stepDepth: 0.3, width: 4.0,
@@ -442,59 +442,65 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
     ],
   },
 
-  // ── 12. Ancient Pantheon ──
+  // ── 12. Ancient Pantheon (Greek Doric Temple) ──
   {
     id: 'ancient-pantheon',
     name: 'Ancient Pantheon',
-    description: 'A classic temple featuring colonnades, grand plinths, and offset walls using advanced graph nodes.',
+    description: 'Architecturally accurate Greek Doric temple: outer limestone colonnade, inner marble cella, terracotta-tiled gable roof, and grand stepped krepidoma.',
     category: 'custom',
     icon: '🏛️',
     preview: '🏛️',
     nodes: [
-      // Foundation - reasonable temple footprint
-      makeNode('f-1', 'foundation', 'Foundation', 50, 250, {
-        width: 14, depth: 22, foundationShape: 'rectangle',
+      // Stylobate (top step of the krepidoma) — the actual floor rectangle
+      // Greek peristyle temple: 6 columns on short end = ~3m spacing * 6 = 18m wide
+      // 13 columns on long end = ~3m spacing * 13 = ~39m long (Parthenon ratio)
+      makeNode('f-1', 'foundation', 'Stylobate', 50, 250, {
+        width: 16, depth: 30, foundationShape: 'rectangle',
       }),
-      // Columns run along OUTER perimeter of the foundation
-      makeNode('col-1', 'columns', 'Outer Colonnade', 350, 250, {
-        radius: 0.35, height: 5.5, spacing: 2.8, useCorners: true, material: 'concrete', zOffset: 1.2,
+      // ── Krepidoma raised platform
+      makeNode('pl-1', 'plinth', 'Krepidoma Platform', 50, 450, {
+        height: 1.2, material: 'limestone',
       }),
-      // Inner chamber walls are inset 1.8m from the outer edge
-      makeNode('off-1', 'offset_spline', 'Inner Chamber', 650, 100, {
+      // ── Grand front + back stairs
+      makeNode('st-1', 'stairs', 'Entry Steps', 50, 600, {
+        count: 5, stepHeight: 0.24, stepDepth: 0.42, width: 6.0, side: 'frontback',
+      }),
+      // ── Outer peristyle colonnade (Doric order)
+      // Columns MUST be shorter than cella walls so entablature sits on top
+      makeNode('col-1', 'columns', 'Peristyle Colonnade', 380, 250, {
+        radius: 0.48, height: 5.8, spacing: 2.7, useCorners: true,
+        material: 'limestone', zOffset: 1.2,
+      }),
+      // ── Cella inset 2m from outer colonnade line
+      makeNode('off-1', 'offset_spline', 'Cella Offset', 680, 150, {
         offset: -1.8,
       }),
-      makeNode('fl-1', 'floors', 'Inner Walls', 950, 100, {
-        count: 1, height: 5.5, winWidth: 0, winHeight: 0, winSpacing: 20,
-        doorWidth: 3.5, doorHeight: 4.5, doorSide: 'front',
-        windowType: 'classic', doorType: 'classic', material: 'concrete',
-        hasBalcony: false, hasRibs: false, plinthHeight: 1.2,
+      // Cella walls taller than columns so pediment can rest on them
+      makeNode('fl-1', 'floors', 'Cella Walls', 980, 150, {
+        count: 1, height: 6.8,
+        winWidth: 0, winHeight: 0, winSpacing: 99,
+        doorWidth: 3.5, doorHeight: 4.8, doorSide: 'front',
+        windowType: 'classic', doorType: 'classic',
+        material: 'marble',
+        hasBalcony: false, hasRibs: false, plinthHeight: 0.0,
       }),
-      // Gable roof over the whole footprint
-      makeNode('r-1', 'roof', 'Temple Roof', 350, 50, {
-        roofType: 'gable', height: 3.5, overhang: 0.6, color: '#c8a97a',
-      }),
-      // Raised stepped platform (krepidoma)
-      makeNode('pl-1', 'plinth', 'Krepidoma', 50, 550, {
-        height: 1.2, material: 'concrete',
-      }),
-      // Grand front staircase
-      makeNode('st-1', 'stairs', 'Grand Stairs', 50, 700, {
-        count: 6, stepHeight: 0.2, stepDepth: 0.4, width: 6.0, side: 'front',
+      // ── Pediment (gable roof) — terracotta red, classic steep Greek pitch
+      makeNode('r-1', 'roof', 'Pediment Roof', 380, 50, {
+        roofType: 'gable', height: 4.0, overhang: 0.5, color: '#b84830',
       }),
     ],
     edges: [
-      // columns receive outer foundation spline
-      { id: 'e1', source: 'f-1', target: 'col-1', sourceHandle: 'spline', targetHandle: 'spline' },
-      // roof receives outer foundation spline
-      { id: 'e2', source: 'f-1', target: 'r-1', sourceHandle: 'spline', targetHandle: 'spline' },
-      // plinth receives outer foundation spline
-      { id: 'e3', source: 'f-1', target: 'pl-1', sourceHandle: 'spline', targetHandle: 'spline' },
-      // stairs receive outer foundation spline
-      { id: 'e4', source: 'f-1', target: 'st-1', sourceHandle: 'spline', targetHandle: 'spline' },
-      // inner chamber offset chain
-      { id: 'e5', source: 'f-1', target: 'off-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      // Colonnade uses outer stylobate spline
+      { id: 'e1', source: 'f-1', target: 'col-1',  sourceHandle: 'spline', targetHandle: 'spline' },
+      // Roof uses outer stylobate spline
+      { id: 'e2', source: 'f-1', target: 'r-1',    sourceHandle: 'spline', targetHandle: 'spline' },
+      // Krepidoma (plinth) uses outer spline
+      { id: 'e3', source: 'f-1', target: 'pl-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      // Stairs use outer spline
+      { id: 'e4', source: 'f-1', target: 'st-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      // Cella offset chain
+      { id: 'e5', source: 'f-1',  target: 'off-1', sourceHandle: 'spline', targetHandle: 'spline' },
       { id: 'e6', source: 'off-1', target: 'fl-1', sourceHandle: 'spline', targetHandle: 'spline' },
-      // floors feed total height to roof
       { id: 'e7', source: 'fl-1', target: 'r-1', sourceHandle: 'float', targetHandle: 'float' },
     ],
   },
