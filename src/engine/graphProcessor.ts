@@ -11,10 +11,23 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
     if (!node) return null;
 
     const inputEdges = edges.filter(e => e.target === nodeId);
-    const inputs = inputEdges.map(edge => ({
-      handle: edge.targetHandle,
-      data: resolveNode(edge.source)
-    }));
+    const inputs = inputEdges.map(edge => {
+      const sourceNode = nodes.find(n => n.id === edge.source);
+      let sourceData = resolveNode(edge.source);
+      
+      // If the source node outputs an array (multiple pins), we must pick the right one
+      if (Array.isArray(sourceData) && sourceNode?.data.outputs) {
+        const outputIndex = sourceNode.data.outputs.indexOf(edge.sourceHandle as any);
+        if (outputIndex !== -1 && outputIndex < sourceData.length) {
+          sourceData = sourceData[outputIndex];
+        }
+      }
+
+      return {
+        handle: edge.targetHandle,
+        data: sourceData
+      };
+    });
 
     let output: any = null;
 
@@ -32,10 +45,13 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
         const doorOffset = inputs.find(i => i.handle === 'param-doorOffset')?.data || node.data.params.doorOffset || 0;
         const doorSide = inputs.find(i => i.handle === 'param-doorSide')?.data || node.data.params.doorSide || 'front';
 
+        const totalBuildingHeight = count * height;
+
         if (!splineData) {
           output = { 
             count, height, winWidth, winHeight, winSpacing, 
             doorWidth, doorHeight, doorOffset, doorSide,
+            totalHeight: totalBuildingHeight,
             showWindow: node.data.params.showWindow 
           };
         } else {
@@ -59,10 +75,42 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
           };
 
           output = [
-            { ...buildingData, type: 'foundation_slab', detailed: false },
-            { ...buildingData, type: 'full_volume', part: 'building' },
-            { ...buildingData, type: 'full_volume', part: 'facade' }
+            // Index 0: Mesh (Blue Pin)
+            [
+              { ...buildingData, type: 'foundation_slab', detailed: false },
+              { ...buildingData, type: 'full_volume', part: 'building' },
+              { ...buildingData, type: 'full_volume', part: 'facade' }
+            ],
+            // Index 1: Window (Light Blue Pin)
+            null, 
+            // Index 2: Float (Orange Pin) - Height
+            totalBuildingHeight
           ];
+        }
+        break;
+
+      case 'roof':
+        const roofSpline = inputs.find(i => i.handle === 'spline')?.data;
+        const baseHeight = inputs.find(i => i.handle === 'float')?.data || 0;
+        const roofType = inputs.find(i => i.handle === 'param-roofType')?.data || node.data.params.roofType || 'pitched';
+        const roofHeight = inputs.find(i => i.handle === 'param-height')?.data || node.data.params.height || 3;
+        const roofOverhang = inputs.find(i => i.handle === 'param-overhang')?.data || node.data.params.overhang || 0.5;
+        const roofColor = inputs.find(i => i.handle === 'param-color')?.data || node.data.params.color || '#8e2b2b';
+
+        if (!roofSpline) {
+          output = { roofType, height: roofHeight, overhang: roofOverhang, color: roofColor, baseHeight };
+        } else {
+          output = {
+            type: 'roof',
+            roofType,
+            height: roofHeight,
+            overhang: roofOverhang,
+            color: roofColor,
+            baseHeight,
+            spline: roofSpline.points,
+            detailed: false,
+            roof: true
+          };
         }
         break;
 
@@ -147,10 +195,22 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
     return output;
   };
 
-  const rootNodes = nodes.filter(n => 
-    !edges.some(e => e.source === n.id)
-  );
+  const allOutputs: any[] = [];
+  
+  const collectRenderables = (data: any) => {
+    if (!data) return;
+    if (Array.isArray(data)) {
+      data.forEach(item => collectRenderables(item));
+    } else if (typeof data === 'object') {
+      if (data.type || data.roof) {
+        allOutputs.push(data);
+      }
+    }
+  };
 
-  const processed = rootNodes.map(root => resolveNode(root.id)).flat();
-  return processed.filter(Boolean);
+  nodes.forEach(node => {
+    collectRenderables(resolveNode(node.id));
+  });
+
+  return allOutputs;
 };

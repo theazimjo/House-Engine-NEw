@@ -20,8 +20,53 @@ import { Play, Download } from 'lucide-react';
 
 
 
-const initialNodes: Node<NodeData>[] = [];
-const initialEdges: Edge[] = [];
+const initialNodes: Node<NodeData>[] = [
+  {
+    id: 'f-1',
+    type: 'buildingNode',
+    position: { x: 50, y: 200 },
+    data: {
+      label: 'Foundation',
+      type: 'foundation',
+      params: { width: 14, depth: 10, foundationShape: 'rectangle', twistBase: 0, twistMid: 0, twistTop: 0, taper: 1, shearX: 0, shearY: 0, jitter: 0 },
+      onChange: () => {},
+      inputs: [],
+      outputs: ['spline']
+    }
+  },
+  {
+    id: 'fl-1',
+    type: 'buildingNode',
+    position: { x: 400, y: 350 },
+    data: {
+      label: 'Floors System',
+      type: 'floors',
+      params: { count: 5, height: 3.2, winWidth: 1.2, winHeight: 1.8, winSpacing: 2.5, doorWidth: 1.8, doorHeight: 2.4, doorOffset: 0, doorSide: 'front', showWindow: true },
+      onChange: () => {},
+      inputs: ['spline'],
+      outputs: ['mesh', 'window', 'float']
+    }
+  },
+  {
+    id: 'r-1',
+    type: 'buildingNode',
+    position: { x: 400, y: 50 },
+    data: {
+      label: 'Roof System',
+      type: 'roof',
+      params: { roofType: 'pitched', height: 3, overhang: 0.5, color: '#8e2b2b' },
+      onChange: () => {},
+      inputs: ['spline', 'float'],
+      outputs: ['mesh']
+    }
+  }
+];
+
+const initialEdges: Edge[] = [
+  { id: 'e1', source: 'f-1', target: 'fl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+  { id: 'e2', source: 'f-1', target: 'r-1', sourceHandle: 'spline', targetHandle: 'spline' },
+  { id: 'e3', source: 'fl-1', target: 'r-1', sourceHandle: 'float', targetHandle: 'float' }
+];
 
 export default function App() {
   const nodeTypes = useMemo(() => ({
@@ -72,7 +117,7 @@ export default function App() {
               ...node.data,
               onChange: updateNodeParams,
               inputs: ['spline'],
-              outputs: ['mesh', 'window'],
+              outputs: ['mesh', 'window', 'float'], // Added 'float' for height
               params: {
                 winWidth: 1.2,
                 winHeight: 1.8,
@@ -84,6 +129,23 @@ export default function App() {
                 ...node.data.params,
               }
             },
+          };
+        } else if (node.data.type === 'roof') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              onChange: updateNodeParams,
+              inputs: ['spline'],
+              outputs: ['mesh'],
+              params: {
+                roofType: 'pitched',
+                height: 3,
+                overhang: 0.5,
+                color: '#8e2b2b',
+                ...node.data.params
+              }
+            }
           };
         }
         return {
@@ -119,7 +181,7 @@ export default function App() {
       label = 'Foundation';
     } else if (type === 'floors') {
       inputs = ['spline'];
-      outputs = ['mesh', 'window'];
+      outputs = ['mesh', 'window', 'float'];
       params = { 
         count: 5, 
         height: 3.2, 
@@ -133,6 +195,16 @@ export default function App() {
         showWindow: true 
       };
       label = 'Floors System';
+    } else if (type === 'roof') {
+      inputs = ['spline', 'float'];
+      outputs = ['mesh'];
+      params = { 
+        roofType: 'pitched', 
+        height: 3, 
+        overhang: 0.5, 
+        color: '#8e2b2b' 
+      };
+      label = 'Roof System';
     }
 
     const newNode: Node<NodeData> = {

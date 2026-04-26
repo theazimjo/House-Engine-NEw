@@ -1,6 +1,6 @@
 import type { Node, Edge } from 'reactflow';
 
-export type NodeType = 'foundation' | 'floors';
+export type NodeType = 'foundation' | 'floors' | 'roof';
 export type PinType = 'spline' | 'mesh' | 'float' | 'mask' | 'window' | 'floors';
 
 export interface NodeData {

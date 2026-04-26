@@ -114,32 +114,40 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
         }
 
         if (part.roof && spline) {
-          const roofY = floors * floorHeight + oy;
-          const { roofType } = part;
+          const roofY = (part.baseHeight || 0) + oy;
+          const { roofType, overhang = 0.5, color = '#8e2b2b' } = part;
 
+          // Create a shape from spline points
           const roofShape = new THREE.Shape();
-          roofShape.moveTo(spline[0][0], spline[0][1]);
-          spline.slice(1).forEach((p: any) => roofShape.lineTo(p[0], p[1]));
+          
+          // Apply overhang to the shape
+          const expandedSpline = spline.map((p: [number, number]) => {
+            const mag = Math.sqrt(p[0] * p[0] + p[1] * p[1]);
+            const dir = mag > 0 ? [p[0] / mag, p[1] / mag] : [0, 0];
+            return [p[0] + dir[0] * overhang, p[1] + dir[1] * overhang];
+          });
+
+          roofShape.moveTo(expandedSpline[0][0], expandedSpline[0][1]);
+          expandedSpline.slice(1).forEach((p: any) => roofShape.lineTo(p[0], p[1]));
 
           if (roofType === 'pitched') {
             elements.push(
-              <mesh key={`roof-${idx}`} position={[ox, roofY, oz]} rotation={[Math.PI/2, 0, 0]} castShadow>
-                {/* Positive bevel with negative offset keeps it aligned but slanted upwards */}
+              <mesh key={`roof-${idx}`} position={[ox, roofY, oz]} rotation={[-Math.PI/2, 0, 0]} castShadow>
                 <extrudeGeometry args={[roofShape, { 
                   depth: 0.1, 
                   bevelEnabled: true, 
-                  bevelThickness: 1.2, 
-                  bevelSize: 0.6, 
-                  bevelOffset: -0.6, 
+                  bevelThickness: part.height || 1.5, 
+                  bevelSize: 2, 
+                  bevelOffset: -2, 
                   bevelSegments: 1 
                 }]} />
-                <meshStandardMaterial color="#8e2b2b" roughness={0.4} metalness={0.2} />
+                <meshStandardMaterial color={color} roughness={0.4} metalness={0.2} side={THREE.DoubleSide} />
               </mesh>
             );
           } else {
              elements.push(
                <mesh key={`roof-flat-${idx}`} position={[ox, roofY, oz]} rotation={[-Math.PI/2, 0, 0]}>
-                 <extrudeGeometry args={[roofShape, { depth: 0.15, bevelEnabled: false }]} />
+                 <extrudeGeometry args={[roofShape, { depth: 0.2, bevelEnabled: false }]} />
                  <meshStandardMaterial color="#2a2a30" />
                </mesh>
              );

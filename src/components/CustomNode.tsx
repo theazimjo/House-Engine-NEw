@@ -36,57 +36,6 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
       <div className="node-body">
         {Object.entries(data.params).map(([key, value]) => (
           <div key={key} className="input-group" style={{ position: 'relative' }}>
-            {data.type !== 'foundation' && (
-              <Handle
-                type="target"
-                position={Position.Left}
-                id={`param-${key}`}
-                style={{
-                  left: '-17px',
-                  top: '50%',
-                  background: PIN_COLORS[key === 'floors' ? 'floors' : 'float'],
-                  width: '10px',
-                  height: '10px',
-                  border: '1.5px solid #1a1a1a',
-                  borderRadius: '2px'
-                }}
-              />
-            )}
-
-            {data.type !== 'foundation' && (
-              <Handle
-                type="source"
-                position={Position.Right}
-                id={key}
-                style={{
-                  right: '-17px',
-                  top: '50%',
-                  background: PIN_COLORS[data.type === 'floors' ? 'floors' : 'float'],
-                  width: '10px',
-                  height: '10px',
-                  border: '1.5px solid #1a1a1a',
-                  borderRadius: '2px'
-                }}
-              />
-            )}
-
-            {/* Foundation only has outputs on the right */}
-            {data.type === 'foundation' && (
-              <Handle
-                type="source"
-                position={Position.Right}
-                id={key}
-                style={{
-                  right: '-17px',
-                  top: '50%',
-                  background: PIN_COLORS.float,
-                  width: '10px',
-                  height: '10px',
-                  border: '1.5px solid #1a1a1a',
-                  borderRadius: '2px'
-                }}
-              />
-            )}
             <label className="input-label">{key}</label>
 
             {key === 'roofType' || key === 'foundationShape' || key === 'doorSide' ? (
