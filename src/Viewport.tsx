@@ -15,9 +15,9 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
         if (!part) return null;
 
         const elements = [];
-        const { 
-          spline, floors = 1, floorHeight = 3, 
-          windowSpacing, windowHeight, wallThickness, 
+        const {
+          spline, floors = 1, floorHeight = 3,
+          windowSpacing, windowHeight, wallThickness,
           style, offset = [0, 0, 0],
           twist, taper = 1, shear, jitter = 0
         } = part;
@@ -27,7 +27,7 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
         if (part.detailed && spline) {
           for (let f = 0; f < floors; f++) {
             const t = f / Math.max(1, floors - 1);
-            
+
             // Calculate window settings from part data
             const wSpacing = part.winSpacing || 2.5;
             const wSize: [number, number] = [part.winWidth || 1.2, part.winHeight || 1.8];
@@ -53,10 +53,10 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
             const jitterZ = (Math.random() - 0.5) * jitter;
 
             const floorY = f * floorHeight + oy;
-            
+
             spline.forEach((p: any, i: number) => {
               const next = spline[(i + 1) % spline.length];
-              
+
               // Decide if this wall should have a door based on side index
               let shouldHaveDoor = false;
               if (f === 0) {
@@ -88,18 +88,18 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
               const angle = Math.atan2(dx, dz);
 
               elements.push(
-                <group 
-                  key={`wall-${idx}-${f}-${i}`} 
+                <group
+                  key={`wall-${idx}-${f}-${i}`}
                   position={[
-                    pRot[0] + dx/2 + ox + shearOffsetX + jitterX, 
-                    floorY, 
-                    pRot[1] + dz/2 + oz + shearOffsetZ + jitterZ
-                  ]} 
-                  rotation={[0, angle + Math.PI/2, 0]}
+                    pRot[0] + dx / 2 + ox + shearOffsetX + jitterX,
+                    floorY,
+                    pRot[1] + dz / 2 + oz + shearOffsetZ + jitterZ
+                  ]}
+                  rotation={[0, angle + Math.PI / 2, 0]}
                 >
-                  <ProceduralWall 
-                    width={len} height={floorHeight} thickness={wallThickness || 0.25} 
-                    windowSpacing={wSpacing} windowSize={wSize} sillHeight={0.9} 
+                  <ProceduralWall
+                    width={len} height={floorHeight} thickness={wallThickness || 0.25}
+                    windowSpacing={wSpacing} windowSize={wSize} sillHeight={0.9}
                     isModern={isModern}
                     floorIndex={f}
                     hasDoor={shouldHaveDoor}
@@ -138,17 +138,17 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           };
 
           const basePoints = spline.map((p: any) => getTransformedPoint(p, 1.0));
-          
+
           let topScaleX = 1.0;
           let topScaleZ = 1.0;
           let topOffsetZ = 0;
-          
+
           if (roofType === 'hip') {
             topScaleX = 0.05;
             topScaleZ = 0.05;
           } else if (roofType === 'gable' || roofType === 'pitched') {
             topScaleX = 0.01; // Ridge line
-            topScaleZ = 1.0; 
+            topScaleZ = 1.0;
           } else if (roofType === 'mansard') {
             topScaleX = 0.6;
             topScaleZ = 0.6;
@@ -160,11 +160,11 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
 
           for (let i = 0; i < basePoints.length; i++) {
             const next = (i + 1) % basePoints.length;
-            
+
             const p1Base = basePoints[i];
             const p2Base = basePoints[next];
-            
-            const p1Top = roofType === 'shed' ? [p1Base[0], p1Base[1]] : topPoints[i]; 
+
+            const p1Top = roofType === 'shed' ? [p1Base[0], p1Base[1]] : topPoints[i];
             const p2Top = roofType === 'shed' ? [p2Base[0], p2Base[1]] : topPoints[next];
 
             const h1 = (roofType === 'shed') ? (p1Base[0] + 7) * 0.2 : roofH;
@@ -174,7 +174,7 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
             vertices.push(p1Base[0], p1Base[1], 0);
             vertices.push(p2Base[0], p2Base[1], 0);
             vertices.push(p2Top[0], p2Top[1], h2);
-            
+
             // Triangle 2
             vertices.push(p1Base[0], p1Base[1], 0);
             vertices.push(p2Top[0], p2Top[1], h2);
@@ -185,11 +185,11 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           for (let i = 1; i < topPoints.length - 1; i++) {
             const h0 = (roofType === 'shed') ? (topPoints[0][0] + 7) * 0.2 : roofH;
             const hi = (roofType === 'shed') ? (topPoints[i][0] + 7) * 0.2 : roofH;
-            const hi1 = (roofType === 'shed') ? (topPoints[i+1][0] + 7) * 0.2 : roofH;
+            const hi1 = (roofType === 'shed') ? (topPoints[i + 1][0] + 7) * 0.2 : roofH;
 
             vertices.push(topPoints[0][0], topPoints[0][1], h0);
             vertices.push(topPoints[i][0], topPoints[i][1], hi);
-            vertices.push(topPoints[i+1][0], topPoints[i+1][1], hi1);
+            vertices.push(topPoints[i + 1][0], topPoints[i + 1][1], hi1);
           }
 
           const geometry = new THREE.BufferGeometry();
@@ -197,10 +197,10 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           geometry.computeVertexNormals();
 
           elements.push(
-            <mesh 
-              key={`roof-${idx}`} 
-              position={[ox, roofY + 0.01, oz]} 
-              rotation={[-Math.PI/2, 0, 0]} 
+            <mesh
+              key={`roof-${idx}`}
+              position={[ox, roofY + 0.01, oz]}
+              rotation={[-Math.PI / 2, 0, 0]}
               castShadow
               geometry={geometry}
             >
@@ -210,28 +210,28 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
         }
 
         if (part.type === 'column' && spline) {
-           const { columnRadius = 0.2 } = part;
-           spline.forEach((p: any, i: number) => {
-             elements.push(
-               <mesh key={`col-${idx}-${i}`} position={[p[0] + ox, oy + (floors * floorHeight)/2, p[1] + oz]}>
-                 <cylinderGeometry args={[columnRadius, columnRadius, floors * floorHeight, 16]} />
-                 <meshStandardMaterial color="#fff" />
-               </mesh>
-             );
-           });
+          const { columnRadius = 0.2 } = part;
+          spline.forEach((p: any, i: number) => {
+            elements.push(
+              <mesh key={`col-${idx}-${i}`} position={[p[0] + ox, oy + (floors * floorHeight) / 2, p[1] + oz]}>
+                <cylinderGeometry args={[columnRadius, columnRadius, floors * floorHeight, 16]} />
+                <meshStandardMaterial color="#fff" />
+              </mesh>
+            );
+          });
         }
 
         if ((part.type === 'full_volume' || part.detailed || part.type === 'foundation_slab') && Array.isArray(spline) && spline.length > 0) {
-           const slabShape = new THREE.Shape();
-           slabShape.moveTo(spline[0][0], spline[0][1]);
-           spline.slice(1).forEach((p: any) => slabShape.lineTo(p[0], p[1]));
-           
-           elements.push(
-             <mesh key={`slab-${idx}`} position={[ox, oy, oz]} rotation={[-Math.PI/2, 0, 0]}>
-               <extrudeGeometry args={[slabShape, { depth: 0.1, bevelEnabled: false }]} />
-               <meshStandardMaterial color={isModern ? "#fff" : (part.type === 'foundation_slab' ? "#1e1e24" : "#222")} roughness={0.8} />
-             </mesh>
-           );
+          const slabShape = new THREE.Shape();
+          slabShape.moveTo(spline[0][0], spline[0][1]);
+          spline.slice(1).forEach((p: any) => slabShape.lineTo(p[0], p[1]));
+
+          elements.push(
+            <mesh key={`slab-${idx}`} position={[ox, oy, oz]} rotation={[-Math.PI / 2, 0, 0]}>
+              <extrudeGeometry args={[slabShape, { depth: 0.1, bevelEnabled: false }]} />
+              <meshStandardMaterial color={isModern ? "#fff" : (part.type === 'foundation_slab' ? "#1e1e24" : "#222")} roughness={0.8} />
+            </mesh>
+          );
         }
 
         return <React.Fragment key={idx}>{elements}</React.Fragment>;
@@ -246,11 +246,11 @@ export const Viewport: React.FC<ViewportProps> = ({ nodes, edges }) => {
       <Canvas shadows dpr={[1, 2]}>
         <PerspectiveCamera makeDefault position={[25, 25, 25]} fov={45} far={2000} />
         <OrbitControls makeDefault minDistance={5} maxDistance={1000} />
-        
+
         <ambientLight intensity={0.4} />
         <directionalLight position={[10, 20, 10]} intensity={1.5} castShadow shadow-mapSize={[1024, 1024]} />
         <spotLight position={[-10, 20, 10]} angle={0.2} penumbra={1} intensity={1} castShadow />
-        
+
         <BuildingRenderer nodes={nodes} edges={edges} />
 
         <Grid infiniteGrid fadeDistance={50} fadeStrength={5} sectionSize={1} sectionColor="#2a2a30" />

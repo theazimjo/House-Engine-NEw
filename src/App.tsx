@@ -241,6 +241,11 @@ export default function App() {
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           isValidConnection={isValidConnection}
+          defaultEdgeOptions={{
+            style: { strokeWidth: 3, stroke: 'rgba(255,255,255,0.3)' },
+            animated: true,
+          }}
+          deleteKeyCode={['Backspace', 'Delete']}
           fitView
         >
           <Background color="#1a1a20" gap={20} />

@@ -271,3 +271,14 @@ h1, h2, h3 {
 .active-node {
   animation: pulse-glow 2s infinite;
 }
+
+/* Edge Selection Highlights */
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #f59e0b !important;
+  stroke-width: 5px !important;
+  filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.5));
+}
+
+.react-flow__edge-path {
+  transition: stroke 0.2s, stroke-width 0.2s;
+}
