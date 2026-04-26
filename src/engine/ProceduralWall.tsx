@@ -264,10 +264,12 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
     return { shape: s, windowPositions: winPos, doorPos: doorOffset };
   }, [width, height, windowSpacing, windowSize, sillHeight, hasDoor, doorWidth, doorHeight, doorOffset]);
 
+  const extrudeArgs = React.useMemo(() => [shape, { depth: thickness, bevelEnabled: false }] as any, [shape, thickness]);
+
   return (
     <group>
       <mesh castShadow receiveShadow position={[0, 0, -thickness/2]} material={wallMaterial}>
-        <extrudeGeometry args={[shape, { depth: thickness, bevelEnabled: false }]} />
+        <extrudeGeometry args={extrudeArgs} />
       </mesh>
 
       {/* Decorative Cornice (Top trim) — on outer face (-Z side) */}

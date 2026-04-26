@@ -236,15 +236,6 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
               floorIndex: i,
               detailed: false
             });
-
-            // Simple cross-partition interior walls
-            interiorWalls.push({
-              ...buildingData,
-              type: 'interior_partition',
-              baseHeight: floorY,
-              floorIndex: i,
-              detailed: false
-            });
           }
 
           // Top ceiling

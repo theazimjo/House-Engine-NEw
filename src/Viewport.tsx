@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, forwardRef, useImperativeHandle, useState, useCallback } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Environment, ContactShadows, Grid, GizmoHelper, GizmoViewport } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Environment, ContactShadows, Grid, GizmoHelper, GizmoViewport, Stats } from '@react-three/drei';
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter.js';
@@ -46,12 +46,16 @@ CameraController.displayName = 'CameraController';
 
 // ── Building Renderer ────────────────────────────────────────────────────────
 const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { wireframe?: boolean }) => {
-  const processedBuilding = useMemo(() => processGraph(nodes, edges), [nodes, edges]);
+  // Stringify node data (ignoring positions) and edges to prevent re-renders when simply dragging nodes
+  const nodesDataStr = useMemo(() => JSON.stringify(nodes.map(n => ({ id: n.id, data: n.data, type: n.type }))), [nodes]);
+  const edgesStr = useMemo(() => JSON.stringify(edges.map(e => ({ source: e.source, target: e.target, sourceHandle: e.sourceHandle, targetHandle: e.targetHandle }))), [edges]);
 
-  return (
-    <group>
-      {processedBuilding.map((part: any, idx: number) => {
-        if (!part) return null;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const processedBuilding = useMemo(() => processGraph(nodes, edges), [nodesDataStr, edgesStr]);
+
+  const renderedElements = useMemo(() => {
+    return processedBuilding.map((part: any, idx: number) => {
+      if (!part) return null;
 
         const elements: React.ReactNode[] = [];
         const {
@@ -174,7 +178,7 @@ const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { wirefra
             const dir = mag > 0 ? [rx / mag, rz / mag] : [0, 0];
             const px = rx + dir[0] * overhang;
             const pz = rz + dir[1] * overhang;
-            return [px * c - pz * s, px * s + pz * c];
+            return [px * c - pz * s, -(px * s + pz * c)];
           };
 
           const basePoints = spline.map((p: any) => getTP(p, 1.0, 1.0));
@@ -244,7 +248,7 @@ const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { wirefra
             const rz = p[1] * currentScale;
             const px = rx * c - rz * s;
             const pz = rx * s + rz * c;
-            i === 0 ? shape.moveTo(px, pz) : shape.lineTo(px, pz); 
+            i === 0 ? shape.moveTo(px, -pz) : shape.lineTo(px, -pz); 
           });
           shape.closePath();
           return (
@@ -255,49 +259,15 @@ const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { wirefra
           );
         }
 
-        // ── Interior Partition ──
-        if (part.type === 'interior_partition') {
-          const { baseHeight = 0, floorIndex = 0 } = part;
-          const fh = floorHeight || 3;
-          const t = floorIndex / Math.max(1, floors - 1);
-          let currentTwist = 0;
-          if (twist) {
-            currentTwist = t < 0.5
-              ? THREE.MathUtils.lerp(twist.base, twist.mid, t * 2)
-              : THREE.MathUtils.lerp(twist.mid, twist.top, (t - 0.5) * 2);
-          }
-          const rotationRad = (currentTwist * Math.PI) / 180;
-          const currentScale = THREE.MathUtils.lerp(1, taper, t);
-          const shearOffsetX = shear ? shear.x * t : 0;
-          const shearOffsetZ = shear ? shear.y * t : 0;
 
-          const bbox = new THREE.Box2();
-          spline?.forEach((p: any) => {
-            const s = Math.sin(rotationRad);
-            const c = Math.cos(rotationRad);
-            const rx = p[0] * currentScale;
-            const rz = p[1] * currentScale;
-            const px = rx * c - rz * s;
-            const pz = rx * s + rz * c;
-            bbox.expandByPoint(new THREE.Vector2(px, pz));
-          });
-          const center = bbox.getCenter(new THREE.Vector2());
-          const size = bbox.getSize(new THREE.Vector2());
-          return (
-            <group key={`interior-${idx}`} position={[ox + center.x + shearOffsetX, oy + baseHeight + fh / 2, oz + center.y + shearOffsetZ]} rotation={[0, -rotationRad, 0]}>
-              <mesh><boxGeometry args={[size.x * 0.98, fh, 0.2]} /><meshStandardMaterial color="#f5e6d3" side={THREE.DoubleSide} wireframe={wireframe} /></mesh>
-              <mesh rotation={[0, Math.PI / 2, 0]}><boxGeometry args={[size.y * 0.98, fh, 0.2]} /><meshStandardMaterial color="#f5e6d3" side={THREE.DoubleSide} wireframe={wireframe} /></mesh>
-            </group>
-          );
-        }
 
         // ── Plinth Mesh ──
         if (part.type === 'plinth_mesh') {
           const { spline: ps, height: ph, zOffset: pz = 0 } = part;
           if (!ps || ps.length < 3) return null;
           const pShape = new THREE.Shape();
-          pShape.moveTo(ps[0][0], ps[0][1]);
-          ps.slice(1).forEach((p: any) => pShape.lineTo(p[0], p[1]));
+          pShape.moveTo(ps[0][0], -ps[0][1]);
+          ps.slice(1).forEach((p: any) => pShape.lineTo(p[0], -p[1]));
           pShape.closePath();
           return (
             <mesh key={`plinth-${idx}`} position={[ox || 0, (oy || 0) + pz, oz || 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow castShadow>
@@ -387,8 +357,8 @@ const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { wirefra
         // ── Full Volume / Foundation Slab ──
         if ((part.type === 'full_volume' || part.type === 'foundation_slab') && Array.isArray(spline) && spline.length > 0) {
           const slabShape = new THREE.Shape();
-          slabShape.moveTo(spline[0][0], spline[0][1]);
-          spline.slice(1).forEach((p: any) => slabShape.lineTo(p[0], p[1]));
+          slabShape.moveTo(spline[0][0], -spline[0][1]);
+          spline.slice(1).forEach((p: any) => slabShape.lineTo(p[0], -p[1]));
           elements.push(
             <mesh key={`slab-${idx}`} position={[ox, oy, oz]} rotation={[-Math.PI / 2, 0, 0]}>
               <extrudeGeometry args={[slabShape, { depth: 0.1, bevelEnabled: false }]} />
@@ -398,7 +368,12 @@ const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { wirefra
         }
 
         return <React.Fragment key={idx}>{elements}</React.Fragment>;
-      })}
+    });
+  }, [processedBuilding, wireframe]);
+
+  return (
+    <group>
+      {renderedElements}
     </group>
   );
 };
@@ -490,6 +465,7 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
       />
 
       <Canvas shadows dpr={[1, 2]}>
+        <Stats />
         <PerspectiveCamera makeDefault position={[25, 25, 25]} fov={45} far={2000} />
         <CameraController preset={cameraPreset} onDone={() => setCameraPreset(null)} />
 

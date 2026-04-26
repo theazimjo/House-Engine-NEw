@@ -173,13 +173,6 @@ export default function App() {
 
   // ── Cook Time Measurement ──────────────────────────────────────────────────
   const [cookTime, setCookTime] = useState(0);
-  useEffect(() => {
-    const start = performance.now();
-    // Graph is processed in Viewport via useMemo, this estimates the same cost
-    requestAnimationFrame(() => {
-      setCookTime(performance.now() - start);
-    });
-  }, [nodes, edges]);
 
   // ── Param Update ────────────────────────────────────────────────────────────
   const updateNodeParams = useCallback((nodeId: string, params: Record<string, any>) => {
