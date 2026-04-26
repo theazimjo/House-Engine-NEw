@@ -37,6 +37,9 @@ export type NodeType =
   | 'spire'             // Gothic spire / minaret tip
   | 'buttress'          // Flying buttress pair
   | 'pyramid'           // Stepped/smooth pyramid
+  // ── City Generation ──
+  | 'road_grid'         // Street grid (asphalt + sidewalks + markings)
+  | 'city_block'        // City block: multiple buildings on a plot
   // Modifiers
   | 'offset_spline'
   | 'transform_spline'
@@ -210,6 +213,33 @@ export const DEFAULT_PARAMS: Record<NodeType, Record<string, any>> = {
     steps: 0,            // 0 = smooth, >0 = stepped like Mayan
     material: 'sandstone',
   },
+  // ── City Generation ──
+  road_grid: {
+    blocksX: 4,          // Number of blocks along X axis
+    blocksZ: 4,          // Number of blocks along Z axis
+    blockWidth: 40,      // Width of each city block (m)
+    blockDepth: 40,      // Depth of each city block (m)
+    roadWidth: 10,       // Width of road (m)
+    sidewalkWidth: 2.5,  // Sidewalk on each side (m)
+    style: 'modern',     // 'modern' | 'western' | 'cyberpunk' | 'medieval'
+    addLaneMarkings: true,
+    addSidewalks: true,
+  },
+  city_block: {
+    width: 40,           // Block width (m)
+    depth: 40,           // Block depth (m)
+    style: 'modern',     // 'modern' | 'western' | 'cyberpunk' | 'medieval'
+    density: 0.75,       // 0-1: how packed the block is
+    minHeight: 8,        // Min building height (m)
+    maxHeight: 60,       // Max building height (m)
+    minFloors: 2,
+    maxFloors: 15,
+    seed: 42,
+    setbackMin: 1,       // Min distance from plot edge
+    setbackMax: 3,       // Max distance from plot edge
+    material: 'concrete',
+    roofType: 'flat',
+  },
   offset_spline: {
     amount: -1.0,
   },
@@ -277,6 +307,9 @@ export const NODE_PINS: Record<NodeType, { inputs: PinType[]; outputs: PinType[]
   spire:             { inputs: ['spline'],                   outputs: ['mesh'] },
   buttress:          { inputs: ['spline'],                   outputs: ['mesh'] },
   pyramid:           { inputs: [],                           outputs: ['mesh'] },
+  // ── City Generation ──
+  road_grid:         { inputs: [],                           outputs: ['mesh'] },
+  city_block:        { inputs: [],                           outputs: ['mesh'] },
   offset_spline:     { inputs: ['spline'],                   outputs: ['spline'] },
   smooth_spline:     { inputs: ['spline'],                   outputs: ['spline'] },
   transform_spline:  { inputs: ['spline'],                   outputs: ['spline'] },

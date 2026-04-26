@@ -1600,4 +1600,313 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
       { id: 'e10',source: 'f-sign',   target: 'fl-sign',    sourceHandle: 'spline', targetHandle: 'spline' },
     ],
   },
+
+  // ── 35. Modern Downtown City ─────────────────────────────────────────────────
+  {
+    id: 'modern-downtown',
+    name: 'Modern Downtown City',
+    description: 'Full modern city district: 4×4 block street grid with asphalt roads, lane markings, sidewalks, and densely packed mixed-height concrete/glass skyscrapers.',
+    category: 'game',
+    icon: '🏙️',
+    preview: '🏙️',
+    nodes: [
+      // Road network
+      makeNode('rg-1', 'road_grid', 'Street Grid', 50, 150, {
+        blocksX: 4, blocksZ: 4,
+        blockWidth: 45, blockDepth: 45,
+        roadWidth: 12, sidewalkWidth: 3,
+        style: 'modern', addLaneMarkings: true, addSidewalks: true,
+      }),
+      // City blocks — each offset to land in the right grid cell
+      makeNode('cb-1', 'city_block', 'Block A1', 400, 100, {
+        width: 43, depth: 43, style: 'modern',
+        density: 0.85, minHeight: 15, maxHeight: 90,
+        minFloors: 4, maxFloors: 22, seed: 10,
+      }),
+      makeNode('cb-2', 'city_block', 'Block A2', 400, 300, {
+        width: 43, depth: 43, style: 'modern',
+        density: 0.75, minHeight: 10, maxHeight: 60,
+        minFloors: 3, maxFloors: 15, seed: 20,
+      }),
+      makeNode('cb-3', 'city_block', 'Block B1', 400, 500, {
+        width: 43, depth: 43, style: 'modern',
+        density: 0.9, minHeight: 20, maxHeight: 120,
+        minFloors: 6, maxFloors: 30, seed: 30,
+      }),
+      makeNode('cb-4', 'city_block', 'Block B2', 400, 700, {
+        width: 43, depth: 43, style: 'modern',
+        density: 0.7, minHeight: 8, maxHeight: 45,
+        minFloors: 2, maxFloors: 12, seed: 40,
+      }),
+      // Central landmark tower
+      makeNode('f-lm', 'foundation', 'Landmark Tower', 700, 150, {
+        width: 28, depth: 24, foundationShape: 'diamond',
+        taper: 0.6, twistBase: 0, twistMid: 10, twistTop: 22,
+      }),
+      makeNode('fl-lm', 'floors', 'Landmark Floors', 1000, 150, {
+        count: 55, height: 4.0, winWidth: 2.5, winHeight: 3.0, winSpacing: 3.0,
+        doorWidth: 6.0, doorHeight: 6.0, doorSide: 'all',
+        windowType: 'modern', doorType: 'glass', material: 'glass',
+        hasBalcony: false, hasRibs: true, plinthHeight: 3.5,
+      }),
+      makeNode('r-lm', 'roof', 'Landmark Roof', 1000, 50, {
+        roofType: 'flat', height: 1.0, overhang: 0, color: '#0a0a0c',
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-lm', target: 'fl-lm', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-lm', target: 'r-lm',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-lm',target: 'r-lm',  sourceHandle: 'float',  targetHandle: 'float'  },
+    ],
+  },
+
+  // ── 36. Cyberpunk Night City ──────────────────────────────────────────────────
+  {
+    id: 'cyberpunk-night-city',
+    name: 'Cyberpunk Night City',
+    description: 'Full Cyberpunk 2077-style city: 5×5 asphalt grid, dense neon-lit megablocks with emissive panels, holographic billboards, and a central Arasaka-style mega-tower.',
+    category: 'game',
+    icon: '🌆',
+    preview: '🌆',
+    nodes: [
+      // Road grid — cyberpunk style
+      makeNode('rg-1', 'road_grid', 'Night City Roads', 50, 150, {
+        blocksX: 5, blocksZ: 5,
+        blockWidth: 50, blockDepth: 50,
+        roadWidth: 14, sidewalkWidth: 3.5,
+        style: 'cyberpunk', addLaneMarkings: true, addSidewalks: true,
+      }),
+      // Dense cyberpunk blocks
+      makeNode('cb-1', 'city_block', 'Neon District', 450, 100, {
+        width: 48, depth: 48, style: 'cyberpunk',
+        density: 0.92, minHeight: 25, maxHeight: 150,
+        minFloors: 6, maxFloors: 38, seed: 77,
+      }),
+      makeNode('cb-2', 'city_block', 'Corpo Plaza', 450, 350, {
+        width: 48, depth: 48, style: 'cyberpunk',
+        density: 0.80, minHeight: 40, maxHeight: 200,
+        minFloors: 10, maxFloors: 50, seed: 88,
+      }),
+      makeNode('cb-3', 'city_block', 'Watson Block', 450, 600, {
+        width: 48, depth: 48, style: 'cyberpunk',
+        density: 0.88, minHeight: 20, maxHeight: 100,
+        minFloors: 5, maxFloors: 25, seed: 99,
+      }),
+      // Mega central tower
+      makeNode('f-mega', 'foundation', 'Arasaka HQ Base', 800, 200, {
+        width: 45, depth: 40, foundationShape: 'X-shape',
+        taper: 0.65, twistBase: 0, twistMid: 12, twistTop: 25,
+      }),
+      makeNode('fl-mega', 'floors', 'Mega Tower', 1100, 200, {
+        count: 80, height: 4.5, winWidth: 3.0, winHeight: 3.5, winSpacing: 3.5,
+        doorWidth: 8.0, doorHeight: 8.0, doorSide: 'all',
+        windowType: 'modern', doorType: 'glass', material: 'dark_metal',
+        hasBalcony: false, hasRibs: true, plinthHeight: 5.0,
+      }),
+      makeNode('r-mega', 'roof', 'Tower Crown', 1100, 50, {
+        roofType: 'flat', height: 1.0, overhang: 0, color: '#050508',
+      }),
+      // Neon spire
+      makeNode('sp-neon', 'spire', 'Antenna Spire', 800, 500, {
+        baseRadius: 2.5, height: 60, segments: 6,
+        material: 'neon_blue', color: '#0044ff', zOffset: 0,
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-mega', target: 'fl-mega', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-mega', target: 'r-mega',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-mega',target: 'r-mega',  sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e4', source: 'f-mega', target: 'sp-neon', sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // ── 37. Wild West Frontier Town (City) ────────────────────────────────────────
+  {
+    id: 'western-frontier-city',
+    name: 'Wild West Frontier Town',
+    description: 'RDR2-style complete frontier settlement: dirt main street, 3×2 block grid with weathered-wood/plaster buildings, church, saloon, and scattered props.',
+    category: 'game',
+    icon: '🤠',
+    preview: '🤠',
+    nodes: [
+      // Dirt road grid
+      makeNode('rg-1', 'road_grid', 'Main Street', 50, 150, {
+        blocksX: 3, blocksZ: 2,
+        blockWidth: 35, blockDepth: 30,
+        roadWidth: 10, sidewalkWidth: 2,
+        style: 'western', addLaneMarkings: false, addSidewalks: true,
+      }),
+      // Western blocks
+      makeNode('cb-1', 'city_block', 'Main Block', 450, 100, {
+        width: 33, depth: 28, style: 'western',
+        density: 0.65, minHeight: 4, maxHeight: 12,
+        minFloors: 1, maxFloors: 2, seed: 111,
+      }),
+      makeNode('cb-2', 'city_block', 'Side Block', 450, 350, {
+        width: 33, depth: 28, style: 'western',
+        density: 0.55, minHeight: 4, maxHeight: 10,
+        minFloors: 1, maxFloors: 2, seed: 222,
+      }),
+      // Church
+      makeNode('f-ch', 'foundation', 'Church', 800, 100, {
+        width: 10, depth: 18, foundationShape: 'rectangle',
+      }),
+      makeNode('fl-ch', 'floors', 'Church Walls', 1100, 100, {
+        count: 1, height: 5.0, winWidth: 1.2, winHeight: 2.5, winSpacing: 3.5,
+        doorWidth: 2.5, doorHeight: 3.5, doorSide: 'front',
+        windowType: 'arched', doorType: 'classic', material: 'cracked_plaster',
+        hasBalcony: false, hasRibs: false, plinthHeight: 0.5,
+      }),
+      makeNode('r-ch', 'roof', 'Church Roof', 1100, 0, {
+        roofType: 'gable', height: 5.0, overhang: 0.5, color: '#2a1808',
+      }),
+      makeNode('sp-ch', 'spire', 'Church Steeple', 800, 350, {
+        baseRadius: 0.8, height: 12, segments: 4,
+        material: 'weathered_wood', color: '#4a3020', zOffset: 0,
+      }),
+      // Scatter — horses/wagons as props (represented as scatter instances)
+      makeNode('sc-1', 'scatter_points', 'Town Props', 800, 550, {
+        count: 35, seed: 333, minScale: 0.4, maxScale: 0.9,
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-ch',  target: 'fl-ch', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-ch',  target: 'r-ch',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-ch', target: 'r-ch',  sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e4', source: 'f-ch',  target: 'sp-ch', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'rg-1',  target: 'sc-1',  sourceHandle: 'mesh',   targetHandle: 'spline' },
+    ],
+  },
+
+  // ── 38. Medieval City District ────────────────────────────────────────────────
+  {
+    id: 'medieval-city-district',
+    name: 'Medieval City District',
+    description: 'Dense medieval city quarter: cobblestone street grid, worn-stone/limestone buildings, outer curtain wall with towers, castle keep, and a central cathedral.',
+    category: 'game',
+    icon: '🏰',
+    preview: '🏰',
+    nodes: [
+      // Cobblestone road grid
+      makeNode('rg-1', 'road_grid', 'Cobblestone Grid', 50, 150, {
+        blocksX: 3, blocksZ: 3,
+        blockWidth: 38, blockDepth: 38,
+        roadWidth: 8, sidewalkWidth: 1.5,
+        style: 'medieval', addLaneMarkings: false, addSidewalks: true,
+      }),
+      // Medieval blocks
+      makeNode('cb-1', 'city_block', 'Market Quarter', 450, 100, {
+        width: 36, depth: 36, style: 'medieval',
+        density: 0.80, minHeight: 6, maxHeight: 18,
+        minFloors: 1, maxFloors: 3, seed: 444,
+      }),
+      makeNode('cb-2', 'city_block', 'Residential', 450, 400, {
+        width: 36, depth: 36, style: 'medieval',
+        density: 0.70, minHeight: 5, maxHeight: 14,
+        minFloors: 1, maxFloors: 2, seed: 555,
+      }),
+      // Outer wall
+      makeNode('f-wall', 'foundation', 'City Walls', 800, 150, {
+        width: 160, depth: 130, foundationShape: 'rectangle',
+      }),
+      makeNode('cw-1', 'castle_wall', 'Outer Walls', 1100, 150, {
+        height: 9, thickness: 2.5, merlonWidth: 1.2, merlonHeight: 1.6,
+        merlonSpacing: 2.2, material: 'worn_stone', hasMachicolations: false,
+      }),
+      makeNode('tw-1', 'tower', 'Wall Towers', 1100, 0, {
+        radius: 5, height: 16, topType: 'crenellated',
+        material: 'worn_stone', segments: 10,
+      }),
+      // Cathedral
+      makeNode('f-cat', 'foundation', 'Cathedral', 800, 450, {
+        width: 18, depth: 52, foundationShape: 'rectangle',
+      }),
+      makeNode('fl-cat', 'floors', 'Cathedral Nave', 1100, 450, {
+        count: 8, height: 5.5, winWidth: 2.0, winHeight: 5.0, winSpacing: 4.0,
+        doorWidth: 5.0, doorHeight: 8.0, doorSide: 'front',
+        windowType: 'arched', doorType: 'classic', material: 'limestone',
+        hasBalcony: false, hasRibs: true, plinthHeight: 1.2,
+      }),
+      makeNode('r-cat', 'roof', 'Cathedral Roof', 1100, 350, {
+        roofType: 'gable', height: 16, overhang: 0.3, color: '#2a3040',
+      }),
+      makeNode('sp-cat', 'spire', 'Cathedral Spires', 800, 700, {
+        baseRadius: 1.5, height: 35, segments: 8,
+        material: 'dark_metal', color: '#1a1a28', zOffset: 0,
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-wall', target: 'cw-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-wall', target: 'tw-1',   sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'f-cat',  target: 'fl-cat', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e4', source: 'f-cat',  target: 'r-cat',  sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e5', source: 'fl-cat', target: 'r-cat',  sourceHandle: 'float',  targetHandle: 'float'  },
+      { id: 'e6', source: 'f-cat',  target: 'sp-cat', sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
+
+  // ── 39. Sci-Fi Space Colony ───────────────────────────────────────────────────
+  {
+    id: 'scifi-space-colony',
+    name: 'Sci-Fi Space Colony',
+    description: 'Futuristic Martian colony: hexagonal dome towers, carbon fiber megastructures, circuit board pylons, holographic data centers, and a neon-grid road network.',
+    category: 'game',
+    icon: '🚀',
+    preview: '🚀',
+    nodes: [
+      // Sci-fi road grid
+      makeNode('rg-1', 'road_grid', 'Colony Grid', 50, 150, {
+        blocksX: 4, blocksZ: 4,
+        blockWidth: 40, blockDepth: 40,
+        roadWidth: 12, sidewalkWidth: 2.5,
+        style: 'cyberpunk', addLaneMarkings: true, addSidewalks: true,
+      }),
+      // Sci-fi blocks
+      makeNode('cb-1', 'city_block', 'Research District', 450, 150, {
+        width: 38, depth: 38, style: 'cyberpunk',
+        density: 0.78, minHeight: 20, maxHeight: 80,
+        minFloors: 5, maxFloors: 20, seed: 666,
+      }),
+      makeNode('cb-2', 'city_block', 'Habitat Ring', 450, 450, {
+        width: 38, depth: 38, style: 'cyberpunk',
+        density: 0.85, minHeight: 15, maxHeight: 60,
+        minFloors: 4, maxFloors: 15, seed: 777,
+      }),
+      // Central dome tower
+      makeNode('f-dome', 'foundation', 'Command Center', 850, 200, {
+        width: 30, depth: 30, foundationShape: 'circle',
+      }),
+      makeNode('fl-dome', 'floors', 'Command Floors', 1150, 200, {
+        count: 20, height: 5.0, winWidth: 2.5, winHeight: 3.5, winSpacing: 3.0,
+        doorWidth: 6.0, doorHeight: 7.0, doorSide: 'all',
+        windowType: 'modern', doorType: 'glass', material: 'carbon_fiber',
+        hasBalcony: false, hasRibs: true, plinthHeight: 4.0,
+      }),
+      makeNode('dm-1', 'dome', 'Command Dome', 850, 0, {
+        radius: 18, segments: 32, material: 'glass',
+        zOffset: 0, color: '#88ffee',
+      }),
+      // Holographic data towers
+      makeNode('f-holo', 'foundation', 'Data Pylon Base', 850, 500, {
+        width: 5, depth: 5, foundationShape: 'rectangle',
+      }),
+      makeNode('fl-holo', 'floors', 'Holo Panel', 1150, 500, {
+        count: 15, height: 4.0, winWidth: 0, winHeight: 0, winSpacing: 20,
+        doorWidth: 0, doorHeight: 0, doorSide: 'front',
+        windowType: 'modern', doorType: 'modern', material: 'circuit_board',
+        hasBalcony: false, hasRibs: false, plinthHeight: 0,
+      }),
+      // Colony spires
+      makeNode('sp-1', 'spire', 'Antenna Array', 850, 750, {
+        baseRadius: 1.8, height: 50, segments: 6,
+        material: 'neon_blue', color: '#0066ff', zOffset: 0,
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-dome', target: 'fl-dome', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-dome', target: 'dm-1',    sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'f-holo', target: 'fl-holo', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e4', source: 'f-dome', target: 'sp-1',    sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
 ];

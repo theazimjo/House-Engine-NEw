@@ -1074,6 +1074,197 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
         }];
         break;
       }
+
+      // ── Road Grid ────────────────────────────────────────────────────────────
+      case 'road_grid': {
+        const {
+          blocksX = 4, blocksZ = 4,
+          blockWidth = 40, blockDepth = 40,
+          roadWidth = 10, sidewalkWidth = 2.5,
+          style = 'modern', addLaneMarkings = true, addSidewalks = true,
+        } = node.data.params;
+
+        const parts: any[] = [];
+        const totalW = blocksX * blockWidth + (blocksX + 1) * roadWidth;
+        const totalD = blocksZ * blockDepth + (blocksZ + 1) * roadWidth;
+        const cx = totalW / 2;
+        const cz = totalD / 2;
+
+        const roadMat = style === 'cyberpunk' ? 'asphalt' : style === 'western' ? 'dirt' : 'asphalt';
+        const sidewalkMat = style === 'western' ? 'weathered_wood' : style === 'medieval' ? 'sandstone' : 'wet_concrete';
+
+        // Horizontal road strips (along X)
+        for (let rz = 0; rz <= blocksZ; rz++) {
+          const zPos = rz * (blockDepth + roadWidth) - cz + roadWidth / 2;
+          parts.push({
+            type: 'road_segment',
+            position: [0, 0, zPos],
+            length: totalW,
+            width: roadWidth,
+            direction: 'x',
+            material: roadMat,
+            style,
+          });
+          if (addSidewalks) {
+            parts.push({
+              type: 'sidewalk_segment',
+              position: [0, 0.12, zPos - roadWidth / 2 - sidewalkWidth / 2],
+              length: totalW,
+              width: sidewalkWidth,
+              direction: 'x',
+              material: sidewalkMat,
+            });
+            parts.push({
+              type: 'sidewalk_segment',
+              position: [0, 0.12, zPos + roadWidth / 2 + sidewalkWidth / 2],
+              length: totalW,
+              width: sidewalkWidth,
+              direction: 'x',
+              material: sidewalkMat,
+            });
+          }
+          if (addLaneMarkings && style !== 'western' && style !== 'medieval') {
+            parts.push({
+              type: 'lane_marking',
+              position: [0, 0.01, zPos],
+              length: totalW,
+              direction: 'x',
+            });
+          }
+        }
+
+        // Vertical road strips (along Z)
+        for (let rx = 0; rx <= blocksX; rx++) {
+          const xPos = rx * (blockWidth + roadWidth) - cx + roadWidth / 2;
+          parts.push({
+            type: 'road_segment',
+            position: [xPos, 0, 0],
+            length: totalD,
+            width: roadWidth,
+            direction: 'z',
+            material: roadMat,
+            style,
+          });
+          if (addSidewalks) {
+            parts.push({
+              type: 'sidewalk_segment',
+              position: [xPos - roadWidth / 2 - sidewalkWidth / 2, 0.12, 0],
+              length: totalD,
+              width: sidewalkWidth,
+              direction: 'z',
+              material: sidewalkMat,
+            });
+            parts.push({
+              type: 'sidewalk_segment',
+              position: [xPos + roadWidth / 2 + sidewalkWidth / 2, 0.12, 0],
+              length: totalD,
+              width: sidewalkWidth,
+              direction: 'z',
+              material: sidewalkMat,
+            });
+          }
+        }
+
+        output = parts;
+        break;
+      }
+
+      // ── City Block ────────────────────────────────────────────────────────────
+      case 'city_block': {
+        const {
+          width: cbW = 40, depth: cbD = 40,
+          style: cbStyle = 'modern',
+          density = 0.75,
+          minHeight = 8, maxHeight = 60,
+          minFloors = 2, maxFloors = 15,
+          seed: cbSeed = 42,
+          setbackMin = 1, setbackMax = 3,
+          material: cbMat = 'concrete',
+          roofType: cbRoof = 'flat',
+        } = node.data.params;
+
+        // Seeded PRNG
+        const rand = (s: number) => {
+          const x = Math.sin(s + cbSeed * 9.7) * 43758.5453;
+          return x - Math.floor(x);
+        };
+
+        // Style-based material palettes
+        const palettes: Record<string, string[]> = {
+          modern:    ['concrete', 'glass', 'dark_metal', 'metal', 'wet_concrete'],
+          cyberpunk: ['wet_concrete', 'rust_panel', 'dark_metal', 'neon_blue', 'neon_pink'],
+          western:   ['weathered_wood', 'painted_wood', 'cracked_plaster', 'mud_brick', 'red_barn'],
+          medieval:  ['worn_stone', 'limestone', 'sandstone', 'dry_stone', 'granite'],
+        };
+        const roofPalettes: Record<string, string[]> = {
+          modern:    ['flat', 'flat', 'pitched'],
+          cyberpunk: ['flat', 'flat', 'flat'],
+          western:   ['gable', 'shed', 'gable', 'pitched'],
+          medieval:  ['gable', 'pitched', 'gable'],
+        };
+
+        const palette = palettes[cbStyle] || palettes.modern;
+        const roofPal = roofPalettes[cbStyle] || roofPalettes.modern;
+
+        const parts: any[] = [];
+        // Generate building footprints within the block
+        // Strategy: divide block into a grid of slots, randomly skip some
+        const cols = Math.max(2, Math.round((cbW / 15) * density * 1.5));
+        const rows = Math.max(2, Math.round((cbD / 15) * density * 1.5));
+        const slotW = cbW / cols;
+        const slotD = cbD / rows;
+
+        for (let row = 0; row < rows; row++) {
+          for (let col = 0; col < cols; col++) {
+            const si = row * cols + col;
+            if (rand(si * 3.7) > density) continue; // Skip based on density
+
+            const setback = setbackMin + rand(si * 1.3) * (setbackMax - setbackMin);
+            const bW = slotW - setback * 2;
+            const bD = slotD - setback * 2;
+            if (bW < 4 || bD < 4) continue;
+
+            const floors = minFloors + Math.floor(rand(si * 2.1) * (maxFloors - minFloors + 1));
+            const floorH = 3.0 + rand(si * 4.3) * 1.5;
+            const bH = Math.min(maxHeight, Math.max(minHeight, floors * floorH));
+            const matIdx = Math.floor(rand(si * 5.9) * palette.length);
+            const mat = palette[matIdx];
+            const roofIdx = Math.floor(rand(si * 7.1) * roofPal.length);
+            const rType = roofPal[roofIdx];
+
+            // Position within block (centered at 0,0)
+            const px = -cbW / 2 + col * slotW + slotW / 2;
+            const pz = -cbD / 2 + row * slotD + slotD / 2;
+
+            // Roof color by style
+            const roofColors: Record<string, string> = {
+              modern: '#1a1a1a', cyberpunk: '#0a0a0c',
+              western: '#3a2010', medieval: '#4a3a2a',
+            };
+            const roofCol = roofColors[cbStyle] || '#1a1a1a';
+
+            parts.push({
+              type: 'city_building',
+              position: [px, 0, pz],
+              width: bW,
+              depth: bD,
+              floors,
+              floorHeight: floorH,
+              totalHeight: bH,
+              material: mat,
+              roofType: rType,
+              roofColor: roofCol,
+              style: cbStyle,
+              // Neon accents for cyberpunk
+              hasNeon: cbStyle === 'cyberpunk' && rand(si * 11.3) > 0.5,
+              neonColor: rand(si * 13.7) > 0.5 ? 'neon_blue' : 'neon_pink',
+            });
+          }
+        }
+
+        output = parts;
+        break;
+      }
     }
 
 

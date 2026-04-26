@@ -611,7 +611,159 @@ export const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { 
           );
         }
 
+        // ── Road Segment ──
+        if (part.type === 'road_segment') {
+          const { position: rsPos, length: rsLen, width: rsW, direction: rsDir, material: rsMat } = part;
+          const rsMesh = wireframe ? new THREE.MeshStandardMaterial({ color: '#333', wireframe: true })
+            : materialLib.getMaterial(rsMat || 'asphalt');
+          const isZ = rsDir === 'z';
+          return (
+            <mesh key={`road-${idx}`}
+              position={[rsPos[0], rsPos[1] - 0.05, rsPos[2]]}
+              rotation={[0, isZ ? Math.PI / 2 : 0, 0]}
+              material={rsMesh} receiveShadow>
+              <boxGeometry args={[rsLen, 0.18, rsW]} />
+            </mesh>
+          );
+        }
+
+        // ── Sidewalk Segment ──
+        if (part.type === 'sidewalk_segment') {
+          const { position: swPos, length: swLen, width: swW, direction: swDir, material: swMat } = part;
+          const swMesh = wireframe ? new THREE.MeshStandardMaterial({ color: '#aaa', wireframe: true })
+            : materialLib.getMaterial(swMat || 'wet_concrete');
+          const isZ = swDir === 'z';
+          return (
+            <mesh key={`sw-${idx}`}
+              position={[swPos[0], swPos[1], swPos[2]]}
+              rotation={[0, isZ ? Math.PI / 2 : 0, 0]}
+              material={swMesh} receiveShadow castShadow>
+              <boxGeometry args={[swLen, 0.24, swW]} />
+            </mesh>
+          );
+        }
+
+        // ── Lane Marking ──
+        if (part.type === 'lane_marking') {
+          const { position: lmPos, length: lmLen, direction: lmDir } = part;
+          const isZ = lmDir === 'z';
+          const dashCount = Math.floor(lmLen / 6);
+          return (
+            <group key={`lm-${idx}`}>
+              {Array.from({ length: dashCount }, (_, di) => {
+                const offset = -lmLen / 2 + di * 6 + 3;
+                const px = isZ ? lmPos[0] : lmPos[0] + offset;
+                const pz = isZ ? lmPos[2] + offset : lmPos[2];
+                return (
+                  <mesh key={di} position={[px, lmPos[1] + 0.02, pz]} receiveShadow>
+                    <boxGeometry args={isZ ? [0.3, 0.02, 3.5] : [3.5, 0.02, 0.3]} />
+                    <meshStandardMaterial color="#f0f0c0" roughness={0.9} wireframe={wireframe} />
+                  </mesh>
+                );
+              })}
+            </group>
+          );
+        }
+
+        // ── City Building ──
+        if (part.type === 'city_building') {
+          const {
+            position: cbPos, width: cbW, depth: cbD, floors: cbFloors,
+            floorHeight: cbFH, totalHeight: cbTH, material: cbMat,
+            roofType: cbRT, roofColor: cbRC, style: cbSt,
+            hasNeon, neonColor: cbNC,
+          } = part;
+          const wallMat = wireframe ? new THREE.MeshStandardMaterial({ color: '#888', wireframe: true })
+            : materialLib.getMaterial(cbMat || 'concrete');
+          const roofMat = wireframe ? new THREE.MeshStandardMaterial({ color: '#555', wireframe: true })
+            : new THREE.MeshStandardMaterial({ color: cbRC || '#1a1a1a', roughness: 0.8 });
+          const neonMat = wireframe ? new THREE.MeshStandardMaterial({ wireframe: true, color: '#0ff' })
+            : materialLib.getMaterial(cbNC || 'neon_blue');
+
+          const windowRows = Math.max(1, cbFloors - 1);
+          const winW = Math.min(cbW * 0.25, 1.2);
+          const winH = Math.min(cbFH * 0.55, 1.5);
+          const winColsX = Math.max(1, Math.floor(cbW / 3.5));
+          const winColsZ = Math.max(1, Math.floor(cbD / 3.5));
+
+          // Window helper
+          const makeWindows = (faceLen: number, cols: number, faceDir: 'x' | 'z', faceOffset: number) =>
+            Array.from({ length: windowRows }, (_, r) =>
+              Array.from({ length: cols }, (_, c) => {
+                const wx = faceDir === 'x' ? (-faceLen / 2 + (c + 0.5) * (faceLen / cols)) : faceOffset;
+                const wz = faceDir === 'z' ? (-faceLen / 2 + (c + 0.5) * (faceLen / cols)) : faceOffset;
+                const wy = (r + 1) * cbFH - cbFH * 0.45;
+                return (
+                  <mesh key={`win-${r}-${c}`} position={[wx, wy, wz]} castShadow>
+                    <boxGeometry args={faceDir === 'x' ? [winW, winH, 0.08] : [0.08, winH, winW]} />
+                    <meshPhysicalMaterial
+                      color={cbSt === 'cyberpunk' ? '#002244' : '#aaddff'}
+                      metalness={0.95} roughness={0.05}
+                      transmission={0.5} transparent opacity={0.8}
+                      emissive={cbSt === 'cyberpunk' ? new THREE.Color('#001133') : new THREE.Color('#000')}
+                      emissiveIntensity={cbSt === 'cyberpunk' ? 0.8 : 0}
+                      wireframe={wireframe}
+                    />
+                  </mesh>
+                );
+              })
+            );
+
+          const roofH = cbRT === 'gable' ? cbW * 0.4 : cbRT === 'pitched' ? cbW * 0.25 : 0.4;
+
+          return (
+            <group key={`cityb-${idx}`} position={[cbPos[0], cbPos[1], cbPos[2]]}>
+              {/* Main building box */}
+              <mesh position={[0, cbTH / 2, 0]} material={wallMat} castShadow receiveShadow>
+                <boxGeometry args={[cbW, cbTH, cbD]} />
+              </mesh>
+
+              {/* Window grids on all 4 faces */}
+              {!wireframe && (
+                <group>
+                  {makeWindows(cbW, winColsX, 'x', cbD / 2 + 0.05).flat()}
+                  {makeWindows(cbW, winColsX, 'x', -cbD / 2 - 0.05).flat()}
+                  {makeWindows(cbD, winColsZ, 'z', cbW / 2 + 0.05).flat()}
+                  {makeWindows(cbD, winColsZ, 'z', -cbW / 2 - 0.05).flat()}
+                </group>
+              )}
+
+              {/* Roof */}
+              {cbRT === 'flat' && (
+                <mesh position={[0, cbTH + 0.2, 0]} material={roofMat} castShadow>
+                  <boxGeometry args={[cbW + 0.4, 0.4, cbD + 0.4]} />
+                </mesh>
+              )}
+              {(cbRT === 'gable' || cbRT === 'pitched') && (
+                <mesh position={[0, cbTH, 0]} castShadow>
+                  <coneGeometry args={[Math.max(cbW, cbD) * 0.72, roofH, 4]} />
+                  {wireframe ? <meshStandardMaterial wireframe color="#888" /> : <primitive object={roofMat} attach="material" />}
+                </mesh>
+              )}
+
+              {/* Cornice line */}
+              <mesh position={[0, cbTH - 0.2, 0]} castShadow>
+                <boxGeometry args={[cbW + 0.6, 0.35, cbD + 0.6]} />
+                <meshStandardMaterial color={cbRC || '#1a1a1a'} roughness={0.7} wireframe={wireframe} />
+              </mesh>
+
+              {/* Cyberpunk neon accent strips */}
+              {hasNeon && !wireframe && (
+                <>
+                  <mesh position={[0, cbTH * 0.33, cbD / 2 + 0.06]} material={neonMat}>
+                    <boxGeometry args={[cbW * 0.8, 0.3, 0.15]} />
+                  </mesh>
+                  <mesh position={[0, cbTH * 0.66, cbD / 2 + 0.06]} material={neonMat}>
+                    <boxGeometry args={[cbW * 0.6, 0.25, 0.15]} />
+                  </mesh>
+                </>
+              )}
+            </group>
+          );
+        }
+
         // ── Castle Wall Segment ──
+
         if (part.type === 'castle_wall_segment') {
           const { position: cwPos, rotation: cwRot, length: cwLen, height: cwH, thickness: cwT, material: cwMat } = part;
           const cwMesh = wireframe ? new THREE.MeshStandardMaterial({ color: '#888', wireframe: true })
