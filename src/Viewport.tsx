@@ -118,11 +118,15 @@ export const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { 
 
               let shouldHaveDoor = false;
               if (f === 0) {
-                const side = part.doorSide || 'front';
-                if (side === 'all') shouldHaveDoor = true;
-                else if (side === 'front'     && i === 0) shouldHaveDoor = true;
-                else if (side === 'frontback' && (i === 0 || i === Math.floor(spline.length / 2))) shouldHaveDoor = true;
-                else if (side === 'sides'     && (i === Math.floor(spline.length / 4) || i === Math.floor(spline.length * 3 / 4))) shouldHaveDoor = true;
+                if (part.doorSegmentIndex !== undefined) {
+                  shouldHaveDoor = i === part.doorSegmentIndex;
+                } else {
+                  const side = part.doorSide || 'front';
+                  if (side === 'all') shouldHaveDoor = true;
+                  else if (side === 'front'     && i === 0) shouldHaveDoor = true;
+                  else if (side === 'frontback' && (i === 0 || i === Math.floor(spline.length / 2))) shouldHaveDoor = true;
+                  else if (side === 'sides'     && (i === Math.floor(spline.length / 4) || i === Math.floor(spline.length * 3 / 4))) shouldHaveDoor = true;
+                }
               }
 
               const pRot = rotatePoint(p);
@@ -162,65 +166,122 @@ export const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { 
         // ── Roof ──
         if (part.roof && spline) {
           const roofY = (part.baseHeight || 0) + oy;
-          const { roofType, overhang = 0.5, color = '#8e2b2b', deformation, height = 2 } = part;
+          const { roofType, overhang = 0.5, color = '#8e2b2b', deformation, height = 2, foundationShape } = part;
           const { twist: rTwist = { base: 0, mid: 0, top: 0 }, taper: rTaper = 1 } = deformation || {};
 
-          const t = 1.0;
-          const rotationRad = (rTwist.base + (rTwist.mid - rTwist.base) * t + (rTwist.top - rTwist.mid) * t) * (Math.PI / 180);
-          const currentScale = 1.0 + (rTaper - 1.0) * t;
+          const buildRoofMesh = (pts: [number, number][], ridgeAxis: 'z' | 'x' | 'center', meshIdx: string) => {
+            const cx = pts.reduce((sum, p) => sum + p[0], 0) / pts.length;
+            const cz = pts.reduce((sum, p) => sum + p[1], 0) / pts.length;
 
-          const getTP = (p: [number, number], sx = 1.0, sz = 1.0) => {
-            const s = Math.sin(rotationRad);
-            const c = Math.cos(rotationRad);
-            const rx = p[0] * currentScale * sx;
-            const rz = p[1] * currentScale * sz;
-            const mag = Math.sqrt(rx * rx + rz * rz);
-            const dir = mag > 0 ? [rx / mag, rz / mag] : [0, 0];
-            const px = rx + dir[0] * overhang;
-            const pz = rz + dir[1] * overhang;
-            return [px * c - pz * s, -(px * s + pz * c)];
+            const t = 1.0;
+            const rotationRad = (rTwist.base + (rTwist.mid - rTwist.base) * t + (rTwist.top - rTwist.mid) * t) * (Math.PI / 180);
+            const currentScale = 1.0 + (rTaper - 1.0) * t;
+
+            const getTP = (p: [number, number], sx: number, sz: number, isBase: boolean) => {
+              const localX = p[0] - cx;
+              const localZ = p[1] - cz;
+
+              const scaledX = localX * currentScale * sx;
+              const scaledZ = localZ * currentScale * sz;
+
+              let rox = 0, roz = 0;
+              if (isBase && overhang > 0) {
+                 const mag = Math.sqrt(localX * localX + localZ * localZ);
+                 if (mag > 0) { rox = (localX / mag) * overhang; roz = (localZ / mag) * overhang; }
+              }
+
+              const finalX = scaledX + rox;
+              const finalZ = scaledZ + roz;
+
+              const s = Math.sin(rotationRad);
+              const c = Math.cos(rotationRad);
+              const rotatedX = finalX * c - finalZ * s;
+              const rotatedZ = finalX * s + finalZ * c;
+
+              return [rotatedX + cx, -(rotatedZ + cz)];
+            };
+
+            let topSX = 1.0, topSZ = 1.0;
+            if (roofType === 'hip' || ridgeAxis === 'center') { topSX = 0.05; topSZ = 0.05; }
+            else if (roofType === 'gable' || roofType === 'pitched') {
+              if (ridgeAxis === 'z') { topSX = 0.01; topSZ = 1.0; }
+              else { topSX = 1.0; topSZ = 0.01; }
+            }
+            else if (roofType === 'mansard') { topSX = 0.6; topSZ = 0.6; }
+
+            const basePoints = pts.map(p => getTP(p, 1.0, 1.0, true));
+            const topPoints = pts.map(p => getTP(p, topSX, topSZ, false));
+            const roofH = roofType === 'flat' ? 0.1 : height;
+
+            const vertices: number[] = [];
+            for (let i = 0; i < basePoints.length; i++) {
+              const next = (i + 1) % basePoints.length;
+              const p1B = basePoints[i]; const p2B = basePoints[next];
+              const p1T = roofType === 'shed' ? [p1B[0], p1B[1]] : topPoints[i];
+              const p2T = roofType === 'shed' ? [p2B[0], p2B[1]] : topPoints[next];
+              const h1 = roofType === 'shed' ? (pts[i][0] + 7) * 0.2 : roofH;
+              const h2 = roofType === 'shed' ? (pts[next][0] + 7) * 0.2 : roofH;
+              vertices.push(p1B[0], p1B[1], 0, p2B[0], p2B[1], 0, p2T[0], p2T[1], h2);
+              vertices.push(p1B[0], p1B[1], 0, p2T[0], p2T[1], h2, p1T[0], p1T[1], h1);
+            }
+            for (let i = 1; i < topPoints.length - 1; i++) {
+              const h0 = roofType === 'shed' ? (pts[0][0] + 7) * 0.2 : roofH;
+              const hi = roofType === 'shed' ? (pts[i][0] + 7) * 0.2 : roofH;
+              const hi1 = roofType === 'shed' ? (pts[i+1][0] + 7) * 0.2 : roofH;
+              vertices.push(topPoints[0][0], topPoints[0][1], h0, topPoints[i][0], topPoints[i][1], hi, topPoints[i+1][0], topPoints[i+1][1], hi1);
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            const uvs: number[] = [];
+            for (let i = 0; i < vertices.length; i += 3) uvs.push(vertices[i] * 0.5, vertices[i + 1] * 0.5);
+            geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+            geometry.computeVertexNormals();
+
+            const roofMat = wireframe ? new THREE.MeshStandardMaterial({ color, wireframe: true }) : materialLib.getMaterial('roof_tiles', color);
+            return <mesh key={meshIdx} position={[ox, roofY + 0.01, oz]} rotation={[-Math.PI / 2, 0, 0]} castShadow geometry={geometry} material={roofMat} />;
           };
 
-          const basePoints = spline.map((p: any) => getTP(p, 1.0, 1.0));
-          let topSX = 1.0, topSZ = 1.0;
-          if      (roofType === 'hip')                         { topSX = 0.05; topSZ = 0.05; }
-          else if (roofType === 'gable' || roofType === 'pitched') { topSX = 0.01; topSZ = 1.0; }
-          else if (roofType === 'mansard')                     { topSX = 0.6;  topSZ = 0.6; }
+          if (foundationShape === 'U-shape' && spline.length >= 8) {
+            const minus_w2_ut = spline[6][0];
+            const w2_ut = spline[3][0];
+            const d2_ut = spline[4][1];
+            
+            const ut2 = (spline[1][0] - spline[3][0]) / 2;
+            const back_left_x = spline[0][0] + ut2;
+            const back_right_x = spline[1][0] - ut2;
 
-          const topPoints = spline.map((p: any) => getTP(p, topSX, topSZ));
-          const roofH = roofType === 'flat' ? 0.1 : height;
-          const vertices: number[] = [];
+            const leftWing: [number, number][] = [[spline[0][0], spline[0][1]], [minus_w2_ut, spline[0][1]], [minus_w2_ut, spline[7][1]], [spline[7][0], spline[7][1]]];
+            const rightWing: [number, number][] = [[w2_ut, spline[1][1]], [spline[1][0], spline[1][1]], [spline[2][0], spline[2][1]], [w2_ut, spline[3][1]]];
+            const backWing: [number, number][] = [[back_left_x, spline[0][1]], [back_right_x, spline[1][1]], [back_right_x, d2_ut], [back_left_x, d2_ut]];
 
-          for (let i = 0; i < basePoints.length; i++) {
-            const next = (i + 1) % basePoints.length;
-            const p1B = basePoints[i]; const p2B = basePoints[next];
-            const p1T = roofType === 'shed' ? [p1B[0], p1B[1]] : topPoints[i];
-            const p2T = roofType === 'shed' ? [p2B[0], p2B[1]] : topPoints[next];
-            const h1 = roofType === 'shed' ? (p1B[0] + 7) * 0.2 : roofH;
-            const h2 = roofType === 'shed' ? (p2B[0] + 7) * 0.2 : roofH;
-            vertices.push(p1B[0], p1B[1], 0, p2B[0], p2B[1], 0, p2T[0], p2T[1], h2);
-            vertices.push(p1B[0], p1B[1], 0, p2T[0], p2T[1], h2, p1T[0], p1T[1], h1);
+            elements.push(buildRoofMesh(leftWing, 'z', `roof-${idx}-left`));
+            elements.push(buildRoofMesh(rightWing, 'z', `roof-${idx}-right`));
+            elements.push(buildRoofMesh(backWing, 'x', `roof-${idx}-back`));
+          } else if (foundationShape === 'L-shape' && spline.length >= 6) {
+             const lt2 = (spline[3][0] - spline[5][0]) / 2;
+             const ridge_z = spline[0][1] - lt2;
+             
+             const backWing: [number, number][] = [[spline[0][0], spline[0][1]], [spline[1][0], spline[1][1]], [spline[2][0], spline[2][1]], [spline[0][0], spline[2][1]]];
+             const leftWing: [number, number][] = [[spline[0][0], ridge_z], [spline[3][0], ridge_z], [spline[4][0], spline[4][1]], [spline[5][0], spline[5][1]]];
+             
+            elements.push(buildRoofMesh(backWing, 'x', `roof-${idx}-back`));
+            elements.push(buildRoofMesh(leftWing, 'z', `roof-${idx}-left`));
+          } else if (foundationShape === 'C-shape' && spline.length >= 8) {
+             const ct2 = (spline[1][1] - spline[2][1]) / 2;
+             const top_ridge_z = spline[0][1] - ct2;
+             const bottom_ridge_z = spline[4][1] - ct2;
+             
+             const topWing: [number, number][] = [[spline[7][0], spline[0][1]], [spline[0][0], spline[0][1]], [spline[1][0], spline[1][1]], [spline[7][0], spline[1][1]]];
+             const bottomWing: [number, number][] = [[spline[6][0], spline[4][1]], [spline[4][0], spline[4][1]], [spline[5][0], spline[5][1]], [spline[6][0], spline[6][1]]];
+             const backWing: [number, number][] = [[spline[7][0], top_ridge_z], [spline[2][0], top_ridge_z], [spline[3][0], bottom_ridge_z], [spline[7][0], bottom_ridge_z]];
+             
+            elements.push(buildRoofMesh(topWing, 'x', `roof-${idx}-top`));
+            elements.push(buildRoofMesh(bottomWing, 'x', `roof-${idx}-bottom`));
+            elements.push(buildRoofMesh(backWing, 'z', `roof-${idx}-back`));
+          } else {
+             elements.push(buildRoofMesh(spline, foundationShape === 'hexagon' || foundationShape === 'circle' ? 'center' : 'z', `roof-${idx}`));
           }
-          for (let i = 1; i < topPoints.length - 1; i++) {
-            const h0 = roofType === 'shed' ? (topPoints[0][0] + 7) * 0.2 : roofH;
-            const hi = roofType === 'shed' ? (topPoints[i][0] + 7) * 0.2 : roofH;
-            const hi1 = roofType === 'shed' ? (topPoints[i + 1][0] + 7) * 0.2 : roofH;
-            vertices.push(topPoints[0][0], topPoints[0][1], h0, topPoints[i][0], topPoints[i][1], hi, topPoints[i + 1][0], topPoints[i + 1][1], hi1);
-          }
-
-          const geometry = new THREE.BufferGeometry();
-          geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-          const uvs: number[] = [];
-          for (let i = 0; i < vertices.length; i += 3) uvs.push(vertices[i] * 0.5, vertices[i + 1] * 0.5);
-          geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-          geometry.computeVertexNormals();
-          const roofMat = wireframe
-            ? new THREE.MeshStandardMaterial({ color, wireframe: true })
-            : materialLib.getMaterial('roof_tiles', color);
-
-          elements.push(
-            <mesh key={`roof-${idx}`} position={[ox, roofY + 0.01, oz]} rotation={[-Math.PI / 2, 0, 0]} castShadow geometry={geometry} material={roofMat} />
-          );
         }
 
         // ── Floor Slab ──

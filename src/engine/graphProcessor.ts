@@ -97,9 +97,17 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
         const { count = 4, stepHeight = 0.2, stepDepth = 0.3, width = 2.5 } = node.data.params;
         const zOffset = splineData.zOffset || 0;
 
-        // Place stairs at the center of the first segment
-        const p1 = splineData.points[0];
-        const p2 = splineData.points[1];
+        const shape = splineData.foundationShape || 'rectangle';
+        let segIdx = 2; // Default front for rectangle
+        if (shape === 'U-shape') segIdx = 4;
+        else if (shape === 'L-shape') segIdx = 2;
+        else if (shape === 'C-shape') segIdx = 4;
+        else if (shape === 'X-shape') segIdx = 6;
+        
+        if (segIdx >= splineData.points.length) segIdx = 0;
+
+        const p1 = splineData.points[segIdx];
+        const p2 = splineData.points[(segIdx + 1) % splineData.points.length];
         const midX = (p1[0] + p2[0]) / 2;
         const midZ = (p1[1] + p2[1]) / 2;
 
@@ -214,7 +222,24 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
             material: node.data.params.material || 'bricks',
             hasBalcony: node.data.params.hasBalcony !== undefined ? node.data.params.hasBalcony : true,
             hasRibs: node.data.params.hasRibs || false,
-            plinthHeight: 0, // No longer used inside ProceduralWall
+            doorSegmentIndex: (() => {
+              const shape = splineData.foundationShape || 'rectangle';
+              if (doorSide === 'back') return 0;
+              if (doorSide === 'right') return 1;
+              if (doorSide === 'left') {
+                if (shape === 'U-shape' || shape === 'C-shape') return 7;
+                if (shape === 'L-shape') return 5;
+                if (shape === 'X-shape') return 11;
+                return 3;
+              }
+              // front
+              if (shape === 'U-shape') return 4;
+              if (shape === 'L-shape') return 2;
+              if (shape === 'C-shape') return 4;
+              if (shape === 'X-shape') return 6;
+              return 2;
+            })(),
+            plinthHeight: 0,
             zOffset: (splineData.zOffset || 0) + plinthHeight,
             twist: splineData.twist,
             taper: splineData.taper,
@@ -283,6 +308,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
             color: roofColor,
             baseHeight,
             spline: roofSpline.points,
+            foundationShape: roofSpline.foundationShape,
             deformation: {
               twist: roofSpline.twist,
               taper: roofSpline.taper,
@@ -364,6 +390,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
         // Return a shape package (spline) instead of meshes
         output = {
           points,
+          foundationShape,
           twist: { base: twistBase, mid: twistMid, top: twistTop },
           taper,
           shear: { x: shearX, y: shearY },
