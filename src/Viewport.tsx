@@ -20,9 +20,11 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           spline, floors = 1, floorHeight = 3,
           wallThickness = 0.2,
           style, offset = [0, 0, 0],
-          twist, taper = 1, shear, jitter = 0
+          twist, taper = 1, shear, jitter = 0,
+          zOffset = 0
         } = part;
-        const [ox, oy, oz] = offset;
+        const [ox, oy_orig, oz] = offset;
+        const oy = oy_orig + zOffset;
         const isModern = style === 'modern';
 
         if (part.detailed && spline) {
@@ -128,6 +130,8 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
                     doorType={part.doorType}
                     materialType={part.material}
                     hasBalcony={part.hasBalcony}
+                    hasRibs={part.hasRibs}
+                    plinthHeight={f === 0 ? part.plinthHeight : 0}
                   />
                 </group>
               );
@@ -237,7 +241,51 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           );
         }
 
-        if (part.type === 'column' && spline) {
+        if (part.type === 'floor_slab') {
+          const { spline: slabSpline, baseHeight = 0 } = part;
+          const shape = new THREE.Shape();
+          slabSpline.forEach((p: any, i: number) => {
+            if (i === 0) shape.moveTo(p[0], p[1]);
+            else shape.lineTo(p[0], p[1]);
+          });
+          shape.closePath();
+
+          return (
+            <mesh key={`slab-${idx}`} position={[ox, oy + baseHeight + 0.02, oz]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+              <extrudeGeometry args={[shape, { depth: 0.1, bevelEnabled: false }]} />
+              <meshStandardMaterial color="#333" roughness={0.7} />
+            </mesh>
+          );
+        }
+
+        if (part.type === 'interior_partition') {
+          const { spline: partSpline, baseHeight = 0, floorHeight = 3 } = part;
+          // Simple cross walls
+          return (
+            <group key={`interior-${idx}`} position={[ox, oy + baseHeight, oz]}>
+              <mesh position={[0, floorHeight / 2, 0]}>
+                <boxGeometry args={[0.1, floorHeight, 10]} />
+                <meshStandardMaterial color="#f5f5dc" />
+              </mesh>
+              <mesh position={[0, floorHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]}>
+                <boxGeometry args={[0.1, floorHeight, 10]} />
+                <meshStandardMaterial color="#f5f5dc" />
+              </mesh>
+            </group>
+          );
+        }
+
+        if (part.type === 'column') {
+          const { position, radius, height, material = 'concrete' } = part;
+          const colMaterial = materialLib.getMaterial(material);
+          return (
+            <mesh key={`col-${idx}`} position={[position[0], position[1] + height / 2, position[2]]} material={colMaterial} castShadow>
+              <cylinderGeometry args={[radius, radius, height, 16]} />
+            </mesh>
+          );
+        }
+
+        if (part.type === 'column_legacy' && spline) {
           const { columnRadius = 0.2 } = part;
           spline.forEach((p: any, i: number) => {
             elements.push(

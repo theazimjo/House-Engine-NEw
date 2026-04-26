@@ -32,7 +32,91 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
     let output: any = null;
 
     switch (node.data.type) {
-      case 'floors':
+      case 'offset_spline': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        if (!splineData || !Array.isArray(splineData.points)) break;
+        const amount = node.data.params.amount || 0;
+        
+        const center = splineData.points.reduce((acc: any, p: any) => [acc[0] + p[0], acc[1] + p[1]], [0, 0]);
+        center[0] /= splineData.points.length;
+        center[1] /= splineData.points.length;
+
+        const newPoints = splineData.points.map((p: any) => {
+          const dx = p[0] - center[0];
+          const dy = p[1] - center[1];
+          const len = Math.sqrt(dx * dx + dy * dy);
+          if (len === 0) return p;
+          return [p[0] + (dx / len) * amount, p[1] + (dy / len) * amount];
+        });
+        output = { ...splineData, points: newPoints };
+        break;
+      }
+
+      case 'transform_spline': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        if (!splineData || !Array.isArray(splineData.points)) break;
+        const { x = 0, y = 0, z = 0, scale = 1.0, rotation = 0 } = node.data.params;
+        const rad = rotation * (Math.PI / 180);
+        
+        const newPoints = splineData.points.map((p: any) => {
+          const sx = p[0] * scale;
+          const sy = p[1] * scale;
+          const rx = sx * Math.cos(rad) - sy * Math.sin(rad);
+          const ry = sx * Math.sin(rad) + sy * Math.cos(rad);
+          return [rx + x, ry + y];
+        });
+
+        output = { 
+          ...splineData, 
+          points: newPoints,
+          zOffset: (splineData.zOffset || 0) + z 
+        };
+        break;
+      }
+
+        case 'columns': {
+          const splineData = inputs.find(i => i.handle === 'spline')?.data;
+          if (!splineData || !Array.isArray(splineData.points)) break;
+          const { radius = 0.3, height = 4.0, spacing = 3.0, useCorners = true, material = 'concrete' } = node.data.params;
+          const zOffset = splineData.zOffset || 0;
+          
+          const columnMeshes: any[] = [];
+          const pts = splineData.points;
+          
+          const addColumn = (p: [number, number]) => {
+            columnMeshes.push({
+              type: 'column',
+              position: [p[0], zOffset, p[1]],
+              radius,
+              height,
+              material
+            });
+          };
+
+          for (let i = 0; i < pts.length; i++) {
+            const p1 = pts[i];
+            const p2 = pts[(i + 1) % pts.length];
+            
+            if (useCorners) addColumn(p1);
+
+            if (spacing > 0) {
+              const dist = Math.sqrt(Math.pow(p2[0] - p1[0], 2) + Math.pow(p2[1] - p1[1], 2));
+              const count = Math.floor(dist / spacing);
+              for (let j = 1; j < count; j++) {
+                const t = j / count;
+                const interP: [number, number] = [
+                  p1[0] + (p2[0] - p1[0]) * t,
+                  p1[1] + (p2[1] - p1[1]) * t
+                ];
+                addColumn(interP);
+              }
+            }
+          }
+          output = columnMeshes;
+          break;
+        }
+
+        case 'floors':
         const splineData = inputs.find(i => i.handle === 'spline')?.data;
         const count = inputs.find(i => i.handle === 'param-count')?.data || node.data.params.count;
         const height = inputs.find(i => i.handle === 'param-height')?.data || node.data.params.height;
@@ -71,6 +155,8 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
             doorType: node.data.params.doorType || 'modern',
             material: node.data.params.material || 'bricks',
             hasBalcony: node.data.params.hasBalcony !== undefined ? node.data.params.hasBalcony : true,
+            hasRibs: node.data.params.hasRibs || false,
+            plinthHeight: node.data.params.plinthHeight || 0,
             twist: splineData.twist,
             taper: splineData.taper,
             shear: splineData.shear,

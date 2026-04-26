@@ -35,6 +35,32 @@ const initialNodes: Node<NodeData>[] = [
     }
   },
   {
+    id: 'off-1',
+    type: 'buildingNode',
+    position: { x: 400, y: -200 },
+    data: {
+      label: 'Offset Spline',
+      type: 'offset_spline',
+      params: { amount: -1.0 },
+      onChange: () => {},
+      inputs: ['spline'],
+      outputs: ['spline']
+    }
+  },
+  {
+    id: 'tr-1',
+    type: 'buildingNode',
+    position: { x: 400, y: -450 },
+    data: {
+      label: 'Transform Spline',
+      type: 'transform_spline',
+      params: { x: 0, y: 0, scale: 1.0, rotation: 0 },
+      onChange: () => {},
+      inputs: ['spline'],
+      outputs: ['spline']
+    }
+  },
+  {
     id: 'fl-1',
     type: 'buildingNode',
     position: { x: 400, y: 350 },
@@ -55,11 +81,26 @@ const initialNodes: Node<NodeData>[] = [
         windowType: 'modern',
         doorType: 'modern',
         material: 'bricks',
-        hasBalcony: true
+        hasBalcony: true,
+        hasRibs: true,
+        plinthHeight: 0.8
       },
       onChange: () => {},
       inputs: ['spline'],
       outputs: ['mesh', 'window', 'float']
+    }
+  },
+  {
+    id: 'col-1',
+    type: 'buildingNode',
+    position: { x: 400, y: 600 },
+    data: {
+      label: 'Column Generator',
+      type: 'columns',
+      params: { radius: 0.3, height: 4.0, spacing: 3.0, useCorners: true, material: 'concrete' },
+      onChange: () => {},
+      inputs: ['spline'],
+      outputs: ['mesh']
     }
   },
   {

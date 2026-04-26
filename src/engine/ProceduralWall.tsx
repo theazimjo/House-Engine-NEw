@@ -19,6 +19,8 @@ interface ProceduralWallProps {
   doorType?: string;
   materialType?: MaterialType;
   hasBalcony?: boolean;
+  hasRibs?: boolean;
+  plinthHeight?: number;
 }
 
 const WindowModel = ({ w, h, type }: { w: number, h: number, type: string }) => {
@@ -120,22 +122,22 @@ const BalconyModel = ({ w, h }: { w: number, h: number }) => {
   const depth = 1.2;
   const railingH = 1.0;
   return (
-    <group position={[0, -h/2, depth/2]}>
-      {/* Base slab */}
-      <mesh position={[0, -0.05, 0]}>
+    <group position={[0, -h/2, 0]}>
+      {/* Base slab - starts at wall and goes out */}
+      <mesh position={[0, -0.05, depth/2]}>
         <boxGeometry args={[w + 0.4, 0.1, depth]} />
         <meshStandardMaterial color="#ccc" />
       </mesh>
       {/* Railings */}
-      <mesh position={[0, railingH/2, depth/2]}>
+      <mesh position={[0, railingH/2, depth]}>
         <boxGeometry args={[w + 0.4, railingH, 0.05]} />
         <meshStandardMaterial color="#111" transparent opacity={0.7} />
       </mesh>
-      <mesh position={[-(w+0.4)/2, railingH/2, 0]} rotation={[0, Math.PI/2, 0]}>
+      <mesh position={[-(w+0.4)/2, railingH/2, depth/2]} rotation={[0, Math.PI/2, 0]}>
         <boxGeometry args={[depth, railingH, 0.05]} />
         <meshStandardMaterial color="#111" transparent opacity={0.7} />
       </mesh>
-      <mesh position={[(w+0.4)/2, railingH/2, 0]} rotation={[0, Math.PI/2, 0]}>
+      <mesh position={[(w+0.4)/2, railingH/2, depth/2]} rotation={[0, Math.PI/2, 0]}>
         <boxGeometry args={[depth, railingH, 0.05]} />
         <meshStandardMaterial color="#111" transparent opacity={0.7} />
       </mesh>
@@ -147,17 +149,26 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
   width, height, thickness, windowSpacing, windowSize, sillHeight, isModern,
   hasDoor = false, doorWidth = 1.8, doorHeight = 2.4, doorOffset = 0,
   windowType = 'modern', doorType = 'modern', materialType = 'bricks',
-  hasBalcony = false
+  hasBalcony = false, hasRibs = false, plinthHeight = 0
 }) => {
   const wallMaterial = React.useMemo(() => materialLib.getMaterial(materialType, isModern ? "#e2e2e2" : "#f0f0f0"), [materialType, isModern]);
 
-  const { shape, windowPositions, doorPos } = React.useMemo(() => {
+  const { shape, plinthShape, windowPositions, doorPos } = React.useMemo(() => {
     const s = new THREE.Shape();
     s.moveTo(-width / 2, 0);
     s.lineTo(width / 2, 0);
     s.lineTo(width / 2, height);
     s.lineTo(-width / 2, height);
     s.closePath();
+
+    const pS = new THREE.Shape();
+    if (plinthHeight > 0) {
+      pS.moveTo(-width / 2 - 0.1, 0);
+      pS.lineTo(width / 2 + 0.1, 0);
+      pS.lineTo(width / 2 + 0.1, plinthHeight);
+      pS.lineTo(-width / 2 - 0.1, plinthHeight);
+      pS.closePath();
+    }
 
     const wCount = Math.floor(width / windowSpacing);
     const w = windowSize[0];
@@ -167,19 +178,22 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
     const doorMin = hasDoor ? doorOffset - doorWidth / 2 - 0.2 : 9999;
     const doorMax = hasDoor ? doorOffset + doorWidth / 2 + 0.2 : -9999;
 
+    // Ensure windows are above plinth
+    const actualSillHeight = Math.max(sillHeight, plinthHeight + 0.2);
+
     if (wCount > 0) {
       const startX = -(wCount - 1) * windowSpacing / 2;
       for (let i = 0; i < wCount; i++) {
         const x = startX + i * windowSpacing;
         if (!(hasDoor && x + w / 2 > doorMin && x - w / 2 < doorMax)) {
           const hole = new THREE.Path();
-          hole.moveTo(x - w / 2, sillHeight);
-          hole.lineTo(x + w / 2, sillHeight);
-          hole.lineTo(x + w / 2, sillHeight + h);
-          hole.lineTo(x - w / 2, sillHeight + h);
+          hole.moveTo(x - w / 2, actualSillHeight);
+          hole.lineTo(x + w / 2, actualSillHeight);
+          hole.lineTo(x + w / 2, actualSillHeight + h);
+          hole.lineTo(x - w / 2, actualSillHeight + h);
           hole.closePath();
           s.holes.push(hole);
-          winPos.push({ x, y: sillHeight + h/2 });
+          winPos.push({ x, y: actualSillHeight + h/2 });
         }
       }
     }
@@ -192,10 +206,20 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
       hole.lineTo(doorOffset - doorWidth / 2, doorHeight);
       hole.closePath();
       s.holes.push(hole);
+
+      if (plinthHeight > 0) {
+        const ph = new THREE.Path();
+        ph.moveTo(doorOffset - doorWidth / 2 - 0.05, 0);
+        ph.lineTo(doorOffset + doorWidth / 2 + 0.05, 0);
+        ph.lineTo(doorOffset + doorWidth / 2 + 0.05, plinthHeight);
+        ph.lineTo(doorOffset - doorWidth / 2 - 0.05, plinthHeight);
+        ph.closePath();
+        pS.holes.push(ph);
+      }
     }
 
-    return { shape: s, windowPositions: winPos, doorPos: doorOffset };
-  }, [width, height, windowSpacing, windowSize, sillHeight, hasDoor, doorWidth, doorHeight, doorOffset]);
+    return { shape: s, plinthShape: pS, windowPositions: winPos, doorPos: doorOffset };
+  }, [width, height, windowSpacing, windowSize, sillHeight, hasDoor, doorWidth, doorHeight, doorOffset, plinthHeight]);
 
   return (
     <group>
@@ -203,9 +227,22 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
         <extrudeGeometry args={[shape, { depth: thickness, bevelEnabled: false }]} />
       </mesh>
 
+      {/* Foundation Plinth (Base) with Door Cutout */}
+      {plinthHeight > 0 && (
+        <mesh position={[0, 0, -thickness/2 - 0.1]}>
+          <extrudeGeometry args={[plinthShape, { depth: thickness + 0.2, bevelEnabled: false }]} />
+          <meshStandardMaterial 
+            color="#333" 
+            polygonOffset
+            polygonOffsetFactor={-1}
+            polygonOffsetUnits={-1}
+          />
+        </mesh>
+      )}
+
       {/* Decorative Cornice (Top trim) */}
-      <mesh position={[0, height, 0]}>
-        <boxGeometry args={[width + 0.1, 0.15, thickness + 0.1]} />
+      <mesh position={[0, height, 0.05]}>
+        <boxGeometry args={[width + 0.1, 0.15, thickness + 0.2]} />
         <meshStandardMaterial color="#ccc" />
       </mesh>
       
@@ -213,10 +250,25 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
         <group key={i} position={[pos.x, pos.y, 0]}>
           <WindowModel w={windowSize[0]} h={windowSize[1]} type={windowType} />
           {hasBalcony && i % 2 === 0 && (
-            <BalconyModel w={windowSize[0]} h={windowSize[1]} />
+            <group position={[0, 0, thickness / 2 + 0.1]}>
+              <BalconyModel w={windowSize[0]} h={windowSize[1]} />
+            </group>
           )}
         </group>
       ))}
+
+      {/* Vertical Ribs (Architectural Fins) */}
+      {hasRibs && windowPositions.length > 1 && windowPositions.map((pos, i) => {
+        if (i === windowPositions.length - 1) return null;
+        const nextPos = windowPositions[i+1];
+        const ribX = (pos.x + nextPos.x) / 2;
+        return (
+          <mesh key={`rib-${i}`} position={[ribX, height/2, thickness/2 + 0.05]}>
+            <boxGeometry args={[0.2, height, 0.2]} />
+            <meshStandardMaterial color="#ddd" />
+          </mesh>
+        );
+      })}
 
       {hasDoor && (
         <group position={[doorPos, doorHeight/2, 0]}>

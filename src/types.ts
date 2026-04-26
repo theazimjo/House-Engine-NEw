@@ -1,6 +1,6 @@
 import type { Node, Edge } from 'reactflow';
 
-export type NodeType = 'foundation' | 'floors' | 'roof';
+export type NodeType = 'foundation' | 'floors' | 'roof' | 'offset_spline' | 'transform_spline' | 'columns';
 export type PinType = 'spline' | 'mesh' | 'float' | 'mask' | 'window' | 'floors';
 
 export interface NodeData {
@@ -10,6 +10,7 @@ export interface NodeData {
   onChange: (id: string, params: Record<string, any>) => void;
   inputs?: PinType[];
   outputs?: PinType[];
+  onDelete?: (id: string) => void;
 }
 
 export interface ViewportProps {

@@ -72,7 +72,7 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
                   </>
                 )}
               </select>
-            ) : ['hasBalcony', 'showWindow', 'hasDoor'].includes(key) ? (
+            ) : ['hasBalcony', 'showWindow', 'hasDoor', 'hasRibs'].includes(key) ? (
               /* Checkbox inputs for boolean keys */
               <div className="flex items-center">
                 <input
