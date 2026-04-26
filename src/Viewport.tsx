@@ -106,6 +106,8 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
                     doorWidth={part.doorWidth || 1.8}
                     doorHeight={part.doorHeight || 2.4}
                     doorOffset={part.doorOffset || 0}
+                    windowType={part.windowType}
+                    doorType={part.doorType}
                   />
                 </group>
               );

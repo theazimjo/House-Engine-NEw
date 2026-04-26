@@ -38,7 +38,7 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
           <div key={key} className="input-group" style={{ position: 'relative' }}>
             <label className="input-label">{key}</label>
 
-            {key === 'roofType' || key === 'foundationShape' || key === 'doorSide' ? (
+            {key === 'roofType' || key === 'foundationShape' || key === 'doorSide' || key === 'windowType' || key === 'doorType' ? (
               <select
                 value={value}
                 onChange={(e) => handleParamChange(key, e.target.value)}
@@ -52,6 +52,18 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
                     <option value="gable">Gable</option>
                     <option value="mansard">Mansard</option>
                     <option value="shed">Shed</option>
+                  </>
+                ) : key === 'windowType' ? (
+                  <>
+                    <option value="modern">Modern</option>
+                    <option value="classic">Classic Grid</option>
+                    <option value="arched">Arched</option>
+                  </>
+                ) : key === 'doorType' ? (
+                  <>
+                    <option value="modern">Modern</option>
+                    <option value="classic">Classic Paneled</option>
+                    <option value="double">Double Door</option>
                   </>
                 ) : key === 'doorSide' ? (
                   <>

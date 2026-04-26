@@ -41,7 +41,20 @@ const initialNodes: Node<NodeData>[] = [
     data: {
       label: 'Floors System',
       type: 'floors',
-      params: { count: 5, height: 3.2, winWidth: 1.2, winHeight: 1.8, winSpacing: 2.5, doorWidth: 1.8, doorHeight: 2.4, doorOffset: 0, doorSide: 'front', showWindow: true },
+      params: { 
+        count: 5, 
+        height: 3.2, 
+        winWidth: 1.2, 
+        winHeight: 1.8, 
+        winSpacing: 2.5, 
+        doorWidth: 1.8, 
+        doorHeight: 2.4, 
+        doorOffset: 0, 
+        doorSide: 'front', 
+        showWindow: true,
+        windowType: 'modern',
+        doorType: 'modern'
+      },
       onChange: () => {},
       inputs: ['spline'],
       outputs: ['mesh', 'window', 'float']
