@@ -11,11 +11,6 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
 
   // Header height is roughly 40px. 
   // We want to space handles below that.
-  const getHandleStyle = (index: number, isRight: boolean) => ({
-    background: PIN_COLORS[isRight ? (data.outputs?.[index] || 'mesh') : (data.inputs?.[index] || 'mesh')],
-    top: `${40 + (index + 1) * 24}px`,
-    [isRight ? 'right' : 'left']: '-5px',
-  });
 
   return (
     <>
@@ -38,7 +33,7 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
           <div key={key} className="input-group" style={{ position: 'relative' }}>
             <label className="input-label">{key}</label>
 
-            {key === 'roofType' || key === 'foundationShape' || key === 'doorSide' || key === 'windowType' || key === 'doorType' ? (
+            {key === 'roofType' || key === 'foundationShape' || key === 'doorSide' || key === 'windowType' || key === 'doorType' || key === 'material' ? (
               <select
                 value={value}
                 onChange={(e) => handleParamChange(key, e.target.value)}
@@ -52,6 +47,13 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
                     <option value="gable">Gable</option>
                     <option value="mansard">Mansard</option>
                     <option value="shed">Shed</option>
+                  </>
+                ) : key === 'material' ? (
+                  <>
+                    <option value="concrete">Concrete</option>
+                    <option value="bricks">Bricks</option>
+                    <option value="wood">Wood</option>
+                    <option value="metal">Metal</option>
                   </>
                 ) : key === 'windowType' ? (
                   <>

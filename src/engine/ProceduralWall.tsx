@@ -1,5 +1,7 @@
 import React from 'react';
 import * as THREE from 'three';
+import { materialLib } from './MaterialLibrary';
+import type { MaterialType } from './MaterialLibrary';
 
 interface ProceduralWallProps {
   width: number;
@@ -9,13 +11,13 @@ interface ProceduralWallProps {
   windowSize: [number, number];
   sillHeight: number;
   isModern?: boolean;
-  floorIndex?: number;
   hasDoor?: boolean;
   doorWidth?: number;
   doorHeight?: number;
   doorOffset?: number;
   windowType?: string;
   doorType?: string;
+  materialType?: MaterialType;
 }
 
 const WindowModel = ({ w, h, type }: { w: number, h: number, type: string }) => {
@@ -114,10 +116,12 @@ const DoorModel = ({ w, h, type }: { w: number, h: number, type: string }) => {
 };
 
 export const ProceduralWall: React.FC<ProceduralWallProps> = ({ 
-  width, height, thickness, windowSpacing, windowSize, sillHeight, isModern, floorIndex = 0,
+  width, height, thickness, windowSpacing, windowSize, sillHeight, isModern,
   hasDoor = false, doorWidth = 1.8, doorHeight = 2.4, doorOffset = 0,
-  windowType = 'modern', doorType = 'modern'
+  windowType = 'modern', doorType = 'modern', materialType = 'bricks'
 }) => {
+  const wallMaterial = React.useMemo(() => materialLib.getMaterial(materialType, isModern ? "#e2e2e2" : "#f0f0f0"), [materialType, isModern]);
+
   const { shape, windowPositions, doorPos } = React.useMemo(() => {
     const s = new THREE.Shape();
     s.moveTo(-width / 2, 0);
@@ -166,9 +170,8 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
 
   return (
     <group>
-      <mesh castShadow receiveShadow position={[0, 0, -thickness/2]}>
+      <mesh castShadow receiveShadow position={[0, 0, -thickness/2]} material={wallMaterial}>
         <extrudeGeometry args={[shape, { depth: thickness, bevelEnabled: false }]} />
-        <meshStandardMaterial color={isModern ? "#e2e2e2" : "#f0f0f0"} roughness={0.8} side={THREE.DoubleSide} />
       </mesh>
       
       {windowPositions.map((pos, i) => (

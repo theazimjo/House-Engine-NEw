@@ -17,7 +17,7 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
         const elements = [];
         const {
           spline, floors = 1, floorHeight = 3,
-          windowSpacing, windowHeight, wallThickness,
+          wallThickness = 0.2,
           style, offset = [0, 0, 0],
           twist, taper = 1, shear, jitter = 0
         } = part;
@@ -101,13 +101,13 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
                     width={len} height={floorHeight} thickness={wallThickness || 0.25}
                     windowSpacing={wSpacing} windowSize={wSize} sillHeight={0.9}
                     isModern={isModern}
-                    floorIndex={f}
                     hasDoor={shouldHaveDoor}
                     doorWidth={part.doorWidth || 1.8}
                     doorHeight={part.doorHeight || 2.4}
                     doorOffset={part.doorOffset || 0}
                     windowType={part.windowType}
                     doorType={part.doorType}
+                    materialType={part.material}
                   />
                 </group>
               );
@@ -139,24 +139,23 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
             ];
           };
 
-          const basePoints = spline.map((p: any) => getTransformedPoint(p, 1.0));
+          const basePoints = spline.map((p: any) => getTransformedPoint(p, 1.0, 1.0));
 
           let topScaleX = 1.0;
           let topScaleZ = 1.0;
-          let topOffsetZ = 0;
-
+          
           if (roofType === 'hip') {
             topScaleX = 0.05;
             topScaleZ = 0.05;
           } else if (roofType === 'gable' || roofType === 'pitched') {
             topScaleX = 0.01; // Ridge line
-            topScaleZ = 1.0;
+            topScaleZ = 1.0; 
           } else if (roofType === 'mansard') {
             topScaleX = 0.6;
             topScaleZ = 0.6;
           }
 
-          const topPoints = spline.map((p: any) => getTransformedPoint(p, topScaleX));
+          const topPoints = spline.map((p: any) => getTransformedPoint(p, topScaleX, topScaleZ));
           const vertices = [];
           const roofH = roofType === 'flat' ? 0.1 : height;
 

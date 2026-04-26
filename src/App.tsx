@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect } from 'react';
 import ReactFlow, { 
   addEdge, 
   Background, 
@@ -53,7 +53,8 @@ const initialNodes: Node<NodeData>[] = [
         doorSide: 'front', 
         showWindow: true,
         windowType: 'modern',
-        doorType: 'modern'
+        doorType: 'modern',
+        material: 'bricks'
       },
       onChange: () => {},
       inputs: ['spline'],

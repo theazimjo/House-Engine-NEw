@@ -69,6 +69,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
             doorSide,
             windowType: node.data.params.windowType || 'modern',
             doorType: node.data.params.doorType || 'modern',
+            material: node.data.params.material || 'bricks',
             twist: splineData.twist,
             taper: splineData.taper,
             shear: splineData.shear,
