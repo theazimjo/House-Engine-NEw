@@ -669,6 +669,7 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
   const [wireframe, setWireframe] = useState(false);
   const [gridVisible, setGridVisible] = useState(true);
   const [envPreset, setEnvPreset] = useState<string>('city');
+  const [timeOfDay, setTimeOfDay] = useState<number>(14);
   const [cameraPreset, setCameraPreset] = useState<string | null>(null);
 
   useImperativeHandle(ref, () => ({
@@ -708,6 +709,21 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
     setCameraPreset(preset);
   }, []);
 
+  // Time of Day calculations
+  const sunAngle = ((timeOfDay - 6) / 14) * Math.PI; // 6am = 0, 20pm = PI
+  const sunY = Math.max(-5, Math.sin(sunAngle) * 60);
+  const sunX = Math.cos(sunAngle) * -80; // Sun moves from East to West
+  const sunZ = 20;
+  
+  // Dynamic colors based on time
+  const isNight = timeOfDay < 6.5 || timeOfDay > 19.5;
+  const sunIntensity = isNight ? 0.2 : Math.max(0.1, Math.sin(sunAngle) * 2.5);
+  const sunColor = timeOfDay < 8 || timeOfDay > 18 ? '#ffb766' : '#fff5e0';
+  const ambientIntensity = isNight ? 0.1 : 0.25;
+  const hemiSky = isNight ? '#112' : '#b0d4ff';
+  const hemiGround = isNight ? '#000' : '#c8a060';
+  const fogColor = isNight ? '#050508' : '#1a1820';
+
   return (
     <div style={{ width: '100%', height: '100%', background: '#0a0a0c', position: 'relative' }}>
       {/* Viewport Overlay Controls */}
@@ -719,6 +735,8 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
         wireframe={wireframe}
         gridVisible={gridVisible}
         currentEnv={envPreset}
+        timeOfDay={timeOfDay}
+        onSetTimeOfDay={setTimeOfDay}
       />
 
       <Canvas shadows dpr={[1, 2]}>
@@ -726,15 +744,13 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
         <PerspectiveCamera makeDefault position={[25, 25, 25]} fov={45} far={2000} />
         <CameraController preset={cameraPreset} onDone={() => setCameraPreset(null)} />
 
-        {/* ── Lighting: Golden-Hour Dramatic Scene ── */}
-        <ambientLight intensity={0.25} color="#ffeedd" />
-        {/* Sky/Ground bounce */}
-        <hemisphereLight args={['#b0d4ff', '#c8a060', 0.6]} />
-        {/* Key sun — golden hour angle */}
+        {/* ── Dynamic Lighting ── */}
+        <ambientLight intensity={ambientIntensity} color="#ffeedd" />
+        <hemisphereLight args={[hemiSky, hemiGround, 0.6]} />
         <directionalLight
-          position={[40, 60, 20]}
-          intensity={2.2}
-          color="#fff5e0"
+          position={[sunX, sunY, sunZ]}
+          intensity={sunIntensity}
+          color={sunColor}
           castShadow
           shadow-mapSize={[4096, 4096]}
           shadow-camera-near={0.5}
@@ -746,12 +762,12 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
           shadow-bias={-0.001}
         />
         {/* Fill light — cool blue from opposite side */}
-        <directionalLight position={[-30, 20, -20]} intensity={0.5} color="#c8d8ff" />
+        <directionalLight position={[-30, 20, -20]} intensity={isNight ? 0.1 : 0.5} color="#c8d8ff" />
         {/* Ground-bounce fill */}
-        <pointLight position={[0, -2, 0]} intensity={0.3} color="#d4b896" distance={80} />
+        <pointLight position={[0, -2, 0]} intensity={isNight ? 0.05 : 0.3} color="#d4b896" distance={80} />
 
         {/* Atmospheric fog for depth */}
-        <fogExp2 attach="fog" color="#1a1820" density={0.004} />
+        <fogExp2 attach="fog" color={fogColor} density={0.004} />
 
         <SceneRenderer nodes={nodes} edges={edges} wireframe={wireframe} onSceneReady={(s) => { sceneRef.current = s; }} />
 

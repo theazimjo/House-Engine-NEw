@@ -13,6 +13,8 @@ interface ViewportOverlayProps {
   wireframe: boolean;
   gridVisible: boolean;
   currentEnv: string;
+  timeOfDay: number;
+  onSetTimeOfDay: (time: number) => void;
 }
 
 const CAMERA_PRESETS = [
@@ -34,7 +36,7 @@ const ENV_PRESETS = [
 
 export const ViewportOverlay: React.FC<ViewportOverlayProps> = ({
   onCameraPreset, onToggleWireframe, onToggleGrid, onSetEnvironment,
-  wireframe, gridVisible, currentEnv
+  wireframe, gridVisible, currentEnv, timeOfDay, onSetTimeOfDay
 }) => {
   const [showEnvPanel, setShowEnvPanel] = useState(false);
 
@@ -103,6 +105,22 @@ export const ViewportOverlay: React.FC<ViewportOverlayProps> = ({
                   <span>{e.label}</span>
                 </button>
               ))}
+
+              <div className="viewport-env-label" style={{ marginTop: '12px' }}>TIME OF DAY</div>
+              <div style={{ padding: '0 8px 8px 8px' }}>
+                <input 
+                  type="range" 
+                  min="6" max="20" step="0.5" 
+                  value={timeOfDay} 
+                  onChange={(e) => onSetTimeOfDay(parseFloat(e.target.value))}
+                  style={{ width: '100%', cursor: 'pointer' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#888', marginTop: '4px' }}>
+                  <span>6:00</span>
+                  <span>12:00</span>
+                  <span>20:00</span>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
