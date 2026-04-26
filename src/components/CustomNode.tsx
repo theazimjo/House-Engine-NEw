@@ -48,7 +48,10 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
                   <>
                     <option value="flat">Flat</option>
                     <option value="pitched">Pitched</option>
-                    <option value="dome">Dome</option>
+                    <option value="hip">Hip Roof</option>
+                    <option value="gable">Gable</option>
+                    <option value="mansard">Mansard</option>
+                    <option value="shed">Shed</option>
                   </>
                 ) : key === 'doorSide' ? (
                   <>

@@ -108,6 +108,12 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
             color: roofColor,
             baseHeight,
             spline: roofSpline.points,
+            deformation: {
+              twist: roofSpline.twist,
+              taper: roofSpline.taper,
+              shear: roofSpline.shear,
+              jitter: roofSpline.jitter
+            },
             detailed: false,
             roof: true
           };

@@ -115,43 +115,73 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
 
         if (part.roof && spline) {
           const roofY = (part.baseHeight || 0) + oy;
-          const { roofType, overhang = 0.5, color = '#8e2b2b' } = part;
+          const { roofType, overhang = 0.5, color = '#8e2b2b', deformation, height = 2 } = part;
 
-          // Create a shape from spline points
-          const roofShape = new THREE.Shape();
+          const { twist = { base: 0, mid: 0, top: 0 }, taper = 1 } = deformation || {};
+          const t = 1.0;
+          const rotationRad = (twist.base + (twist.mid - twist.base) * t + (twist.top - twist.mid) * t) * (Math.PI / 180);
+          const currentScale = 1.0 + (taper - 1.0) * t;
+
+          const getTransformedPoint = (p: [number, number], extraScale: number = 1.0) => {
+            const s = Math.sin(rotationRad);
+            const c = Math.cos(rotationRad);
+            const rx = p[0] * currentScale * extraScale;
+            const rz = p[1] * currentScale * extraScale;
+            const mag = Math.sqrt(rx * rx + rz * rz);
+            const dir = mag > 0 ? [rx / mag, rz / mag] : [0, 0];
+            const px = rx + dir[0] * overhang;
+            const pz = rz + dir[1] * overhang;
+            return [
+              px * c - pz * s,
+              px * s + pz * c
+            ];
+          };
+
+          const basePoints = spline.map((p: any) => getTransformedPoint(p, 1.0));
           
-          // Apply overhang to the shape
-          const expandedSpline = spline.map((p: [number, number]) => {
-            const mag = Math.sqrt(p[0] * p[0] + p[1] * p[1]);
-            const dir = mag > 0 ? [p[0] / mag, p[1] / mag] : [0, 0];
-            return [p[0] + dir[0] * overhang, p[1] + dir[1] * overhang];
-          });
+          // For hip roof, the top is a small version of the base
+          const topScale = roofType === 'flat' ? 1.0 : (roofType === 'mansard' ? 0.6 : 0.05);
+          const topPoints = spline.map((p: any) => getTransformedPoint(p, topScale));
+          const roofH = roofType === 'flat' ? 0.1 : height;
 
-          roofShape.moveTo(expandedSpline[0][0], expandedSpline[0][1]);
-          expandedSpline.slice(1).forEach((p: any) => roofShape.lineTo(p[0], p[1]));
-
-          if (roofType === 'pitched') {
-            elements.push(
-              <mesh key={`roof-${idx}`} position={[ox, roofY, oz]} rotation={[-Math.PI/2, 0, 0]} castShadow>
-                <extrudeGeometry args={[roofShape, { 
-                  depth: 0.1, 
-                  bevelEnabled: true, 
-                  bevelThickness: part.height || 1.5, 
-                  bevelSize: 2, 
-                  bevelOffset: -2, 
-                  bevelSegments: 1 
-                }]} />
-                <meshStandardMaterial color={color} roughness={0.4} metalness={0.2} side={THREE.DoubleSide} />
-              </mesh>
-            );
-          } else {
-             elements.push(
-               <mesh key={`roof-flat-${idx}`} position={[ox, roofY, oz]} rotation={[-Math.PI/2, 0, 0]}>
-                 <extrudeGeometry args={[roofShape, { depth: 0.2, bevelEnabled: false }]} />
-                 <meshStandardMaterial color="#2a2a30" />
-               </mesh>
-             );
+          const vertices = [];
+          for (let i = 0; i < basePoints.length; i++) {
+            const next = (i + 1) % basePoints.length;
+            
+            // Side face (Quad as two triangles)
+            // Triangle 1
+            vertices.push(...basePoints[i], 0);
+            vertices.push(...basePoints[next], 0);
+            vertices.push(...topPoints[next], roofH);
+            
+            // Triangle 2
+            vertices.push(...basePoints[i], 0);
+            vertices.push(...topPoints[next], roofH);
+            vertices.push(...topPoints[i], roofH);
           }
+
+          // Top face to close any holes at the peak
+          for (let i = 1; i < topPoints.length - 1; i++) {
+            vertices.push(...topPoints[0], roofH);
+            vertices.push(...topPoints[i], roofH);
+            vertices.push(...topPoints[i+1], roofH);
+          }
+
+          const geometry = new THREE.BufferGeometry();
+          geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+          geometry.computeVertexNormals();
+
+          elements.push(
+            <mesh 
+              key={`roof-${idx}`} 
+              position={[ox, roofY + 0.01, oz]} 
+              rotation={[-Math.PI/2, 0, 0]} 
+              castShadow
+              geometry={geometry}
+            >
+              <meshStandardMaterial color={color} roughness={0.4} metalness={0.2} side={THREE.DoubleSide} />
+            </mesh>
+          );
         }
 
         if (part.type === 'column' && spline) {
