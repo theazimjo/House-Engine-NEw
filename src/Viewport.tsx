@@ -54,6 +54,24 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
 
             const floorY = f * floorHeight + oy;
 
+            // Render Corner Pillars to hide seams
+            spline.forEach((p: any, pIdx: number) => {
+              const rotatePoint = (pt: [number, number]): [number, number] => {
+                const s = Math.sin(rotationRad);
+                const c = Math.cos(rotationRad);
+                const rx = pt[0] * currentScale;
+                const rz = pt[1] * currentScale;
+                return [rx * c - rz * s, rx * s + rz * c];
+              };
+              const pRot = rotatePoint(p);
+              elements.push(
+                <mesh key={`pillar-${idx}-${f}-${pIdx}`} position={[pRot[0] + ox + shearOffsetX + jitterX, floorY + floorHeight / 2, pRot[1] + oz + shearOffsetZ + jitterZ]}>
+                  <boxGeometry args={[wallThickness * 1.1, floorHeight, wallThickness * 1.1]} />
+                  <meshStandardMaterial color="#ccc" />
+                </mesh>
+              );
+            });
+
             spline.forEach((p: any, i: number) => {
               const next = spline[(i + 1) % spline.length];
 
