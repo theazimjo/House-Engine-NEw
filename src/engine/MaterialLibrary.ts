@@ -1,13 +1,27 @@
 import * as THREE from 'three';
 
-export type MaterialType = 'concrete' | 'bricks' | 'wood' | 'metal' | 'roof_tiles';
+export type MaterialType = 'concrete' | 'bricks' | 'wood' | 'metal' | 'roof_tiles' | 'stone' | 'plaster' | 'marble' | 'glass';
 
 class MaterialLibrary {
-  private cache: Map<string, THREE.MeshStandardMaterial> = new Map();
+  private cache: Map<string, THREE.MeshStandardMaterial | THREE.MeshPhysicalMaterial> = new Map();
 
-  getMaterial(type: MaterialType, color: string = '#ffffff'): THREE.MeshStandardMaterial {
+  getMaterial(type: MaterialType, color: string = '#ffffff'): THREE.MeshStandardMaterial | THREE.MeshPhysicalMaterial {
     const key = `${type}-${color}`;
     if (this.cache.has(key)) return this.cache.get(key)!;
+
+    if (type === 'glass') {
+      const glassMat = new THREE.MeshPhysicalMaterial({
+        color: new THREE.Color(color).lerp(new THREE.Color('#aaddff'), 0.3),
+        metalness: 0.9,
+        roughness: 0.05,
+        transmission: 0.9,
+        transparent: true,
+        opacity: 0.7,
+        side: THREE.DoubleSide
+      });
+      this.cache.set(key, glassMat);
+      return glassMat;
+    }
 
     const textures = this.generateTextures(type);
     const material = new THREE.MeshStandardMaterial({
@@ -15,8 +29,8 @@ class MaterialLibrary {
       normalMap: textures.normal,
       roughnessMap: textures.roughness,
       color: new THREE.Color(color),
-      roughness: type === 'metal' || type === 'roof_tiles' ? 0.4 : 0.8,
-      metalness: type === 'metal' ? 0.9 : 0.05,
+      roughness: (type === 'metal' || type === 'roof_tiles' || type === 'marble') ? 0.2 : (type === 'plaster' ? 0.9 : 0.8),
+      metalness: type === 'metal' ? 0.9 : (type === 'marble' ? 0.1 : 0.05),
       normalScale: new THREE.Vector2(2.0, 2.0),
       side: THREE.DoubleSide // Ensure visibility from both sides
     });
@@ -114,6 +128,47 @@ class MaterialLibrary {
         // Wood grain in normal map
         nCtx.fillStyle = `rgb(128, 128, ${240 + Math.random() * 15})`;
         nCtx.fillRect(0, i, size, 2);
+      }
+    } else if (type === 'stone') {
+      ctx.fillStyle = '#7a7a7a';
+      ctx.fillRect(0, 0, size, size);
+      for (let i = 0; i < 4000; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const s = Math.random() * 20 + 5;
+        ctx.fillStyle = `rgba(${Math.random()*50},${Math.random()*50},${Math.random()*50}, 0.1)`;
+        ctx.beginPath();
+        ctx.arc(x, y, s, 0, Math.PI * 2);
+        ctx.fill();
+
+        nCtx.fillStyle = `rgb(${128 + Math.random()*20 - 10}, ${128 + Math.random()*20 - 10}, 255)`;
+        nCtx.beginPath();
+        nCtx.arc(x, y, s, 0, Math.PI * 2);
+        nCtx.fill();
+      }
+    } else if (type === 'marble') {
+      ctx.fillStyle = '#f0f0f0';
+      ctx.fillRect(0, 0, size, size);
+      ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 30; i++) {
+        ctx.beginPath();
+        ctx.moveTo(Math.random() * size, 0);
+        ctx.bezierCurveTo(Math.random() * size, size/3, Math.random() * size, size*2/3, Math.random() * size, size);
+        ctx.stroke();
+      }
+    } else if (type === 'plaster') {
+      ctx.fillStyle = '#e8e8e8';
+      ctx.fillRect(0, 0, size, size);
+      for (let i = 0; i < 50000; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const val = Math.random();
+        ctx.fillStyle = `rgba(0,0,0,${val * 0.05})`;
+        ctx.fillRect(x, y, 1, 1);
+        
+        nCtx.fillStyle = `rgb(${120 + val * 16}, ${120 + val * 16}, 255)`;
+        nCtx.fillRect(x, y, 2, 2);
       }
     } else {
       // Concrete

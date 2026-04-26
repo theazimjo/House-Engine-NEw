@@ -233,6 +233,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
               ...buildingData,
               type: 'floor_slab',
               baseHeight: floorY,
+              floorIndex: i,
               detailed: false
             });
 
@@ -241,6 +242,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
               ...buildingData,
               type: 'interior_partition',
               baseHeight: floorY,
+              floorIndex: i,
               detailed: false
             });
           }
@@ -250,6 +252,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
             ...buildingData,
             type: 'floor_slab',
             baseHeight: totalBuildingHeight,
+            floorIndex: count,
             detailed: false
           });
 

@@ -27,7 +27,7 @@ const WindowModel = ({ w, h, type }: { w: number, h: number, type: string }) => 
   const fT = 0.06;
   const glassW = w - fT * 2;
   const glassH = h - fT * 2;
-  const fC = type === 'modern' ? "#111" : (type === 'classic' ? "#f5f5f5" : "#5d4037");
+  const fC = type === 'modern' ? "#111" : (type === 'classic' ? "#f5f5f5" : (type === 'industrial' ? "#333" : "#5d4037"));
   const depth = 0.5; // Thicker than wall to show on both sides
 
   return (
@@ -38,10 +38,15 @@ const WindowModel = ({ w, h, type }: { w: number, h: number, type: string }) => 
       <mesh position={[-w/2 + fT/2, 0, 0]}><boxGeometry args={[fT, h, depth]} /><meshStandardMaterial color={fC} side={THREE.DoubleSide} /></mesh>
       <mesh position={[w/2 - fT/2, 0, 0]}><boxGeometry args={[fT, h, depth]} /><meshStandardMaterial color={fC} side={THREE.DoubleSide} /></mesh>
       
+      {/* Sill */}
+      <mesh position={[0, -h/2, 0]}>
+        <boxGeometry args={[w + 0.1, 0.04, depth + 0.15]} />
+        <meshStandardMaterial color={fC} roughness={0.8} side={THREE.DoubleSide} />
+      </mesh>
+
       {/* Glass */}
-      <mesh position={[0, 0, 0]}>
+      <mesh position={[0, 0, 0]} material={materialLib.getMaterial('glass')}>
         <boxGeometry args={[glassW, glassH, 0.05]} />
-        <meshStandardMaterial color="#aaddff" transparent opacity={0.5} metalness={0.9} roughness={0.1} side={THREE.DoubleSide} />
       </mesh>
 
       {/* Grid for Classic */}
@@ -49,6 +54,24 @@ const WindowModel = ({ w, h, type }: { w: number, h: number, type: string }) => 
         <group>
           <mesh><boxGeometry args={[glassW, 0.03, depth + 0.02]} /><meshStandardMaterial color={fC} side={THREE.DoubleSide} /></mesh>
           <mesh><boxGeometry args={[0.03, glassH, depth + 0.02]} /><meshStandardMaterial color={fC} side={THREE.DoubleSide} /></mesh>
+        </group>
+      )}
+
+      {/* Grid for Industrial */}
+      {type === 'industrial' && (
+        <group>
+          {Array.from({ length: 3 }).map((_, i) => (
+             <mesh key={`h-${i}`} position={[0, -glassH/2 + (i+1)*glassH/4, 0]}>
+               <boxGeometry args={[glassW, 0.03, depth + 0.02]} />
+               <meshStandardMaterial color={fC} metalness={0.6} side={THREE.DoubleSide} />
+             </mesh>
+          ))}
+          {Array.from({ length: 2 }).map((_, i) => (
+             <mesh key={`v-${i}`} position={[-glassW/2 + (i+1)*glassW/3, 0, 0]}>
+               <boxGeometry args={[0.03, glassH, depth + 0.02]} />
+               <meshStandardMaterial color={fC} metalness={0.6} side={THREE.DoubleSide} />
+             </mesh>
+          ))}
         </group>
       )}
 
@@ -78,18 +101,36 @@ const DoorModel = ({ w, h, type }: { w: number, h: number, type: string }) => {
       <mesh position={[w/2 + fT/2, 0, 0]}><boxGeometry args={[fT, h, depth]} /><meshStandardMaterial color="#222" side={THREE.DoubleSide} /></mesh>
 
       {/* Door Slab */}
-      <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[w, h, depth - 0.1]} />
-        <meshStandardMaterial color={dC} roughness={0.7} metalness={0.1} side={THREE.DoubleSide} />
-      </mesh>
+      {type !== 'glass' && (
+        <mesh position={[0, 0, 0]}>
+          <boxGeometry args={[w, h, depth - 0.1]} />
+          <meshStandardMaterial color={dC} roughness={0.7} metalness={0.1} side={THREE.DoubleSide} />
+        </mesh>
+      )}
 
       {/* Modern Details */}
       {type === 'modern' && (
         <group>
-          <mesh position={[-w*0.2, 0, 0]}><boxGeometry args={[0.1, h*0.8, depth + 0.02]} /><meshStandardMaterial color="#aaddff" transparent opacity={0.6} side={THREE.DoubleSide} /></mesh>
+          <mesh position={[-w*0.2, 0, 0]} material={materialLib.getMaterial('glass')}>
+            <boxGeometry args={[0.1, h*0.8, depth + 0.02]} />
+          </mesh>
           {/* Single elegant handle */}
           <mesh position={[w*0.35, 0, depth/2 + 0.05]}><boxGeometry args={[0.04, h*0.6, 0.08]} /><meshStandardMaterial color="#ffffff" metalness={1} roughness={0.1} side={THREE.DoubleSide} /></mesh>
           <mesh position={[w*0.35, 0, -depth/2 - 0.05]}><boxGeometry args={[0.04, h*0.6, 0.08]} /><meshStandardMaterial color="#ffffff" metalness={1} roughness={0.1} side={THREE.DoubleSide} /></mesh>
+        </group>
+      )}
+
+      {/* Glass Storefront Door */}
+      {type === 'glass' && (
+        <group>
+          <mesh position={[0, 0, 0]} material={materialLib.getMaterial('glass')}>
+            <boxGeometry args={[w, h, 0.1]} />
+          </mesh>
+          {/* Top/Bottom internal metal frame */}
+          <mesh position={[0, h/2 - 0.05, 0]}><boxGeometry args={[w, 0.1, 0.15]} /><meshStandardMaterial color="#888" metalness={0.8} /></mesh>
+          <mesh position={[0, -h/2 + 0.05, 0]}><boxGeometry args={[w, 0.1, 0.15]} /><meshStandardMaterial color="#888" metalness={0.8} /></mesh>
+          <mesh position={[w*0.35, 0, depth/2 - 0.15]}><cylinderGeometry args={[0.02, 0.02, h*0.7, 8]} rotation={[0,0,0]} /><meshStandardMaterial color="#fff" metalness={0.9}/></mesh>
+          <mesh position={[w*0.35, 0, -depth/2 + 0.15]}><cylinderGeometry args={[0.02, 0.02, h*0.7, 8]} rotation={[0,0,0]} /><meshStandardMaterial color="#fff" metalness={0.9}/></mesh>
         </group>
       )}
 
@@ -125,7 +166,6 @@ const BalconyModel = ({ w, h }: { w: number, h: number }) => {
   const depth     = 1.3;
   const railingH  = 1.05;
   const slabT     = 0.12;
-  const glassOpacity = 0.45;
   const balusterCount = Math.max(2, Math.floor((w + 0.4) / 0.4));
 
   return (
@@ -137,25 +177,22 @@ const BalconyModel = ({ w, h }: { w: number, h: number }) => {
       </mesh>
 
       {/* ── Front Glass Railing Panel ── */}
-      <mesh position={[0, railingH / 2, -depth]}>
+      <mesh position={[0, railingH / 2, -depth]} material={materialLib.getMaterial('glass')}>
         <boxGeometry args={[w + 0.5, railingH, 0.04]} />
-        <meshStandardMaterial color="#aaddff" transparent opacity={glassOpacity} metalness={0.8} roughness={0.1} />
       </mesh>
 
       {/* ── Side Glass Panels ── */}
-      <mesh position={[-(w + 0.5) / 2, railingH / 2, -depth / 2]}>
+      <mesh position={[-(w + 0.5) / 2, railingH / 2, -depth / 2]} material={materialLib.getMaterial('glass')}>
         <boxGeometry args={[0.04, railingH, depth]} />
-        <meshStandardMaterial color="#aaddff" transparent opacity={glassOpacity} metalness={0.8} roughness={0.1} />
       </mesh>
-      <mesh position={[(w + 0.5) / 2, railingH / 2, -depth / 2]}>
+      <mesh position={[(w + 0.5) / 2, railingH / 2, -depth / 2]} material={materialLib.getMaterial('glass')}>
         <boxGeometry args={[0.04, railingH, depth]} />
-        <meshStandardMaterial color="#aaddff" transparent opacity={glassOpacity} metalness={0.8} roughness={0.1} />
       </mesh>
 
       {/* ── Top Handrail ── */}
       <mesh position={[0, railingH, -depth / 2]}>
         <boxGeometry args={[w + 0.5 + 0.06, 0.06, depth + 0.06]} />
-        <meshStandardMaterial color="#e0e0e0" metalness={0.7} roughness={0.2} />
+        <meshStandardMaterial color="#222" metalness={0.9} roughness={0.2} />
       </mesh>
 
       {/* ── Vertical Balusters (steel posts) ── */}
@@ -164,7 +201,7 @@ const BalconyModel = ({ w, h }: { w: number, h: number }) => {
         return (
           <mesh key={i} position={[bx, railingH / 2, -depth]}>
             <boxGeometry args={[0.04, railingH, 0.04]} />
-            <meshStandardMaterial color="#cccccc" metalness={0.9} roughness={0.1} />
+            <meshStandardMaterial color="#444" metalness={0.9} roughness={0.1} />
           </mesh>
         );
       })}

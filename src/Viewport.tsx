@@ -221,13 +221,34 @@ const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { wirefra
 
         // ── Floor Slab ──
         if (part.type === 'floor_slab') {
-          const { spline: sl, baseHeight = 0 } = part;
-          if (!sl) return null;
+          const { baseHeight = 0, floorIndex = 0 } = part;
+          if (!spline) return null;
+          
+          const t = floorIndex / Math.max(1, floors - 1);
+          let currentTwist = 0;
+          if (twist) {
+            currentTwist = t < 0.5
+              ? THREE.MathUtils.lerp(twist.base, twist.mid, t * 2)
+              : THREE.MathUtils.lerp(twist.mid, twist.top, (t - 0.5) * 2);
+          }
+          const rotationRad = (currentTwist * Math.PI) / 180;
+          const currentScale = THREE.MathUtils.lerp(1, taper, t);
+          const shearOffsetX = shear ? shear.x * t : 0;
+          const shearOffsetZ = shear ? shear.y * t : 0;
+
           const shape = new THREE.Shape();
-          sl.forEach((p: any, i: number) => { i === 0 ? shape.moveTo(p[0], p[1]) : shape.lineTo(p[0], p[1]); });
+          spline.forEach((p: any, i: number) => { 
+            const s = Math.sin(rotationRad);
+            const c = Math.cos(rotationRad);
+            const rx = p[0] * currentScale;
+            const rz = p[1] * currentScale;
+            const px = rx * c - rz * s;
+            const pz = rx * s + rz * c;
+            i === 0 ? shape.moveTo(px, pz) : shape.lineTo(px, pz); 
+          });
           shape.closePath();
           return (
-            <mesh key={`slab-${idx}`} position={[ox, oy + baseHeight + 0.02, oz]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+            <mesh key={`slab-${idx}`} position={[ox + shearOffsetX, oy + baseHeight + 0.02, oz + shearOffsetZ]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
               <extrudeGeometry args={[shape, { depth: 0.1, bevelEnabled: false }]} />
               <meshStandardMaterial color="#333" roughness={0.7} wireframe={wireframe} />
             </mesh>
@@ -236,13 +257,34 @@ const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { wirefra
 
         // ── Interior Partition ──
         if (part.type === 'interior_partition') {
-          const { baseHeight = 0, floorHeight: fh = 3 } = part;
+          const { baseHeight = 0, floorIndex = 0 } = part;
+          const fh = floorHeight || 3;
+          const t = floorIndex / Math.max(1, floors - 1);
+          let currentTwist = 0;
+          if (twist) {
+            currentTwist = t < 0.5
+              ? THREE.MathUtils.lerp(twist.base, twist.mid, t * 2)
+              : THREE.MathUtils.lerp(twist.mid, twist.top, (t - 0.5) * 2);
+          }
+          const rotationRad = (currentTwist * Math.PI) / 180;
+          const currentScale = THREE.MathUtils.lerp(1, taper, t);
+          const shearOffsetX = shear ? shear.x * t : 0;
+          const shearOffsetZ = shear ? shear.y * t : 0;
+
           const bbox = new THREE.Box2();
-          spline?.forEach((p: any) => bbox.expandByPoint(new THREE.Vector2(p[0], p[1])));
+          spline?.forEach((p: any) => {
+            const s = Math.sin(rotationRad);
+            const c = Math.cos(rotationRad);
+            const rx = p[0] * currentScale;
+            const rz = p[1] * currentScale;
+            const px = rx * c - rz * s;
+            const pz = rx * s + rz * c;
+            bbox.expandByPoint(new THREE.Vector2(px, pz));
+          });
           const center = bbox.getCenter(new THREE.Vector2());
           const size = bbox.getSize(new THREE.Vector2());
           return (
-            <group key={`interior-${idx}`} position={[ox + center.x, oy + baseHeight + fh / 2, oz + center.y]}>
+            <group key={`interior-${idx}`} position={[ox + center.x + shearOffsetX, oy + baseHeight + fh / 2, oz + center.y + shearOffsetZ]} rotation={[0, -rotationRad, 0]}>
               <mesh><boxGeometry args={[size.x * 0.98, fh, 0.2]} /><meshStandardMaterial color="#f5e6d3" side={THREE.DoubleSide} wireframe={wireframe} /></mesh>
               <mesh rotation={[0, Math.PI / 2, 0]}><boxGeometry args={[size.y * 0.98, fh, 0.2]} /><meshStandardMaterial color="#f5e6d3" side={THREE.DoubleSide} wireframe={wireframe} /></mesh>
             </group>

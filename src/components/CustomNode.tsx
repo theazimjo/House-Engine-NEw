@@ -48,18 +48,24 @@ const SELECT_OPTIONS: Record<string, { value: string; label: string }[]> = {
   windowType: [
     { value: 'modern',  label: 'Modern' },
     { value: 'classic', label: 'Classic Grid' },
+    { value: 'industrial', label: 'Industrial Grid' },
     { value: 'arched',  label: 'Arched' },
   ],
   doorType: [
     { value: 'modern',  label: 'Modern' },
     { value: 'classic', label: 'Classic Panel' },
     { value: 'double',  label: 'Double Glass' },
+    { value: 'glass',   label: 'Glass Storefront' },
   ],
   material: [
     { value: 'concrete',  label: 'Concrete' },
     { value: 'bricks',    label: 'Bricks' },
     { value: 'wood',      label: 'Wood' },
     { value: 'metal',     label: 'Metal' },
+    { value: 'stone',     label: 'Stone' },
+    { value: 'plaster',   label: 'Plaster' },
+    { value: 'marble',    label: 'Marble' },
+    { value: 'glass',     label: 'Glass' },
   ],
   axis: [
     { value: 'x', label: 'X Axis' },
