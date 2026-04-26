@@ -76,12 +76,44 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]) => {
             detailed: true
           };
 
+          const floorSlabs = [];
+          const interiorWalls = [];
+
+          for (let i = 0; i < count; i++) {
+            const floorY = i * height;
+            // Floor slab
+            floorSlabs.push({
+              ...buildingData,
+              type: 'floor_slab',
+              baseHeight: floorY,
+              detailed: false
+            });
+
+            // Simple cross-partition interior walls
+            interiorWalls.push({
+              ...buildingData,
+              type: 'interior_partition',
+              baseHeight: floorY,
+              detailed: false
+            });
+          }
+
+          // Top ceiling
+          floorSlabs.push({
+            ...buildingData,
+            type: 'floor_slab',
+            baseHeight: totalBuildingHeight,
+            detailed: false
+          });
+
           output = [
             // Index 0: Mesh (Blue Pin)
             [
               { ...buildingData, type: 'foundation_slab', detailed: false },
               { ...buildingData, type: 'full_volume', part: 'building' },
-              { ...buildingData, type: 'full_volume', part: 'facade' }
+              { ...buildingData, type: 'full_volume', part: 'facade' },
+              ...floorSlabs,
+              ...interiorWalls
             ],
             // Index 1: Window (Light Blue Pin)
             null, 

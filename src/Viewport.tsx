@@ -223,7 +223,39 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           });
         }
 
-        if ((part.type === 'full_volume' || part.detailed || part.type === 'foundation_slab') && Array.isArray(spline) && spline.length > 0) {
+        if ((part.type === 'full_volume' || part.detailed || part.type === 'foundation_slab' || part.type === 'floor_slab' || part.type === 'interior_partition') && Array.isArray(spline) && spline.length > 0) {
+          if (part.type === 'floor_slab') {
+            const slabShape = new THREE.Shape();
+            slabShape.moveTo(spline[0][0], spline[0][1]);
+            spline.slice(1).forEach((p: any) => slabShape.lineTo(p[0], p[1]));
+            slabShape.closePath();
+
+            elements.push(
+              <mesh key={`slab-${idx}`} position={[ox, oy + part.baseHeight, oz]} rotation={[-Math.PI / 2, 0, 0]}>
+                <extrudeGeometry args={[slabShape, { depth: 0.2, bevelEnabled: false }]} />
+                <meshStandardMaterial color="#a0a0a0" side={THREE.DoubleSide} />
+              </mesh>
+            );
+            return elements;
+          }
+
+          if (part.type === 'interior_partition') {
+            const bbox = new THREE.Box2();
+            spline.forEach((p: any) => bbox.expandByPoint(new THREE.Vector2(p[0], p[1])));
+            const center = bbox.getCenter(new THREE.Vector2());
+            const size = bbox.getSize(new THREE.Vector2());
+
+            elements.push(
+              <group key={`interior-${idx}`} position={[ox + center.x, oy + part.baseHeight + part.height / 2, oz + center.y]}>
+                {/* Longitudinal wall */}
+                <mesh><boxGeometry args={[size.x * 0.98, part.height, 0.2]} /><meshStandardMaterial color="#f5e6d3" side={THREE.DoubleSide} /></mesh>
+                {/* Transverse wall */}
+                <mesh rotation={[0, Math.PI / 2, 0]}><boxGeometry args={[size.y * 0.98, part.height, 0.2]} /><meshStandardMaterial color="#f5e6d3" side={THREE.DoubleSide} /></mesh>
+              </group>
+            );
+            return elements;
+          }
+
           const slabShape = new THREE.Shape();
           slabShape.moveTo(spline[0][0], spline[0][1]);
           spline.slice(1).forEach((p: any) => slabShape.lineTo(p[0], p[1]));
