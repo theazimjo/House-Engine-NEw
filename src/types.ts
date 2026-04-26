@@ -27,10 +27,12 @@ export type NodeType =
   | 'columns'
   | 'stairs'
   | 'plinth'
+  | 'railing'
   // Modifiers
   | 'offset_spline'
   | 'transform_spline'
   | 'mirror_spline'
+  | 'smooth_spline'
   // Utilities
   | 'math_node'
   | 'merge_mesh'
@@ -101,6 +103,7 @@ export const DEFAULT_PARAMS: Record<NodeType, Record<string, any>> = {
     spacing: 3.0,
     useCorners: true,
     material: 'concrete',
+    arcade: false,
   },
   stairs: {
     count: 4,
@@ -112,6 +115,10 @@ export const DEFAULT_PARAMS: Record<NodeType, Record<string, any>> = {
     height: 0.8,
     material: 'concrete',
   },
+  railing: {
+    height: 1.0,
+    type: 'glass',
+  },
   dome: {
     radius: 6.0,
     segments: 24,
@@ -121,6 +128,11 @@ export const DEFAULT_PARAMS: Record<NodeType, Record<string, any>> = {
   },
   offset_spline: {
     amount: -1.0,
+  },
+  smooth_spline: {
+    tension: 0.5,
+    points: 50,
+    closed: true,
   },
   transform_spline: {
     x: 0,
@@ -170,8 +182,10 @@ export const NODE_PINS: Record<NodeType, { inputs: PinType[]; outputs: PinType[]
   columns:          { inputs: ['spline'],                   outputs: ['mesh'] },
   stairs:           { inputs: ['spline'],                   outputs: ['mesh'] },
   plinth:           { inputs: ['spline'],                   outputs: ['mesh'] },
+  railing:          { inputs: ['spline'],                   outputs: ['mesh'] },
   dome:             { inputs: ['spline'],                   outputs: ['mesh'] },
   offset_spline:    { inputs: ['spline'],                   outputs: ['spline'] },
+  smooth_spline:    { inputs: ['spline'],                   outputs: ['spline'] },
   transform_spline: { inputs: ['spline'],                   outputs: ['spline'] },
   mirror_spline:    { inputs: ['spline'],                   outputs: ['spline'] },
   boolean_subtract: { inputs: ['mesh', 'mesh'],             outputs: ['mesh'] },

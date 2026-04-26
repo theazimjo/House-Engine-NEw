@@ -847,5 +847,81 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
       { id: 'e13', source: 'fl-3', target: 'r-3',   sourceHandle: 'float',  targetHandle: 'float'  },
     ],
   },
+
+  // \u2500\u2500 20. Zaha Museum (Organic Architecture) \u2500\u2500
+  {
+    id: 'zaha-museum',
+    name: 'Zaha Museum',
+    description: 'An organic, fluid museum design featuring sweeping smooth splines, glass curtain walls, and a twisting futuristic roof.',
+    category: 'custom',
+    icon: '\ud83c\udf00',
+    preview: '\ud83c\udf00',
+    nodes: [
+      makeNode('f-1', 'foundation', 'Organic Base', 50, 250, {
+        width: 40, depth: 25, foundationShape: 'C-shape', twistBase: 0, twistMid: 0, twistTop: 0
+      }),
+      // Smooth the C-Shape into a fluid organic form
+      makeNode('sm-1', 'smooth_spline', 'Fluid Curve', 380, 250, {
+        tension: 0.65, points: 64, closed: true
+      }),
+      makeNode('fl-1', 'floors', 'Glass Ribbon', 680, 300, {
+        count: 3, height: 4.0, winWidth: 0, winHeight: 0, winSpacing: 10,
+        doorWidth: 0, doorHeight: 0, doorSide: 'front',
+        windowType: 'modern', doorType: 'glass', material: 'glass',
+        hasBalcony: false, hasRibs: false, plinthHeight: 0,
+      }),
+      makeNode('r-1', 'roof', 'Sweeping Roof', 680, 50, {
+        roofType: 'flat', height: 1.0, overhang: 2.5, color: '#f0f0f5',
+      }),
+      // Add a modern glass railing around the roof
+      makeNode('rl-1', 'railing', 'Roof Balustrade', 980, 50, {
+        height: 1.2, type: 'glass'
+      })
+    ],
+    edges: [
+      { id: 'e1', source: 'f-1', target: 'sm-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'sm-1', target: 'fl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'sm-1', target: 'r-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e4', source: 'fl-1', target: 'r-1', sourceHandle: 'float', targetHandle: 'float' },
+      { id: 'e5', source: 'sm-1', target: 'rl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e6', source: 'fl-1', target: 'rl-1', sourceHandle: 'float', targetHandle: 'float' }, // Railing base is roof height
+    ],
+  },
+
+  // \u2500\u2500 21. Roman Aqueduct \u2500\u2500
+  {
+    id: 'roman-aqueduct',
+    name: 'Roman Aqueduct',
+    description: 'A classical continuous Roman aqueduct utilizing the new column arcade feature to generate beautiful arches.',
+    category: 'custom',
+    icon: '\ud83c\udfdb\ufe0f',
+    preview: '\ud83c\udfdb\ufe0f',
+    nodes: [
+      // A very long thin strip
+      makeNode('f-1', 'foundation', 'Aqueduct Path', 50, 250, {
+        width: 100, depth: 3, foundationShape: 'rectangle',
+      }),
+      // Columns with ARCADE turned ON
+      makeNode('col-1', 'columns', 'Arch Arcade', 380, 250, {
+        radius: 0.6, height: 8.0, spacing: 6.0, useCorners: true, arcade: true, material: 'sandstone'
+      }),
+      // Move channel to top of columns
+      makeNode('xf-1', 'transform_spline', 'Move to Top', 380, 100, {
+        x: 0, y: 8.6, z: 0, scale: 1, rotation: 0
+      }),
+      // Water channel on top
+      makeNode('fl-1', 'floors', 'Water Channel', 680, 50, {
+        count: 1, height: 2.0, winWidth: 0, winHeight: 0, winSpacing: 10,
+        doorWidth: 0, doorHeight: 0, doorSide: 'front',
+        windowType: 'classic', doorType: 'classic', material: 'sandstone',
+        hasBalcony: false, hasRibs: false, plinthHeight: 0,
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-1', target: 'col-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-1', target: 'xf-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'xf-1', target: 'fl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
 ];
 

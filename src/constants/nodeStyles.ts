@@ -26,8 +26,10 @@ export const NODE_HEADER_COLORS: Record<NodeType | string, string> = {
   columns:          '#6d28d9',
   stairs:           '#be185d',
   plinth:           '#064e3b',
+  railing:          '#0d9488',
   // Modifiers
   offset_spline:    '#0f766e',
+  smooth_spline:    '#0284c7',
   transform_spline: '#7e22ce',
   mirror_spline:    '#0e7490',
   boolean_subtract: '#b91c1c',

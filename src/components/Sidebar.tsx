@@ -34,6 +34,7 @@ const NODE_CATEGORIES: NodeCategory[] = [
       { type: 'columns',  label: 'Column Generator',   description: 'Structural columns' },
       { type: 'stairs',   label: 'Stairs Generator',   description: 'Entry staircase' },
       { type: 'plinth',   label: 'Plinth Generator',   description: 'Base plinth slab' },
+      { type: 'railing',  label: 'Railing Generator',  description: 'Balustrades and parapets' },
     ]
   },
   {
@@ -41,6 +42,7 @@ const NODE_CATEGORIES: NodeCategory[] = [
     icon: '⚙️',
     nodes: [
       { type: 'offset_spline',    label: 'Offset Spline',    description: 'Inset / outset a shape' },
+      { type: 'smooth_spline',    label: 'Smooth Spline',    description: 'Curve/organic interpolation' },
       { type: 'transform_spline', label: 'Transform Spline', description: 'Move, scale, rotate shape' },
       { type: 'mirror_spline',    label: 'Mirror Spline',    description: 'Mirror shape on X or Z axis' },
       { type: 'boolean_subtract', label: 'Boolean Subtract', description: 'Subtract Mesh B from Mesh A' },

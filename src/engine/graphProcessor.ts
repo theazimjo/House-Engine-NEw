@@ -1,5 +1,6 @@
 import type { Node, Edge } from 'reactflow';
 import type { NodeData } from '../types';
+import * as THREE from 'three';
 
 export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
   const results = new Map<string, any>();
@@ -160,6 +161,9 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
         const columnMeshes: any[] = [];
         const pts = splineData.points;
 
+        const arcade = node.data.params.arcade || false;
+        const columnPositions: [number, number][] = [];
+
         const addColumn = (p: [number, number]) => {
           columnMeshes.push({
             type: 'column',
@@ -168,6 +172,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
             height,
             material
           });
+          columnPositions.push(p);
         };
 
         for (let i = 0; i < pts.length; i++) {
@@ -189,6 +194,23 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
             }
           }
         }
+        
+        if (arcade && columnPositions.length > 1) {
+          for (let i = 0; i < columnPositions.length; i++) {
+            const p1 = columnPositions[i];
+            const p2 = columnPositions[(i + 1) % columnPositions.length];
+            columnMeshes.push({
+              type: 'arcade_arch',
+              p1,
+              p2,
+              zOffset: totalZOffset,
+              height,
+              radius,
+              material
+            });
+          }
+        }
+
         output = columnMeshes;
         break;
       }
@@ -512,7 +534,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
           }
         }
         
-        output = { ...splineData, points: newPts };
+        output = { ...splineData, points: newPts, foundationShape: 'custom' };
         break;
       }
 
@@ -535,7 +557,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
           ] as [number, number];
         });
         const newZOffset = (splineData.zOffset || 0) + (node.data.params.y || 0);
-        output = { ...splineData, points: newPts, zOffset: newZOffset };
+        output = { ...splineData, points: newPts, zOffset: newZOffset, foundationShape: 'custom' };
         break;
       }
       case 'mirror_spline': {
@@ -550,7 +572,47 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
         });
 
         const merged = [...splineData.points, ...mirrored.reverse()];
-        output = { ...splineData, points: merged };
+        output = { ...splineData, points: merged, foundationShape: 'custom' };
+        break;
+      }
+      case 'smooth_spline': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        if (!splineData || !Array.isArray(splineData.points)) break;
+        const pts = splineData.points as [number, number][];
+        
+        // Convert to THREE.Vector3 array for SplineCurve or CatmullRomCurve3
+        const vecs = pts.map(p => new THREE.Vector3(p[0], 0, p[1]));
+        
+        const isClosed = node.data.params.closed !== false;
+        const tension = node.data.params.tension !== undefined ? node.data.params.tension : 0.5;
+        const resolution = node.data.params.points || 50;
+        
+        const curve = new THREE.CatmullRomCurve3(vecs, isClosed, 'catmullrom', tension);
+        const interpolated = curve.getPoints(resolution);
+        
+        // Remove the last point if closed (since getPoints duplicates the first point at the end)
+        if (isClosed && interpolated.length > 1) {
+          interpolated.pop();
+        }
+        
+        const newPts = interpolated.map(p => [p.x, p.z] as [number, number]);
+        output = { ...splineData, points: newPts, foundationShape: 'custom' };
+        break;
+      }
+      case 'railing': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        if (!splineData || !Array.isArray(splineData.points)) break;
+        
+        const height = node.data.params.height || 1.0;
+        const type = node.data.params.type || 'glass';
+        
+        output = [{
+          type: 'railing_mesh',
+          spline: splineData.points,
+          height,
+          railingType: type,
+          zOffset: splineData.zOffset || 0
+        }];
         break;
       }
 

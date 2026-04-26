@@ -437,6 +437,46 @@ export const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { 
           );
         }
 
+        // ── Arcade Arch ──
+        if (part.type === 'arcade_arch') {
+          const { p1, p2, zOffset: aZ, height: aH, radius: aR, material: aMat } = part;
+          const dist = Math.sqrt(Math.pow(p2[0] - p1[0], 2) + Math.pow(p2[1] - p1[1], 2));
+          const archW = dist - aR * 2.5; // span between capitals
+          
+          if (archW > 0.5) { // Only draw arch if there's enough space
+            const angle = Math.atan2(p1[1] - p2[1], p1[0] - p2[0]);
+            const midX = (p1[0] + p2[0]) / 2;
+            const midZ = (p1[1] + p2[1]) / 2;
+            
+            const archShape = new THREE.Shape();
+            const thickness = Math.min(aR * 2.0, archW / 2);
+            const extrudeD = aR * 1.8;
+            
+            // Draw a 2D arch profile (upside down U shape)
+            archShape.moveTo(-archW/2, 0);
+            archShape.lineTo(-archW/2, thickness);
+            archShape.lineTo(archW/2, thickness);
+            archShape.lineTo(archW/2, 0);
+            
+            // Inner arch curve (semi-circle)
+            archShape.absarc(0, 0, archW/2, 0, Math.PI, true);
+            archShape.closePath();
+            
+            const arcMat = wireframe
+              ? new THREE.MeshStandardMaterial({ color: '#888', wireframe: true })
+              : materialLib.getMaterial(aMat);
+              
+            return (
+              <group key={`arch-${idx}`} position={[midX, aZ + aH + aR * 0.6, midZ]} rotation={[0, -angle, 0]}>
+                <mesh position={[0, 0, -extrudeD/2]} material={arcMat} castShadow receiveShadow>
+                  <extrudeGeometry args={[archShape, { depth: extrudeD, bevelEnabled: false, curveSegments: 24 }]} />
+                </mesh>
+              </group>
+            );
+          }
+          return null;
+        }
+
         // ── Primitives ──
         if (part.type === 'primitive_box') {
           return (
@@ -479,6 +519,62 @@ export const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { 
               </mesh>
             </group>
           );
+        }
+
+        // ── Railing ──
+        if (part.type === 'railing_mesh') {
+          const { spline: rSpline, height: rHeight = 1.0, zOffset: rZ = 0 } = part;
+          if (!rSpline || rSpline.length === 0) return null;
+          
+          const railingElements = [];
+          
+          // Extrude railing base/top
+          const rShape = new THREE.Shape();
+          const rThickness = 0.15;
+          rShape.moveTo(-rThickness/2, -rThickness/2);
+          rShape.lineTo(rThickness/2, -rThickness/2);
+          rShape.lineTo(rThickness/2, rThickness/2);
+          rShape.lineTo(-rThickness/2, rThickness/2);
+          rShape.closePath();
+          
+          const pathPts = rSpline.map((p: any) => new THREE.Vector3(p[0], 0, p[1]));
+          // Close path if start == end or we want it closed (simple logic: check if closed)
+          // For balustrades, we just extrude along the curve.
+          const curve = new THREE.CatmullRomCurve3(pathPts, false, 'catmullrom', 0.1);
+          
+          railingElements.push(
+            <mesh key="r-base" position={[0, rZ + 0.05, 0]}>
+              <extrudeGeometry args={[rShape, { extrudePath: curve, steps: 100, bevelEnabled: false }]} />
+              <meshStandardMaterial color="#888" roughness={0.6} />
+            </mesh>
+          );
+          
+          railingElements.push(
+            <mesh key="r-top" position={[0, rZ + rHeight, 0]}>
+              <extrudeGeometry args={[rShape, { extrudePath: curve, steps: 100, bevelEnabled: false }]} />
+              <meshStandardMaterial color="#666" roughness={0.5} />
+            </mesh>
+          );
+          
+          // Glass panels between
+          const glassShape = new THREE.Shape();
+          glassShape.moveTo(-0.02, 0);
+          glassShape.lineTo(0.02, 0);
+          glassShape.lineTo(0.02, rHeight - 0.1);
+          glassShape.lineTo(-0.02, rHeight - 0.1);
+          glassShape.closePath();
+          
+          const glassMat = wireframe
+            ? new THREE.MeshStandardMaterial({ wireframe: true, color: '#aaddff' })
+            : materialLib.getMaterial('glass');
+
+          railingElements.push(
+            <mesh key="r-glass" position={[0, rZ + 0.05, 0]} material={glassMat}>
+              <extrudeGeometry args={[glassShape, { extrudePath: curve, steps: 100, bevelEnabled: false }]} />
+            </mesh>
+          );
+
+          return <group key={`railing-${idx}`}>{railingElements}</group>;
         }
 
         // ── Boolean Subtract ──
