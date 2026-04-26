@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export type MaterialType = 'concrete' | 'bricks' | 'wood' | 'metal';
+export type MaterialType = 'concrete' | 'bricks' | 'wood' | 'metal' | 'roof_tiles';
 
 class MaterialLibrary {
   private cache: Map<string, THREE.MeshStandardMaterial> = new Map();
@@ -15,9 +15,10 @@ class MaterialLibrary {
       normalMap: textures.normal,
       roughnessMap: textures.roughness,
       color: new THREE.Color(color),
-      roughness: type === 'metal' ? 0.2 : 0.8,
+      roughness: type === 'metal' || type === 'roof_tiles' ? 0.4 : 0.8,
       metalness: type === 'metal' ? 0.9 : 0.05,
-      normalScale: new THREE.Vector2(2.0, 2.0)
+      normalScale: new THREE.Vector2(2.0, 2.0),
+      side: THREE.DoubleSide // Ensure visibility from both sides
     });
 
     this.cache.set(key, material);
@@ -25,7 +26,7 @@ class MaterialLibrary {
   }
 
   private generateTextures(type: MaterialType) {
-    const size = 1024; // Increased resolution
+    const size = 1024;
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
@@ -36,11 +37,40 @@ class MaterialLibrary {
     nCanvas.height = size;
     const nCtx = nCanvas.getContext('2d')!;
 
-    // Initialize Normal Map with neutral flat blue
     nCtx.fillStyle = 'rgb(128, 128, 255)';
     nCtx.fillRect(0, 0, size, size);
 
-    if (type === 'bricks') {
+    if (type === 'roof_tiles') {
+      ctx.fillStyle = '#4a4a4a'; // Slate dark
+      ctx.fillRect(0, 0, size, size);
+      
+      const rows = 16;
+      const cols = 8;
+      const rH = size / rows;
+      const rW = size / cols;
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const x = c * rW + (r % 2 === 0 ? 0 : rW / 2);
+          
+          // Tile Base
+          ctx.fillStyle = `rgb(${70 + Math.random()*20}, ${70 + Math.random()*20}, ${70 + Math.random()*20})`;
+          ctx.beginPath();
+          ctx.roundRect(x + 2, r * rH + 2, rW - 4, rH * 1.2, 10);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+          ctx.stroke();
+
+          // Normal Map: Tiles overlap (bottom is higher than top of next tile)
+          nCtx.fillStyle = 'rgb(128, 160, 255)'; // Sloped
+          nCtx.beginPath();
+          nCtx.roundRect(x + 2, r * rH + 2, rW - 4, rH * 1.2, 10);
+          nCtx.fill();
+          nCtx.strokeStyle = 'rgb(100, 100, 180)';
+          nCtx.stroke();
+        }
+      }
+    } else if (type === 'bricks') {
       ctx.fillStyle = '#8e2b2b';
       ctx.fillRect(0, 0, size, size);
       

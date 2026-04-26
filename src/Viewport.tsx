@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Environment, ContactShadows, Grid } from '@react-three/drei';
 import * as THREE from 'three';
 import { ProceduralWall } from './engine/ProceduralWall';
+import { materialLib } from './engine/MaterialLibrary';
 import { processGraph } from './engine/graphProcessor';
 import type { ViewportProps } from './types';
 
@@ -213,7 +214,15 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
 
           const geometry = new THREE.BufferGeometry();
           geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+          
+          const uvs = [];
+          for (let i = 0; i < vertices.length; i += 3) {
+            uvs.push(vertices[i] * 0.5, vertices[i + 1] * 0.5);
+          }
+          geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
           geometry.computeVertexNormals();
+
+          const roofMaterial = materialLib.getMaterial('roof_tiles', color);
 
           elements.push(
             <mesh
@@ -222,9 +231,8 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
               rotation={[-Math.PI / 2, 0, 0]}
               castShadow
               geometry={geometry}
-            >
-              <meshStandardMaterial color={color} roughness={0.4} metalness={0.2} side={THREE.DoubleSide} />
-            </mesh>
+              material={roofMaterial}
+            />
           );
         }
 
