@@ -1,5 +1,6 @@
 import React from 'react';
 import * as THREE from 'three';
+import { Instances, Instance } from '@react-three/drei';
 import { materialLib } from './MaterialLibrary';
 import type { MaterialType } from './MaterialLibrary';
 
@@ -23,75 +24,9 @@ interface ProceduralWallProps {
   plinthHeight?: number;
 }
 
-const WindowModel = ({ w, h, type }: { w: number, h: number, type: string }) => {
-  const fT = 0.06;
-  const glassW = w - fT * 2;
-  const glassH = h - fT * 2;
-  const fC = type === 'modern' ? "#111" : (type === 'classic' ? "#f5f5f5" : (type === 'industrial' ? "#333" : "#5d4037"));
-  const depth = 0.5; // Thicker than wall to show on both sides
-
-  return (
-    <group>
-      {/* 4 Frame segments */}
-      <mesh position={[0, h/2 - fT/2, 0]}><boxGeometry args={[w, fT, depth]} /><meshStandardMaterial color={fC} side={THREE.DoubleSide} /></mesh>
-      <mesh position={[0, -h/2 + fT/2, 0]}><boxGeometry args={[w, fT, depth]} /><meshStandardMaterial color={fC} side={THREE.DoubleSide} /></mesh>
-      <mesh position={[-w/2 + fT/2, 0, 0]}><boxGeometry args={[fT, h, depth]} /><meshStandardMaterial color={fC} side={THREE.DoubleSide} /></mesh>
-      <mesh position={[w/2 - fT/2, 0, 0]}><boxGeometry args={[fT, h, depth]} /><meshStandardMaterial color={fC} side={THREE.DoubleSide} /></mesh>
-      
-      {/* Sill */}
-      <mesh position={[0, -h/2, 0]}>
-        <boxGeometry args={[w + 0.1, 0.04, depth + 0.15]} />
-        <meshStandardMaterial color={fC} roughness={0.8} side={THREE.DoubleSide} />
-      </mesh>
-
-      {/* Glass */}
-      <mesh position={[0, 0, 0]} material={materialLib.getMaterial('glass')}>
-        <boxGeometry args={[glassW, glassH, 0.05]} />
-      </mesh>
-
-      {/* Grid for Classic */}
-      {type === 'classic' && (
-        <group>
-          <mesh><boxGeometry args={[glassW, 0.03, depth + 0.02]} /><meshStandardMaterial color={fC} side={THREE.DoubleSide} /></mesh>
-          <mesh><boxGeometry args={[0.03, glassH, depth + 0.02]} /><meshStandardMaterial color={fC} side={THREE.DoubleSide} /></mesh>
-        </group>
-      )}
-
-      {/* Grid for Industrial */}
-      {type === 'industrial' && (
-        <group>
-          {Array.from({ length: 3 }).map((_, i) => (
-             <mesh key={`h-${i}`} position={[0, -glassH/2 + (i+1)*glassH/4, 0]}>
-               <boxGeometry args={[glassW, 0.03, depth + 0.02]} />
-               <meshStandardMaterial color={fC} metalness={0.6} side={THREE.DoubleSide} />
-             </mesh>
-          ))}
-          {Array.from({ length: 2 }).map((_, i) => (
-             <mesh key={`v-${i}`} position={[-glassW/2 + (i+1)*glassW/3, 0, 0]}>
-               <boxGeometry args={[0.03, glassH, depth + 0.02]} />
-               <meshStandardMaterial color={fC} metalness={0.6} side={THREE.DoubleSide} />
-             </mesh>
-          ))}
-        </group>
-      )}
-
-      {/* Arched Top */}
-      {type === 'arched' && (
-        <group position={[0, h/2 - fT, 0]}>
-          <mesh rotation={[0, 0, 0]}>
-            <torusGeometry args={[w/2 - fT/2, fT/2, 8, 32, Math.PI]} />
-            <meshStandardMaterial color={fC} side={THREE.DoubleSide} />
-          </mesh>
-        </group>
-      )}
-    </group>
-  );
-};
-
-const DoorModel = ({ w, h, type }: { w: number, h: number, type: string }) => {
+const DoorModel = ({ w, h, type, depth }: { w: number, h: number, type: string, depth: number }) => {
   const fT = 0.08;
   const dC = type === 'classic' ? "#3e2723" : (type === 'double' ? "#111" : "#222");
-  const depth = 0.5;
 
   return (
     <group>
@@ -114,7 +49,6 @@ const DoorModel = ({ w, h, type }: { w: number, h: number, type: string }) => {
           <mesh position={[-w*0.2, 0, 0]} material={materialLib.getMaterial('glass')}>
             <boxGeometry args={[0.1, h*0.8, depth + 0.02]} />
           </mesh>
-          {/* Single elegant handle */}
           <mesh position={[w*0.35, 0, depth/2 + 0.05]}><boxGeometry args={[0.04, h*0.6, 0.08]} /><meshStandardMaterial color="#ffffff" metalness={1} roughness={0.1} side={THREE.DoubleSide} /></mesh>
           <mesh position={[w*0.35, 0, -depth/2 - 0.05]}><boxGeometry args={[0.04, h*0.6, 0.08]} /><meshStandardMaterial color="#ffffff" metalness={1} roughness={0.1} side={THREE.DoubleSide} /></mesh>
         </group>
@@ -126,7 +60,6 @@ const DoorModel = ({ w, h, type }: { w: number, h: number, type: string }) => {
           <mesh position={[0, 0, 0]} material={materialLib.getMaterial('glass')}>
             <boxGeometry args={[w, h, 0.1]} />
           </mesh>
-          {/* Top/Bottom internal metal frame */}
           <mesh position={[0, h/2 - 0.05, 0]}><boxGeometry args={[w, 0.1, 0.15]} /><meshStandardMaterial color="#888" metalness={0.8} /></mesh>
           <mesh position={[0, -h/2 + 0.05, 0]}><boxGeometry args={[w, 0.1, 0.15]} /><meshStandardMaterial color="#888" metalness={0.8} /></mesh>
           <mesh position={[w*0.35, 0, depth/2 - 0.15]}><cylinderGeometry args={[0.02, 0.02, h*0.7, 8]} rotation={[0,0,0]} /><meshStandardMaterial color="#fff" metalness={0.9}/></mesh>
@@ -160,55 +93,6 @@ const DoorModel = ({ w, h, type }: { w: number, h: number, type: string }) => {
   );
 };
 
-const BalconyModel = ({ w, h }: { w: number, h: number }) => {
-  // NOTE: local -Z is the OUTWARD direction (wall group has Ry(π) rotation).
-  // So all depth offsets use negative Z.
-  const depth     = 1.3;
-  const railingH  = 1.05;
-  const slabT     = 0.12;
-  const balusterCount = Math.max(2, Math.floor((w + 0.4) / 0.4));
-
-  return (
-    <group position={[0, -h / 2, 0]}>
-      {/* ── Base Slab ── */}
-      <mesh position={[0, -slabT / 2, -depth / 2]} castShadow receiveShadow>
-        <boxGeometry args={[w + 0.5, slabT, depth]} />
-        <meshStandardMaterial color="#c8c8cc" roughness={0.6} metalness={0.05} />
-      </mesh>
-
-      {/* ── Front Glass Railing Panel ── */}
-      <mesh position={[0, railingH / 2, -depth]} material={materialLib.getMaterial('glass')}>
-        <boxGeometry args={[w + 0.5, railingH, 0.04]} />
-      </mesh>
-
-      {/* ── Side Glass Panels ── */}
-      <mesh position={[-(w + 0.5) / 2, railingH / 2, -depth / 2]} material={materialLib.getMaterial('glass')}>
-        <boxGeometry args={[0.04, railingH, depth]} />
-      </mesh>
-      <mesh position={[(w + 0.5) / 2, railingH / 2, -depth / 2]} material={materialLib.getMaterial('glass')}>
-        <boxGeometry args={[0.04, railingH, depth]} />
-      </mesh>
-
-      {/* ── Top Handrail ── */}
-      <mesh position={[0, railingH, -depth / 2]}>
-        <boxGeometry args={[w + 0.5 + 0.06, 0.06, depth + 0.06]} />
-        <meshStandardMaterial color="#222" metalness={0.9} roughness={0.2} />
-      </mesh>
-
-      {/* ── Vertical Balusters (steel posts) ── */}
-      {Array.from({ length: balusterCount }).map((_, i) => {
-        const bx = -(w + 0.5) / 2 + (i + 0.5) * ((w + 0.5) / balusterCount);
-        return (
-          <mesh key={i} position={[bx, railingH / 2, -depth]}>
-            <boxGeometry args={[0.04, railingH, 0.04]} />
-            <meshStandardMaterial color="#444" metalness={0.9} roughness={0.1} />
-          </mesh>
-        );
-      })}
-    </group>
-  );
-};
-
 export const ProceduralWall: React.FC<ProceduralWallProps> = ({ 
   width, height, thickness, windowSpacing, windowSize, sillHeight, isModern,
   hasDoor = false, doorWidth = 1.8, doorHeight = 2.4, doorOffset = 0,
@@ -233,7 +117,6 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
     const doorMin = hasDoor ? doorOffset - doorWidth / 2 - 0.4 : 9999;
     const doorMax = hasDoor ? doorOffset + doorWidth / 2 + 0.4 : -9999;
 
-    // Use a fixed startX based on width to ensure alignment
     const startX = -(wCount - 1) * windowSpacing / 2;
 
     for (let i = 0; i < wCount; i++) {
@@ -266,46 +149,151 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
 
   const extrudeArgs = React.useMemo(() => [shape, { depth: thickness, bevelEnabled: false }] as any, [shape, thickness]);
 
+  // Window constants
+  const w = windowSize[0];
+  const h = windowSize[1];
+  const fT = 0.06;
+  const glassW = w - fT * 2;
+  const glassH = h - fT * 2;
+  const fC = windowType === 'modern' ? "#111" : (windowType === 'classic' ? "#f5f5f5" : (windowType === 'industrial' ? "#333" : "#5d4037"));
+  const depth = 0.5;
+
   return (
     <group>
       <mesh castShadow receiveShadow position={[0, 0, -thickness/2]} material={wallMaterial}>
         <extrudeGeometry args={extrudeArgs} />
       </mesh>
 
-      {/* Decorative Cornice (Top trim) — on outer face (-Z side) */}
       <mesh position={[0, height + 0.07, 0]}>
         <boxGeometry args={[width + 0.15, 0.14, thickness + 0.3]} />
         <meshStandardMaterial color="#d8d8dc" roughness={0.5} metalness={0.1} />
       </mesh>
-      
-      {windowPositions.map((pos, i) => (
-        <group key={i} position={[pos.x, pos.y, 0]}>
-          <WindowModel w={windowSize[0]} h={windowSize[1]} type={windowType} />
-          {hasBalcony && i % 2 === 0 && (
-            // Place balcony on the OUTER face: local -Z is outward (Ry(π) rotation on wall group)
-            <group position={[0, 0, -(thickness / 2 + 0.05)]}>
-              <BalconyModel w={windowSize[0]} h={windowSize[1]} />
+
+      {/* WINDOW FRAMES & SILLS (Instanced) */}
+      {windowPositions.length > 0 && (
+        <Instances limit={1000} castShadow receiveShadow>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color={fC} side={THREE.DoubleSide} />
+          {windowPositions.map((pos, i) => (
+            <group key={`w-${i}`} position={[pos.x, pos.y, 0]}>
+              <Instance position={[0, h/2 - fT/2, 0]} scale={[w, fT, depth]} />
+              <Instance position={[0, -h/2 + fT/2, 0]} scale={[w, fT, depth]} />
+              <Instance position={[-w/2 + fT/2, 0, 0]} scale={[fT, h, depth]} />
+              <Instance position={[w/2 - fT/2, 0, 0]} scale={[fT, h, depth]} />
+              <Instance position={[0, -h/2, 0]} scale={[w + 0.1, 0.04, depth + 0.15]} />
+              
+              {windowType === 'classic' && (
+                <>
+                  <Instance position={[0, 0, 0]} scale={[glassW, 0.03, depth + 0.02]} />
+                  <Instance position={[0, 0, 0]} scale={[0.03, glassH, depth + 0.02]} />
+                </>
+              )}
+
+              {windowType === 'industrial' && (
+                <>
+                  {Array.from({ length: 3 }).map((_, gi) => (
+                    <Instance key={`h-${gi}`} position={[0, -glassH/2 + (gi+1)*glassH/4, 0]} scale={[glassW, 0.03, depth + 0.02]} color="#444" />
+                  ))}
+                  {Array.from({ length: 2 }).map((_, gi) => (
+                    <Instance key={`v-${gi}`} position={[-glassW/2 + (gi+1)*glassW/3, 0, 0]} scale={[0.03, glassH, depth + 0.02]} color="#444" />
+                  ))}
+                </>
+              )}
             </group>
-          )}
-        </group>
-      ))}
+          ))}
+        </Instances>
+      )}
 
-      {/* Vertical Ribs (Architectural Fins) — on outer face (-Z) */}
-      {hasRibs && windowPositions.length > 1 && windowPositions.map((pos, i) => {
-        if (i === windowPositions.length - 1) return null;
-        const nextPos = windowPositions[i + 1];
-        const ribX = (pos.x + nextPos.x) / 2;
-        return (
-          <mesh key={`rib-${i}`} position={[ribX, height / 2, -(thickness / 2 + 0.08)]}>
-            <boxGeometry args={[0.18, height, 0.22]} />
-            <meshStandardMaterial color="#e0e0e4" metalness={0.1} roughness={0.4} />
-          </mesh>
-        );
-      })}
+      {/* WINDOW GLASS (Instanced) */}
+      {windowPositions.length > 0 && (
+        <Instances limit={100} material={materialLib.getMaterial('glass')}>
+          <boxGeometry args={[1, 1, 1]} />
+          {windowPositions.map((pos, i) => (
+            <group key={`g-${i}`} position={[pos.x, pos.y, 0]}>
+              <Instance position={[0, 0, 0]} scale={[glassW, glassH, 0.05]} />
+            </group>
+          ))}
+        </Instances>
+      )}
 
+      {/* ARCHED WINDOW TOPS (Instanced) */}
+      {windowType === 'arched' && windowPositions.length > 0 && (
+        <Instances limit={100}>
+          <torusGeometry args={[w/2 - fT/2, fT/2, 8, 32, Math.PI]} />
+          <meshStandardMaterial color={fC} side={THREE.DoubleSide} />
+          {windowPositions.map((pos, i) => (
+            <group key={`a-${i}`} position={[pos.x, pos.y, 0]}>
+              <Instance position={[0, h/2 - fT, 0]} />
+            </group>
+          ))}
+        </Instances>
+      )}
+
+      {/* BALCONY SOLID PARTS (Instanced) */}
+      {hasBalcony && windowPositions.length > 0 && (
+        <Instances limit={500} receiveShadow castShadow>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="#c8c8cc" roughness={0.6} metalness={0.05} />
+          {windowPositions.map((pos, i) => {
+            if (i % 2 !== 0) return null;
+            const bW = w + 0.5;
+            const bD = 1.3;
+            const rH = 1.05;
+            const slabT = 0.12;
+            const balCount = Math.max(2, Math.floor((w + 0.4) / 0.4));
+            
+            return (
+              <group key={`b-${i}`} position={[pos.x, pos.y - h/2, -(thickness / 2 + 0.05)]}>
+                <Instance position={[0, -slabT/2, -bD/2]} scale={[bW, slabT, bD]} />
+                <Instance position={[0, rH, -bD/2]} scale={[bW + 0.06, 0.06, bD + 0.06]} color="#222" />
+                {Array.from({ length: balCount }).map((_, bi) => {
+                  const bx = -bW/2 + (bi + 0.5) * (bW / balCount);
+                  return <Instance key={`bu-${bi}`} position={[bx, rH/2, -bD]} scale={[0.04, rH, 0.04]} color="#444" />;
+                })}
+              </group>
+            );
+          })}
+        </Instances>
+      )}
+
+      {/* BALCONY GLASS (Instanced) */}
+      {hasBalcony && windowPositions.length > 0 && (
+        <Instances limit={200} material={materialLib.getMaterial('glass')}>
+          <boxGeometry args={[1, 1, 1]} />
+          {windowPositions.map((pos, i) => {
+            if (i % 2 !== 0) return null;
+            const bW = w + 0.5;
+            const bD = 1.3;
+            const rH = 1.05;
+            return (
+              <group key={`bg-${i}`} position={[pos.x, pos.y - h/2, -(thickness / 2 + 0.05)]}>
+                <Instance position={[0, rH/2, -bD]} scale={[bW, rH, 0.04]} />
+                <Instance position={[-bW/2, rH/2, -bD/2]} scale={[0.04, rH, bD]} />
+                <Instance position={[bW/2, rH/2, -bD/2]} scale={[0.04, rH, bD]} />
+              </group>
+            );
+          })}
+        </Instances>
+      )}
+
+      {/* VERTICAL RIBS (Instanced) */}
+      {hasRibs && windowPositions.length > 1 && (
+        <Instances limit={100}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="#e0e0e4" metalness={0.1} roughness={0.4} />
+          {windowPositions.map((pos, i) => {
+            if (i === windowPositions.length - 1) return null;
+            const nextPos = windowPositions[i + 1];
+            const ribX = (pos.x + nextPos.x) / 2;
+            return <Instance key={`rib-${i}`} position={[ribX, height / 2, -(thickness / 2 + 0.08)]} scale={[0.18, height, 0.22]} />;
+          })}
+        </Instances>
+      )}
+
+      {/* DOOR */}
       {hasDoor && (
         <group position={[doorPos, doorHeight/2, 0]}>
-          <DoorModel w={doorWidth} h={doorHeight} type={doorType} />
+          <DoorModel w={doorWidth} h={doorHeight} type={doorType} depth={depth} />
         </group>
       )}
     </group>

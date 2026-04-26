@@ -471,7 +471,7 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
 
         <ambientLight intensity={0.4} />
         <directionalLight position={[10, 20, 10]} intensity={1.5} castShadow shadow-mapSize={[2048, 2048]} />
-        <spotLight position={[-10, 20, 10]} angle={0.2} penumbra={1} intensity={1} castShadow />
+        <spotLight position={[-10, 20, 10]} angle={0.2} penumbra={1} intensity={1} />
 
         <SceneRenderer nodes={nodes} edges={edges} wireframe={wireframe} onSceneReady={(s) => { sceneRef.current = s; }} />
 
@@ -502,7 +502,7 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
         </GizmoHelper>
 
         <Environment preset={envPreset as any} />
-        <ContactShadows position={[0, 0, 0]} opacity={0.5} scale={50} blur={2} far={12} />
+        <ContactShadows position={[0, 0, 0]} opacity={0.5} scale={50} blur={2} far={12} frames={1} resolution={512} />
       </Canvas>
     </div>
   );
