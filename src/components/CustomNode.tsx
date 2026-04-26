@@ -13,31 +13,25 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
   // We want to space handles below that.
 
   return (
-    <>
-      <div className={`node-header header-${data.type} custom-drag-handle`}>
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{data.label}</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          <span className="node-id" style={{ fontSize: '0.5rem', opacity: 0.6 }}>NB{id.split('-')[0].toUpperCase()}</span>
-          <div className="node-delete-btn" onClick={(e) => {
-            e.stopPropagation();
-            // We'll use a custom event or a shared context if useReactFlow fails here
-            window.dispatchEvent(new CustomEvent('delete-node', { detail: id }));
-          }}>
-            <X size={12} />
-          </div>
-        </div>
+    <div className="custom-node shadow-xl">
+      <div className="node-header flex justify-between items-center px-3 py-2 bg-slate-800 text-white rounded-t-lg">
+        <span className="font-bold text-sm uppercase tracking-wider">{data.label}</span>
+        <button onClick={() => data.onDelete?.(id)} className="hover:text-red-400 transition-colors">
+          <X size={16} />
+        </button>
       </div>
 
-      <div className="node-body">
+      <div className="node-content p-3 bg-slate-900/90 backdrop-blur-sm text-slate-200 rounded-b-lg border border-slate-700">
         {Object.entries(data.params).map(([key, value]) => (
-          <div key={key} className="input-group" style={{ position: 'relative' }}>
-            <label className="input-label">{key}</label>
+          <div key={key} className="input-group mb-3" style={{ position: 'relative' }}>
+            <label className="input-label block text-xs text-slate-400 mb-1 capitalize">{key.replace(/([A-Z])/g, ' $1')}</label>
 
-            {key === 'roofType' || key === 'foundationShape' || key === 'doorSide' || key === 'windowType' || key === 'doorType' || key === 'material' ? (
+            {/* Select dropdowns for specific keys */}
+            {['roofType', 'foundationShape', 'doorSide', 'windowType', 'doorType', 'material'].includes(key) ? (
               <select
-                value={value}
+                value={value as string}
                 onChange={(e) => handleParamChange(key, e.target.value)}
-                className="node-select"
+                className="node-select w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500"
               >
                 {key === 'roofType' ? (
                   <>
@@ -64,97 +58,79 @@ export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
                 ) : key === 'doorType' ? (
                   <>
                     <option value="modern">Modern</option>
-                    <option value="classic">Classic Paneled</option>
-                    <option value="double">Double Door</option>
-                  </>
-                ) : key === 'doorSide' ? (
-                  <>
-                    <option value="all">All Sides</option>
-                    <option value="front">Front Only</option>
-                    <option value="frontback">Front & Back</option>
-                    <option value="sides">Left & Right</option>
-                    <option value="none">None</option>
+                    <option value="classic">Classic Panel</option>
+                    <option value="double">Double Glass</option>
                   </>
                 ) : (
                   <>
+                    <option value="front">Front</option>
+                    <option value="back">Back</option>
+                    <option value="left">Left</option>
+                    <option value="right">Right</option>
                     <option value="rectangle">Rectangle</option>
                     <option value="circle">Circle</option>
-                    <option value="hexagon">Hexagon</option>
-                    <option value="L-shape">L-Shape</option>
-                    <option value="U-shape">U-Shape</option>
-                    <option value="C-shape">C-Shape</option>
-                    <option value="X-shape">X-Shape</option>
-                    <option value="custom">Custom</option>
                   </>
                 )}
               </select>
-            ) : (
-              <div className="input-with-unit">
+            ) : ['hasBalcony', 'showWindow', 'hasDoor'].includes(key) ? (
+              /* Checkbox inputs for boolean keys */
+              <div className="flex items-center">
                 <input
-                  type="number"
-                  step={key.includes('twist') ? 1 : 0.1}
-                  value={value}
-                  onChange={(e) => handleParamChange(key, parseFloat(e.target.value))}
-                  className="node-input"
+                  type="checkbox"
+                  checked={Boolean(value)}
+                  onChange={(e) => handleParamChange(key, e.target.checked)}
+                  className="node-checkbox w-5 h-5 cursor-pointer accent-blue-500"
                 />
-                <span className="unit-label">{
-                  key.includes('twist') ? '°' :
-                    key === 'floors' ? '' :
-                      key === 'taper' ? 'x' :
-                        key === 'jitter' ? 'm' : 'm'
-                }</span>
+                <span className="ml-2 text-xs text-slate-500">{Boolean(value) ? 'Enabled' : 'Disabled'}</span>
               </div>
+            ) : (
+              /* Number inputs for everything else */
+              <input
+                type="number"
+                value={value as number}
+                onChange={(e) => handleParamChange(key, parseFloat(e.target.value))}
+                className="node-input w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500"
+              />
             )}
           </div>
         ))}
-
-        {/* If no params, add some empty space to prevent handles clumping */}
-        {Object.keys(data.params).length === 0 && (
-          <div style={{ height: '40px' }} />
-        )}
       </div>
 
-      <div className="node-ports-left">
-        {data.inputs?.map((type, i) => (
-          <Handle
-            key={`in-${i}`}
-            type="target"
-            position={Position.Left}
-            id={type}
-            style={{
-              left: '-8px',
-              top: `${20 + i * 24}px`,
-              background: PIN_COLORS[type] || PIN_COLORS.float,
-              width: '12px',
-              height: '12px',
-              border: '1px solid #000',
-              borderRadius: '2px',
-              pointerEvents: 'all'
-            }}
-          />
-        ))}
-      </div>
+      {/* Input Handles */}
+      {data.inputs?.map((input, i) => (
+        <Handle
+          key={`in-${i}`}
+          type="target"
+          position={Position.Left}
+          id={`in-${i}`}
+          style={{
+            background: PIN_COLORS[input] || '#fff',
+            top: `${48 + (i + 1) * 24}px`,
+            left: '-6px',
+            width: '12px',
+            height: '12px',
+            border: '2px solid #1e293b'
+          }}
+        />
+      ))}
 
-      <div className="node-ports-right">
-        {data.outputs?.map((type, i) => (
-          <Handle
-            key={`out-${i}`}
-            type="source"
-            position={Position.Right}
-            id={type}
-            style={{
-              right: '-8px',
-              top: `${20 + i * 24}px`,
-              background: PIN_COLORS[type] || PIN_COLORS.float,
-              width: '12px',
-              height: '12px',
-              border: '1px solid #000',
-              borderRadius: '2px',
-              pointerEvents: 'all'
-            }}
-          />
-        ))}
-      </div>
-    </>
+      {/* Output Handles */}
+      {data.outputs?.map((output, i) => (
+        <Handle
+          key={`out-${i}`}
+          type="source"
+          position={Position.Right}
+          id={`out-${i}`}
+          style={{
+            background: PIN_COLORS[output] || '#fff',
+            top: `${48 + (i + 1) * 24}px`,
+            right: '-6px',
+            width: '12px',
+            height: '12px',
+            border: '2px solid #1e293b'
+          }}
+        />
+      ))}
+    </div>
   );
 });

@@ -54,7 +54,8 @@ const initialNodes: Node<NodeData>[] = [
         showWindow: true,
         windowType: 'modern',
         doorType: 'modern',
-        material: 'bricks'
+        material: 'bricks',
+        hasBalcony: true
       },
       onChange: () => {},
       inputs: ['spline'],
@@ -141,6 +142,7 @@ export default function App() {
                 doorHeight: 2.4,
                 doorOffset: 0,
                 doorSide: 'front',
+                hasBalcony: true,
                 ...node.data.params,
               }
             },

@@ -127,6 +127,7 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
                     windowType={part.windowType}
                     doorType={part.doorType}
                     materialType={part.material}
+                    hasBalcony={part.hasBalcony}
                   />
                 </group>
               );
@@ -143,11 +144,11 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           const rotationRad = (twist.base + (twist.mid - twist.base) * t + (twist.top - twist.mid) * t) * (Math.PI / 180);
           const currentScale = 1.0 + (taper - 1.0) * t;
 
-          const getTransformedPoint = (p: [number, number], extraScale: number = 1.0) => {
+          const getTransformedPoint = (p: [number, number], scaleX: number = 1.0, scaleZ: number = 1.0) => {
             const s = Math.sin(rotationRad);
             const c = Math.cos(rotationRad);
-            const rx = p[0] * currentScale * extraScale;
-            const rz = p[1] * currentScale * extraScale;
+            const rx = p[0] * currentScale * scaleX;
+            const rz = p[1] * currentScale * scaleZ;
             const mag = Math.sqrt(rx * rx + rz * rz);
             const dir = mag > 0 ? [rx / mag, rz / mag] : [0, 0];
             const px = rx + dir[0] * overhang;

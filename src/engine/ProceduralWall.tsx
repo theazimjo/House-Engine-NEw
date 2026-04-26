@@ -18,6 +18,7 @@ interface ProceduralWallProps {
   windowType?: string;
   doorType?: string;
   materialType?: MaterialType;
+  hasBalcony?: boolean;
 }
 
 const WindowModel = ({ w, h, type }: { w: number, h: number, type: string }) => {
@@ -115,10 +116,38 @@ const DoorModel = ({ w, h, type }: { w: number, h: number, type: string }) => {
   );
 };
 
+const BalconyModel = ({ w, h }: { w: number, h: number }) => {
+  const depth = 1.2;
+  const railingH = 1.0;
+  return (
+    <group position={[0, -h/2, depth/2]}>
+      {/* Base slab */}
+      <mesh position={[0, -0.05, 0]}>
+        <boxGeometry args={[w + 0.4, 0.1, depth]} />
+        <meshStandardMaterial color="#ccc" />
+      </mesh>
+      {/* Railings */}
+      <mesh position={[0, railingH/2, depth/2]}>
+        <boxGeometry args={[w + 0.4, railingH, 0.05]} />
+        <meshStandardMaterial color="#111" transparent opacity={0.7} />
+      </mesh>
+      <mesh position={[-(w+0.4)/2, railingH/2, 0]} rotation={[0, Math.PI/2, 0]}>
+        <boxGeometry args={[depth, railingH, 0.05]} />
+        <meshStandardMaterial color="#111" transparent opacity={0.7} />
+      </mesh>
+      <mesh position={[(w+0.4)/2, railingH/2, 0]} rotation={[0, Math.PI/2, 0]}>
+        <boxGeometry args={[depth, railingH, 0.05]} />
+        <meshStandardMaterial color="#111" transparent opacity={0.7} />
+      </mesh>
+    </group>
+  );
+};
+
 export const ProceduralWall: React.FC<ProceduralWallProps> = ({ 
   width, height, thickness, windowSpacing, windowSize, sillHeight, isModern,
   hasDoor = false, doorWidth = 1.8, doorHeight = 2.4, doorOffset = 0,
-  windowType = 'modern', doorType = 'modern', materialType = 'bricks'
+  windowType = 'modern', doorType = 'modern', materialType = 'bricks',
+  hasBalcony = false
 }) => {
   const wallMaterial = React.useMemo(() => materialLib.getMaterial(materialType, isModern ? "#e2e2e2" : "#f0f0f0"), [materialType, isModern]);
 
@@ -173,10 +202,19 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
       <mesh castShadow receiveShadow position={[0, 0, -thickness/2]} material={wallMaterial}>
         <extrudeGeometry args={[shape, { depth: thickness, bevelEnabled: false }]} />
       </mesh>
+
+      {/* Decorative Cornice (Top trim) */}
+      <mesh position={[0, height, 0]}>
+        <boxGeometry args={[width + 0.1, 0.15, thickness + 0.1]} />
+        <meshStandardMaterial color="#ccc" />
+      </mesh>
       
       {windowPositions.map((pos, i) => (
         <group key={i} position={[pos.x, pos.y, 0]}>
           <WindowModel w={windowSize[0]} h={windowSize[1]} type={windowType} />
+          {hasBalcony && i % 2 === 0 && (
+            <BalconyModel w={windowSize[0]} h={windowSize[1]} />
+          )}
         </group>
       ))}
 
