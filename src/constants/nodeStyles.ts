@@ -26,6 +26,11 @@ export const NODE_HEADER_COLORS: Record<NodeType | string, string> = {
   // Modifiers
   offset_spline:    '#0f766e',
   transform_spline: '#7e22ce',
+  mirror_spline:    '#0e7490',
+  // Utilities
+  math_node:        '#78350f',
+  merge_mesh:       '#1e3a5f',
+  scatter_points:   '#14532d',
   // Legacy
   extrude:  '#005682',
   split:    '#f97316',

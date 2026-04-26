@@ -249,6 +249,31 @@ const BuildingRenderer = ({ nodes, edges }: ViewportProps) => {
           );
         }
 
+        // ── Scatter Instance (tree / prop placeholder) ──
+        if (part.type === 'scatter_instance') {
+          const { position, scale = 1, rotation: rot = 0 } = part;
+          const h = 2.5 * scale;
+          const r = 0.4 * scale;
+          return (
+            <group key={`scatter-${idx}`} position={[position[0], position[1], position[2]]} rotation={[0, rot, 0]}>
+              {/* Trunk */}
+              <mesh position={[0, h * 0.3, 0]} castShadow>
+                <cylinderGeometry args={[r * 0.25, r * 0.35, h * 0.6, 6]} />
+                <meshStandardMaterial color="#5d4037" roughness={0.9} />
+              </mesh>
+              {/* Canopy */}
+              <mesh position={[0, h * 0.75, 0]} castShadow>
+                <coneGeometry args={[r * 1.6, h * 0.7, 7]} />
+                <meshStandardMaterial color="#2e7d32" roughness={0.85} />
+              </mesh>
+              <mesh position={[0, h * 0.95, 0]} castShadow>
+                <coneGeometry args={[r * 1.1, h * 0.55, 6]} />
+                <meshStandardMaterial color="#388e3c" roughness={0.85} />
+              </mesh>
+            </group>
+          );
+        }
+
         // ── Full Volume / Foundation Slab ──
         if ((part.type === 'full_volume' || part.type === 'foundation_slab') && Array.isArray(spline) && spline.length > 0) {
           const slabShape = new THREE.Shape();

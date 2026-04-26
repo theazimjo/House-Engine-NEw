@@ -61,6 +61,19 @@ const SELECT_OPTIONS: Record<string, { value: string; label: string }[]> = {
     { value: 'wood',      label: 'Wood' },
     { value: 'metal',     label: 'Metal' },
   ],
+  axis: [
+    { value: 'x', label: 'X Axis' },
+    { value: 'z', label: 'Z Axis' },
+  ],
+  operation: [
+    { value: 'add',      label: 'Add  (A + B)' },
+    { value: 'subtract', label: 'Subtract (A - B)' },
+    { value: 'multiply', label: 'Multiply (A × B)' },
+    { value: 'divide',   label: 'Divide (A ÷ B)' },
+    { value: 'max',      label: 'Max' },
+    { value: 'min',      label: 'Min' },
+    { value: 'power',    label: 'Power (A ^ B)' },
+  ],
 };
 
 const BOOLEAN_KEYS = new Set(['hasBalcony', 'showWindow', 'hasDoor', 'hasRibs', 'useCorners']);

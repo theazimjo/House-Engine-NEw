@@ -135,6 +135,10 @@ export default function App() {
       plinth:           'Plinth Generator',
       offset_spline:    'Offset Spline',
       transform_spline: 'Transform Spline',
+      mirror_spline:    'Mirror Spline',
+      math_node:        'Math',
+      merge_mesh:       'Merge Mesh',
+      scatter_points:   'Scatter Points',
     };
     const id = `${type}-${Date.now()}`;
     const newNode: Node<NodeData> = {

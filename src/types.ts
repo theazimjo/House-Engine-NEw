@@ -16,14 +16,23 @@ export type PinType =
 
 // ── Node Types ───────────────────────────────────────────────────────────────
 export type NodeType =
+  // Generators
   | 'foundation'
+  // Structure
   | 'floors'
   | 'roof'
   | 'columns'
   | 'stairs'
   | 'plinth'
+  // Modifiers
   | 'offset_spline'
-  | 'transform_spline';
+  | 'transform_spline'
+  | 'mirror_spline'
+  // Utilities
+  | 'math_node'
+  | 'merge_mesh'
+  | 'scatter_points';
+
 
 // ── Node Data ─────────────────────────────────────────────────────────────────
 export interface NodeData {
@@ -110,18 +119,38 @@ export const DEFAULT_PARAMS: Record<NodeType, Record<string, any>> = {
     scale: 1.0,
     rotation: 0,
   },
+  mirror_spline: {
+    axis: 'x',
+    offset: 0,
+  },
+  math_node: {
+    operation: 'multiply',
+    valueA: 1.0,
+    valueB: 1.0,
+  },
+  merge_mesh: {},
+  scatter_points: {
+    count: 20,
+    seed: 42,
+    minScale: 0.8,
+    maxScale: 1.2,
+  },
 };
 
 // ── Node Pin Definitions ──────────────────────────────────────────────────────
 export const NODE_PINS: Record<NodeType, { inputs: PinType[]; outputs: PinType[] }> = {
-  foundation:       { inputs: [],                    outputs: ['spline'] },
-  floors:           { inputs: ['spline'],             outputs: ['mesh', 'window', 'float'] },
-  roof:             { inputs: ['spline', 'float'],    outputs: ['mesh'] },
-  columns:          { inputs: ['spline'],             outputs: ['mesh'] },
-  stairs:           { inputs: ['spline'],             outputs: ['mesh'] },
-  plinth:           { inputs: ['spline'],             outputs: ['mesh'] },
-  offset_spline:    { inputs: ['spline'],             outputs: ['spline'] },
-  transform_spline: { inputs: ['spline'],             outputs: ['spline'] },
+  foundation:       { inputs: [],                          outputs: ['spline'] },
+  floors:           { inputs: ['spline'],                   outputs: ['mesh', 'window', 'float'] },
+  roof:             { inputs: ['spline', 'float'],          outputs: ['mesh'] },
+  columns:          { inputs: ['spline'],                   outputs: ['mesh'] },
+  stairs:           { inputs: ['spline'],                   outputs: ['mesh'] },
+  plinth:           { inputs: ['spline'],                   outputs: ['mesh'] },
+  offset_spline:    { inputs: ['spline'],                   outputs: ['spline'] },
+  transform_spline: { inputs: ['spline'],                   outputs: ['spline'] },
+  mirror_spline:    { inputs: ['spline'],                   outputs: ['spline'] },
+  math_node:        { inputs: ['float', 'float'],           outputs: ['float'] },
+  merge_mesh:       { inputs: ['mesh', 'mesh'],             outputs: ['mesh'] },
+  scatter_points:   { inputs: ['spline'],                   outputs: ['mesh'] },
 };
 
 // ── Legacy BuildingParams ─────────────────────────────────────────────────────

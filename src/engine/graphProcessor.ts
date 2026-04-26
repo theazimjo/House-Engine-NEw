@@ -301,7 +301,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
         }
         break;
 
-      case 'foundation':
+      case 'foundation': {
         const getParam = (name: string) => {
           const input = inputs.find(i => i.handle === `param-${name}`);
           return input ? input.data : node.data.params[name];
@@ -376,7 +376,105 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
           jitter
         };
         break;
+      }
+
+      // ── Mirror Spline ────────────────────────────────────────────────────────
+      case 'mirror_spline': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        if (!splineData || !Array.isArray(splineData.points)) break;
+        const axis   = node.data.params.axis   || 'x';
+        const offset = node.data.params.offset || 0;
+
+        const mirrored = splineData.points.map((p: any) => {
+          if (axis === 'x') return [-p[0] + offset * 2, p[1]];
+          else              return [p[0], -p[1] + offset * 2];
+        });
+
+        // Merge original + mirrored (reversed so winding stays consistent)
+        const merged = [...splineData.points, ...mirrored.reverse()];
+        output = { ...splineData, points: merged };
+        break;
+      }
+
+      // ── Math Node ────────────────────────────────────────────────────────────
+      case 'math_node': {
+        const aRaw = inputs.find(i => i.handle === 'float')?.data;
+        const bRaw = inputs.find(i => i.handle === 'float' && i !== inputs.find(j => j.handle === 'float'))?.data;
+        const allFloat = inputs.filter(i => i.handle === 'float');
+        const a = (typeof allFloat[0]?.data === 'number' ? allFloat[0].data : node.data.params.valueA) ?? 1;
+        const b = (typeof allFloat[1]?.data === 'number' ? allFloat[1].data : node.data.params.valueB) ?? 1;
+        const op = node.data.params.operation || 'multiply';
+
+        let result = 0;
+        switch (op) {
+          case 'add':      result = a + b; break;
+          case 'subtract': result = a - b; break;
+          case 'multiply': result = a * b; break;
+          case 'divide':   result = b !== 0 ? a / b : 0; break;
+          case 'max':      result = Math.max(a, b); break;
+          case 'min':      result = Math.min(a, b); break;
+          case 'power':    result = Math.pow(a, b); break;
+          default:         result = a * b;
+        }
+        output = result;
+        break;
+      }
+
+      // ── Merge Mesh ───────────────────────────────────────────────────────────
+      case 'merge_mesh': {
+        // Collect all mesh inputs and flatten them into one array
+        const meshInputs = inputs.filter(i => i.handle === 'mesh');
+        const all: any[] = [];
+        meshInputs.forEach(mi => {
+          if (Array.isArray(mi.data)) all.push(...mi.data);
+          else if (mi.data) all.push(mi.data);
+        });
+        output = all.length > 0 ? all : null;
+        break;
+      }
+
+      // ── Scatter Points ───────────────────────────────────────────────────────
+      case 'scatter_points': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        if (!splineData || !Array.isArray(splineData.points)) break;
+
+        const count    = Math.floor(node.data.params.count    || 20);
+        const seed     = node.data.params.seed     || 42;
+        const minScale = node.data.params.minScale || 0.8;
+        const maxScale = node.data.params.maxScale || 1.2;
+        const pts      = splineData.points;
+
+        // Bounding box of spline
+        const minX = Math.min(...pts.map((p: any) => p[0]));
+        const maxX = Math.max(...pts.map((p: any) => p[0]));
+        const minZ = Math.min(...pts.map((p: any) => p[1]));
+        const maxZ = Math.max(...pts.map((p: any) => p[1]));
+
+        // Simple seeded pseudo-random
+        const rand = (s: number) => {
+          const x = Math.sin(s) * 43758.5453123;
+          return x - Math.floor(x);
+        };
+
+        const scattered: any[] = [];
+        for (let i = 0; i < count; i++) {
+          const rx = rand(seed + i * 3.1)    * (maxX - minX) + minX;
+          const rz = rand(seed + i * 7.7 + 1) * (maxZ - minZ) + minZ;
+          const sc = rand(seed + i * 13.3 + 2) * (maxScale - minScale) + minScale;
+          const ry = rand(seed + i * 5.5 + 3)  * Math.PI * 2;
+
+          scattered.push({
+            type: 'scatter_instance',
+            position: [rx, splineData.zOffset || 0, rz],
+            scale: sc,
+            rotation: ry,
+          });
+        }
+        output = scattered;
+        break;
+      }
     }
+
 
     results.set(nodeId, output);
     return output;

@@ -120,28 +120,54 @@ const DoorModel = ({ w, h, type }: { w: number, h: number, type: string }) => {
 };
 
 const BalconyModel = ({ w, h }: { w: number, h: number }) => {
-  const depth = 1.2;
-  const railingH = 1.0;
+  // NOTE: local -Z is the OUTWARD direction (wall group has Ry(π) rotation).
+  // So all depth offsets use negative Z.
+  const depth     = 1.3;
+  const railingH  = 1.05;
+  const slabT     = 0.12;
+  const glassOpacity = 0.45;
+  const balusterCount = Math.max(2, Math.floor((w + 0.4) / 0.4));
+
   return (
-    <group position={[0, -h/2, 0]}>
-      {/* Base slab - starts at wall and goes out */}
-      <mesh position={[0, -0.05, depth/2]}>
-        <boxGeometry args={[w + 0.4, 0.1, depth]} />
-        <meshStandardMaterial color="#ccc" />
+    <group position={[0, -h / 2, 0]}>
+      {/* ── Base Slab ── */}
+      <mesh position={[0, -slabT / 2, -depth / 2]} castShadow receiveShadow>
+        <boxGeometry args={[w + 0.5, slabT, depth]} />
+        <meshStandardMaterial color="#c8c8cc" roughness={0.6} metalness={0.05} />
       </mesh>
-      {/* Railings */}
-      <mesh position={[0, railingH/2, depth]}>
-        <boxGeometry args={[w + 0.4, railingH, 0.05]} />
-        <meshStandardMaterial color="#111" transparent opacity={0.7} />
+
+      {/* ── Front Glass Railing Panel ── */}
+      <mesh position={[0, railingH / 2, -depth]}>
+        <boxGeometry args={[w + 0.5, railingH, 0.04]} />
+        <meshStandardMaterial color="#aaddff" transparent opacity={glassOpacity} metalness={0.8} roughness={0.1} />
       </mesh>
-      <mesh position={[-(w+0.4)/2, railingH/2, depth/2]} rotation={[0, Math.PI/2, 0]}>
-        <boxGeometry args={[depth, railingH, 0.05]} />
-        <meshStandardMaterial color="#111" transparent opacity={0.7} />
+
+      {/* ── Side Glass Panels ── */}
+      <mesh position={[-(w + 0.5) / 2, railingH / 2, -depth / 2]}>
+        <boxGeometry args={[0.04, railingH, depth]} />
+        <meshStandardMaterial color="#aaddff" transparent opacity={glassOpacity} metalness={0.8} roughness={0.1} />
       </mesh>
-      <mesh position={[(w+0.4)/2, railingH/2, depth/2]} rotation={[0, Math.PI/2, 0]}>
-        <boxGeometry args={[depth, railingH, 0.05]} />
-        <meshStandardMaterial color="#111" transparent opacity={0.7} />
+      <mesh position={[(w + 0.5) / 2, railingH / 2, -depth / 2]}>
+        <boxGeometry args={[0.04, railingH, depth]} />
+        <meshStandardMaterial color="#aaddff" transparent opacity={glassOpacity} metalness={0.8} roughness={0.1} />
       </mesh>
+
+      {/* ── Top Handrail ── */}
+      <mesh position={[0, railingH, -depth / 2]}>
+        <boxGeometry args={[w + 0.5 + 0.06, 0.06, depth + 0.06]} />
+        <meshStandardMaterial color="#e0e0e0" metalness={0.7} roughness={0.2} />
+      </mesh>
+
+      {/* ── Vertical Balusters (steel posts) ── */}
+      {Array.from({ length: balusterCount }).map((_, i) => {
+        const bx = -(w + 0.5) / 2 + (i + 0.5) * ((w + 0.5) / balusterCount);
+        return (
+          <mesh key={i} position={[bx, railingH / 2, -depth]}>
+            <boxGeometry args={[0.04, railingH, 0.04]} />
+            <meshStandardMaterial color="#cccccc" metalness={0.9} roughness={0.1} />
+          </mesh>
+        );
+      })}
     </group>
   );
 };
@@ -207,32 +233,33 @@ export const ProceduralWall: React.FC<ProceduralWallProps> = ({
         <extrudeGeometry args={[shape, { depth: thickness, bevelEnabled: false }]} />
       </mesh>
 
-      {/* Decorative Cornice (Top trim) */}
-      <mesh position={[0, height, 0.05]}>
-        <boxGeometry args={[width + 0.1, 0.15, thickness + 0.2]} />
-        <meshStandardMaterial color="#ccc" />
+      {/* Decorative Cornice (Top trim) — on outer face (-Z side) */}
+      <mesh position={[0, height + 0.07, 0]}>
+        <boxGeometry args={[width + 0.15, 0.14, thickness + 0.3]} />
+        <meshStandardMaterial color="#d8d8dc" roughness={0.5} metalness={0.1} />
       </mesh>
       
       {windowPositions.map((pos, i) => (
         <group key={i} position={[pos.x, pos.y, 0]}>
           <WindowModel w={windowSize[0]} h={windowSize[1]} type={windowType} />
           {hasBalcony && i % 2 === 0 && (
-            <group position={[0, 0, thickness / 2 + 0.1]}>
+            // Place balcony on the OUTER face: local -Z is outward (Ry(π) rotation on wall group)
+            <group position={[0, 0, -(thickness / 2 + 0.05)]}>
               <BalconyModel w={windowSize[0]} h={windowSize[1]} />
             </group>
           )}
         </group>
       ))}
 
-      {/* Vertical Ribs (Architectural Fins) */}
+      {/* Vertical Ribs (Architectural Fins) — on outer face (-Z) */}
       {hasRibs && windowPositions.length > 1 && windowPositions.map((pos, i) => {
         if (i === windowPositions.length - 1) return null;
-        const nextPos = windowPositions[i+1];
+        const nextPos = windowPositions[i + 1];
         const ribX = (pos.x + nextPos.x) / 2;
         return (
-          <mesh key={`rib-${i}`} position={[ribX, height/2, thickness/2 + 0.05]}>
-            <boxGeometry args={[0.2, height, 0.2]} />
-            <meshStandardMaterial color="#ddd" />
+          <mesh key={`rib-${i}`} position={[ribX, height / 2, -(thickness / 2 + 0.08)]}>
+            <boxGeometry args={[0.18, height, 0.22]} />
+            <meshStandardMaterial color="#e0e0e4" metalness={0.1} roughness={0.4} />
           </mesh>
         );
       })}

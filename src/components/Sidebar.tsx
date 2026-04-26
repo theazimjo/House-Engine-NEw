@@ -26,22 +26,33 @@ const NODE_CATEGORIES: NodeCategory[] = [
     label: 'STRUCTURE',
     icon: '🏢',
     nodes: [
-      { type: 'floors', label: 'Floors System', description: 'Multi-floor walls & windows' },
-      { type: 'roof', label: 'Roof System', description: 'Pitched, hip, flat & more' },
-      { type: 'columns', label: 'Column Generator', description: 'Structural columns' },
-      { type: 'stairs', label: 'Stairs Generator', description: 'Entry staircase' },
-      { type: 'plinth', label: 'Plinth Generator', description: 'Base plinth slab' },
+      { type: 'floors',   label: 'Floors System',     description: 'Multi-floor walls & windows' },
+      { type: 'roof',     label: 'Roof System',        description: 'Pitched, hip, flat & more' },
+      { type: 'columns',  label: 'Column Generator',   description: 'Structural columns' },
+      { type: 'stairs',   label: 'Stairs Generator',   description: 'Entry staircase' },
+      { type: 'plinth',   label: 'Plinth Generator',   description: 'Base plinth slab' },
     ]
   },
   {
     label: 'MODIFIERS',
     icon: '⚙️',
     nodes: [
-      { type: 'offset_spline', label: 'Offset Spline', description: 'Inset/outset a shape' },
+      { type: 'offset_spline',    label: 'Offset Spline',    description: 'Inset / outset a shape' },
       { type: 'transform_spline', label: 'Transform Spline', description: 'Move, scale, rotate shape' },
+      { type: 'mirror_spline',    label: 'Mirror Spline',    description: 'Mirror shape on X or Z axis' },
+    ]
+  },
+  {
+    label: 'UTILITIES',
+    icon: '🔧',
+    nodes: [
+      { type: 'math_node',      label: 'Math',          description: 'Add, multiply, divide floats' },
+      { type: 'merge_mesh',     label: 'Merge Mesh',    description: 'Combine two mesh outputs' },
+      { type: 'scatter_points', label: 'Scatter Points', description: 'Place objects on a spline area' },
     ]
   },
 ];
+
 
 export const Sidebar: React.FC<SidebarProps> = ({ onAddNode }) => {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
