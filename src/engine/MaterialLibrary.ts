@@ -15,8 +15,9 @@ class MaterialLibrary {
       normalMap: textures.normal,
       roughnessMap: textures.roughness,
       color: new THREE.Color(color),
-      roughness: 1,
-      metalness: type === 'metal' ? 0.8 : 0.1,
+      roughness: type === 'metal' ? 0.2 : 0.8,
+      metalness: type === 'metal' ? 0.9 : 0.05,
+      normalScale: new THREE.Vector2(2.0, 2.0)
     });
 
     this.cache.set(key, material);
@@ -24,7 +25,7 @@ class MaterialLibrary {
   }
 
   private generateTextures(type: MaterialType) {
-    const size = 512;
+    const size = 1024; // Increased resolution
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
@@ -35,62 +36,81 @@ class MaterialLibrary {
     nCanvas.height = size;
     const nCtx = nCanvas.getContext('2d')!;
 
+    // Initialize Normal Map with neutral flat blue
+    nCtx.fillStyle = 'rgb(128, 128, 255)';
+    nCtx.fillRect(0, 0, size, size);
+
     if (type === 'bricks') {
-      // Base Color
       ctx.fillStyle = '#8e2b2b';
       ctx.fillRect(0, 0, size, size);
-      ctx.strokeStyle = '#cccccc';
-      ctx.lineWidth = 4;
       
-      nCtx.fillStyle = 'rgb(128, 128, 255)'; // Flat normal
-      nCtx.fillRect(0, 0, size, size);
-
-      const rows = 8;
-      const cols = 4;
+      const rows = 12;
+      const cols = 6;
       const rH = size / rows;
       const rW = size / cols;
 
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
           const x = c * rW + (r % 2 === 0 ? 0 : rW / 2);
-          ctx.strokeRect(x, r * rH, rW, rH);
-          // Normal map for mortar (pushed in)
-          nCtx.strokeStyle = 'rgb(100, 100, 200)';
+          
+          // Brick Face
+          ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x + 2, r * rH + 2, rW - 4, rH - 4);
+
+          // Normal Map: Mortar lines as deep blue (pointing in)
+          nCtx.strokeStyle = 'rgb(64, 64, 180)';
+          nCtx.lineWidth = 6;
           nCtx.strokeRect(x, r * rH, rW, rH);
+          
+          // Add some noise to brick face normal
+          for(let i=0; i<10; i++) {
+            const nx = x + Math.random() * rW;
+            const ny = r * rH + Math.random() * rH;
+            nCtx.fillStyle = `rgba(140, 140, 255, 0.5)`;
+            nCtx.fillRect(nx, ny, 4, 4);
+          }
         }
       }
     } else if (type === 'wood') {
       ctx.fillStyle = '#5d4037';
       ctx.fillRect(0, 0, size, size);
-      for (let i = 0; i < 100; i++) {
-        ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.1})`;
-        ctx.fillRect(0, Math.random() * size, size, 2);
+      
+      for (let i = 0; i < size; i += 4) {
+        const h = Math.random() * 20;
+        ctx.fillStyle = `rgba(0,0,0,${0.1 + Math.random() * 0.1})`;
+        ctx.fillRect(0, i, size, 2);
+        
+        // Wood grain in normal map
+        nCtx.fillStyle = `rgb(128, 128, ${240 + Math.random() * 15})`;
+        nCtx.fillRect(0, i, size, 2);
       }
-      nCtx.fillStyle = 'rgb(128, 128, 255)';
-      nCtx.fillRect(0, 0, size, size);
     } else {
-      // Concrete/Default
-      ctx.fillStyle = '#ffffff';
+      // Concrete
+      ctx.fillStyle = '#999999';
       ctx.fillRect(0, 0, size, size);
-      for (let i = 0; i < 5000; i++) {
+      
+      for (let i = 0; i < 20000; i++) {
         const x = Math.random() * size;
         const y = Math.random() * size;
         const s = Math.random() * 2;
-        ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.05})`;
+        const val = Math.random();
+        ctx.fillStyle = `rgba(0,0,0,${val * 0.1})`;
         ctx.fillRect(x, y, s, s);
+        
+        // Noise in normal map
+        nCtx.fillStyle = `rgb(${120 + val * 20}, ${120 + val * 20}, 255)`;
+        nCtx.fillRect(x, y, s, s);
       }
-      nCtx.fillStyle = 'rgb(128, 128, 255)';
-      nCtx.fillRect(0, 0, size, size);
     }
 
     const map = new THREE.CanvasTexture(canvas);
     map.wrapS = map.wrapT = THREE.RepeatWrapping;
-    map.repeat.set(2, 2);
+    map.anisotropy = 16;
 
     const normal = new THREE.CanvasTexture(nCanvas);
     normal.wrapS = normal.wrapT = THREE.RepeatWrapping;
-    normal.repeat.set(2, 2);
-
+    
     return { map, normal, roughness: null };
   }
 }
