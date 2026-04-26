@@ -219,34 +219,73 @@ body {
 .editor-pane {
   flex: 1;
   position: relative;
+  min-width: 0;
 }
 
 .preview-pane {
-  width: 400px;
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-  background: #0f0f12;
+  width: 480px;
+  flex-shrink: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0a0a0e;
   position: relative;
 }
 
 .sidebar-overlay {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: 16px;
+  left: 16px;
   z-index: 10;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
 }
 
-.toolbar {
+/* ── Viewport Toolbar ── */
+.viewport-toolbar {
   position: absolute;
-  bottom: 20px;
+  bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-  padding: 8px;
   z-index: 10;
+  white-space: nowrap;
+}
+
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.toolbar-btn:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.15);
+  color: #fff;
+}
+
+.toolbar-btn--primary {
+  background: rgba(79, 70, 229, 0.2);
+  border-color: rgba(79, 70, 229, 0.4);
+  color: #a5b4fc;
+}
+
+.toolbar-btn--primary:hover {
+  background: rgba(79, 70, 229, 0.35);
+  border-color: rgba(99, 102, 241, 0.6);
+  color: #c7d2fe;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255,255,255,0.1);
+  margin: 0 2px;
 }
 
 /* Typography */
@@ -256,23 +295,21 @@ h1, h2, h3 {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.5) 100%);
+  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.45) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 /* Animations */
 @keyframes pulse-glow {
-  0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+  0%   { box-shadow: 0 0 0 0   rgba(79, 70, 229, 0.4); }
+  70%  { box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(79, 70, 229, 0); }
 }
 
-.active-node {
-  animation: pulse-glow 2s infinite;
-}
+.active-node { animation: pulse-glow 2s infinite; }
 
-/* Edge Selection Highlights */
+/* Edge Highlights */
 .react-flow__edge.selected .react-flow__edge-path {
   stroke: #f59e0b !important;
   stroke-width: 5px !important;
@@ -281,4 +318,12 @@ h1, h2, h3 {
 
 .react-flow__edge-path {
   transition: stroke 0.2s, stroke-width 0.2s;
+}
+
+/* Checkbox */
+.node-checkbox {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: #4ade80;
 }

@@ -1,136 +1,197 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import type { NodeData } from '../types';
-import { PIN_COLORS } from '../constants/nodeStyles';
-import { X } from 'lucide-react';
+import { PIN_COLORS, NODE_HEADER_COLORS } from '../constants/nodeStyles';
+import { X, GripVertical } from 'lucide-react';
 
+// ── Pin Label Map ─────────────────────────────────────────────────────────────
+const PIN_LABELS: Record<string, string> = {
+  spline:    'SPLINE',
+  mesh:      'MESH',
+  float:     'FLOAT',
+  integer:   'INT',
+  boolean:   'BOOL',
+  material:  'MAT',
+  transform: 'XFM',
+  array:     'ARR',
+  mask:      'MASK',
+  window:    'WIN',
+  floors:    'FLOOR',
+};
+
+// ── Select Options ────────────────────────────────────────────────────────────
+const SELECT_OPTIONS: Record<string, { value: string; label: string }[]> = {
+  roofType: [
+    { value: 'flat',    label: 'Flat' },
+    { value: 'pitched', label: 'Pitched' },
+    { value: 'hip',     label: 'Hip' },
+    { value: 'gable',   label: 'Gable' },
+    { value: 'mansard', label: 'Mansard' },
+    { value: 'shed',    label: 'Shed' },
+  ],
+  foundationShape: [
+    { value: 'rectangle', label: 'Rectangle' },
+    { value: 'circle',    label: 'Circle' },
+    { value: 'hexagon',   label: 'Hexagon' },
+    { value: 'L-shape',   label: 'L-Shape' },
+    { value: 'U-shape',   label: 'U-Shape' },
+    { value: 'C-shape',   label: 'C-Shape' },
+    { value: 'X-shape',   label: 'X-Shape' },
+  ],
+  doorSide: [
+    { value: 'front',     label: 'Front' },
+    { value: 'back',      label: 'Back' },
+    { value: 'frontback', label: 'Front + Back' },
+    { value: 'sides',     label: 'Sides' },
+    { value: 'all',       label: 'All Sides' },
+  ],
+  windowType: [
+    { value: 'modern',  label: 'Modern' },
+    { value: 'classic', label: 'Classic Grid' },
+    { value: 'arched',  label: 'Arched' },
+  ],
+  doorType: [
+    { value: 'modern',  label: 'Modern' },
+    { value: 'classic', label: 'Classic Panel' },
+    { value: 'double',  label: 'Double Glass' },
+  ],
+  material: [
+    { value: 'concrete',  label: 'Concrete' },
+    { value: 'bricks',    label: 'Bricks' },
+    { value: 'wood',      label: 'Wood' },
+    { value: 'metal',     label: 'Metal' },
+  ],
+};
+
+const BOOLEAN_KEYS = new Set(['hasBalcony', 'showWindow', 'hasDoor', 'hasRibs', 'useCorners']);
+
+// ── CustomNode ────────────────────────────────────────────────────────────────
 export const CustomNode = memo(({ data, id }: NodeProps<NodeData>) => {
+  const headerColor = NODE_HEADER_COLORS[data.type] ?? '#333';
+
   const handleParamChange = (name: string, value: any) => {
     data.onChange(id, { ...data.params, [name]: value });
   };
 
-  // Header height is roughly 40px. 
-  // We want to space handles below that.
+  const handleDelete = () => {
+    window.dispatchEvent(new CustomEvent('delete-node', { detail: id }));
+  };
 
   return (
-    <div className="custom-node shadow-xl">
-      <div className="node-header flex justify-between items-center px-3 py-2 bg-slate-800 text-white rounded-t-lg">
-        <span className="font-bold text-sm uppercase tracking-wider">{data.label}</span>
-        <button onClick={() => data.onDelete?.(id)} className="hover:text-red-400 transition-colors">
-          <X size={16} />
+    <div className="custom-node">
+      {/* ── Header ── */}
+      <div
+        className="node-header"
+        style={{ background: headerColor, borderBottom: `1px solid rgba(0,0,0,0.4)` }}
+      >
+        <GripVertical size={12} style={{ opacity: 0.4, flexShrink: 0 }} />
+        <span style={{ flex: 1, fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.07em' }}>
+          {data.label}
+        </span>
+        <button
+          className="node-delete-btn"
+          onClick={handleDelete}
+          title="Delete node"
+        >
+          <X size={12} />
         </button>
       </div>
 
-      <div className="node-content p-3 bg-slate-900/90 backdrop-blur-sm text-slate-200 rounded-b-lg border border-slate-700">
-        {Object.entries(data.params).map(([key, value]) => (
-          <div key={key} className="input-group mb-3" style={{ position: 'relative' }}>
-            <label className="input-label block text-xs text-slate-400 mb-1 capitalize">{key.replace(/([A-Z])/g, ' $1')}</label>
+      {/* ── Body ── */}
+      <div className="node-body">
+        {Object.entries(data.params).map(([key, value]) => {
+          const isSelect  = key in SELECT_OPTIONS;
+          const isBool    = BOOLEAN_KEYS.has(key);
+          const isColor   = key === 'color';
 
-            {/* Select dropdowns for specific keys */}
-            {['roofType', 'foundationShape', 'doorSide', 'windowType', 'doorType', 'material'].includes(key) ? (
-              <select
-                value={value as string}
-                onChange={(e) => handleParamChange(key, e.target.value)}
-                className="node-select w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500"
-              >
-                {key === 'roofType' ? (
-                  <>
-                    <option value="flat">Flat</option>
-                    <option value="pitched">Pitched</option>
-                    <option value="hip">Hip Roof</option>
-                    <option value="gable">Gable</option>
-                    <option value="mansard">Mansard</option>
-                    <option value="shed">Shed</option>
-                  </>
-                ) : key === 'material' ? (
-                  <>
-                    <option value="concrete">Concrete</option>
-                    <option value="bricks">Bricks</option>
-                    <option value="wood">Wood</option>
-                    <option value="metal">Metal</option>
-                  </>
-                ) : key === 'windowType' ? (
-                  <>
-                    <option value="modern">Modern</option>
-                    <option value="classic">Classic Grid</option>
-                    <option value="arched">Arched</option>
-                  </>
-                ) : key === 'doorType' ? (
-                  <>
-                    <option value="modern">Modern</option>
-                    <option value="classic">Classic Panel</option>
-                    <option value="double">Double Glass</option>
-                  </>
-                ) : (
-                  <>
-                    <option value="front">Front</option>
-                    <option value="back">Back</option>
-                    <option value="left">Left</option>
-                    <option value="right">Right</option>
-                    <option value="rectangle">Rectangle</option>
-                    <option value="circle">Circle</option>
-                  </>
-                )}
-              </select>
-            ) : ['hasBalcony', 'showWindow', 'hasDoor', 'hasRibs'].includes(key) ? (
-              /* Checkbox inputs for boolean keys */
-              <div className="flex items-center">
+          return (
+            <div key={key} className="input-group">
+              <label className="input-label">{key.replace(/([A-Z])/g, ' $1')}</label>
+
+              {isColor ? (
                 <input
-                  type="checkbox"
-                  checked={Boolean(value)}
-                  onChange={(e) => handleParamChange(key, e.target.checked)}
-                  className="node-checkbox w-5 h-5 cursor-pointer accent-blue-500"
+                  type="color"
+                  value={value as string}
+                  onChange={(e) => handleParamChange(key, e.target.value)}
+                  style={{ width: '36px', height: '20px', padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
                 />
-                <span className="ml-2 text-xs text-slate-500">{Boolean(value) ? 'Enabled' : 'Disabled'}</span>
-              </div>
-            ) : (
-              /* Number inputs for everything else */
-              <input
-                type="number"
-                value={value as number}
-                onChange={(e) => handleParamChange(key, parseFloat(e.target.value))}
-                className="node-input w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500"
-              />
-            )}
-          </div>
-        ))}
+              ) : isSelect ? (
+                <select
+                  value={value as string}
+                  onChange={(e) => handleParamChange(key, e.target.value)}
+                  className="node-select"
+                >
+                  {SELECT_OPTIONS[key].map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              ) : isBool ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(value)}
+                    onChange={(e) => handleParamChange(key, e.target.checked)}
+                    className="node-checkbox"
+                  />
+                  <span style={{ fontSize: '0.58rem', color: Boolean(value) ? '#4ade80' : '#555' }}>
+                    {Boolean(value) ? 'ON' : 'OFF'}
+                  </span>
+                </div>
+              ) : (
+                <input
+                  type="number"
+                  value={value as number}
+                  step={typeof value === 'number' && value < 2 ? 0.1 : 1}
+                  onChange={(e) => handleParamChange(key, parseFloat(e.target.value))}
+                  className="node-input"
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {/* Input Handles */}
-      {data.inputs?.map((input, i) => (
+      {/* ── Input Handles (Left) ── */}
+      {data.inputs?.map((pin, i) => (
         <Handle
-          key={`in-${i}`}
+          key={`in-${pin}-${i}`}
           type="target"
           position={Position.Left}
-          id={`in-${i}`}
+          id={pin}   // ← ID = pin type name, NOT index
           style={{
-            background: PIN_COLORS[input] || '#fff',
-            top: `${48 + (i + 1) * 24}px`,
-            left: '-6px',
+            background: PIN_COLORS[pin] ?? '#aaa',
+            top: `${52 + i * 22}px`,
+            left: '-7px',
             width: '12px',
             height: '12px',
-            border: '2px solid #1e293b'
+            borderRadius: '3px',
+            border: '2px solid #111',
           }}
+          title={PIN_LABELS[pin] ?? pin}
         />
       ))}
 
-      {/* Output Handles */}
-      {data.outputs?.map((output, i) => (
+      {/* ── Output Handles (Right) ── */}
+      {data.outputs?.map((pin, i) => (
         <Handle
-          key={`out-${i}`}
+          key={`out-${pin}-${i}`}
           type="source"
           position={Position.Right}
-          id={`out-${i}`}
+          id={pin}   // ← ID = pin type name, NOT index
           style={{
-            background: PIN_COLORS[output] || '#fff',
-            top: `${48 + (i + 1) * 24}px`,
-            right: '-6px',
+            background: PIN_COLORS[pin] ?? '#aaa',
+            top: `${52 + i * 22}px`,
+            right: '-7px',
             width: '12px',
             height: '12px',
-            border: '2px solid #1e293b'
+            borderRadius: '3px',
+            border: '2px solid #111',
           }}
+          title={PIN_LABELS[pin] ?? pin}
         />
       ))}
     </div>
   );
 });
+
+CustomNode.displayName = 'CustomNode';

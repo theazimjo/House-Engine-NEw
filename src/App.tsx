@@ -1,13 +1,13 @@
-import { useCallback, useEffect } from 'react';
-import ReactFlow, { 
-  addEdge, 
-  Background, 
-  Controls, 
+import { useCallback, useEffect, useRef } from 'react';
+import ReactFlow, {
+  addEdge,
+  Background,
+  Controls,
   useNodesState,
   useEdgesState,
   type Node,
   type Edge,
-  type Connection
+  type Connection,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import './index.css';
@@ -15,306 +15,211 @@ import './index.css';
 import { CustomNode } from './components/CustomNode';
 import { Viewport } from './Viewport';
 import { Sidebar } from './components/Sidebar';
-import type { NodeData, NodeType, PinType } from './types';
-import { Play, Download } from 'lucide-react';
+import type { NodeData, NodeType } from './types';
+import { DEFAULT_PARAMS, NODE_PINS } from './types';
+import { Play, Download, Save, FolderOpen } from 'lucide-react';
 
-
+// ── Initial Graph ────────────────────────────────────────────────────────────
+const makeNodeData = (type: NodeType, label: string): Omit<NodeData, 'onChange'> => ({
+  label,
+  type,
+  params: { ...DEFAULT_PARAMS[type] },
+  inputs: NODE_PINS[type].inputs,
+  outputs: NODE_PINS[type].outputs,
+});
 
 const initialNodes: Node<NodeData>[] = [
   {
     id: 'f-1',
     type: 'buildingNode',
-    position: { x: 50, y: 200 },
-    data: {
-      label: 'Foundation',
-      type: 'foundation',
-      params: { width: 14, depth: 10, foundationShape: 'rectangle', twistBase: 0, twistMid: 0, twistTop: 0, taper: 1, shearX: 0, shearY: 0, jitter: 0 },
-      onChange: () => {},
-      inputs: [],
-      outputs: ['spline']
-    }
-  },
-  {
-    id: 'off-1',
-    type: 'buildingNode',
-    position: { x: 400, y: -200 },
-    data: {
-      label: 'Offset Spline',
-      type: 'offset_spline',
-      params: { amount: -1.0 },
-      onChange: () => {},
-      inputs: ['spline'],
-      outputs: ['spline']
-    }
-  },
-  {
-    id: 'tr-1',
-    type: 'buildingNode',
-    position: { x: 400, y: -450 },
-    data: {
-      label: 'Transform Spline',
-      type: 'transform_spline',
-      params: { x: 0, y: 0, scale: 1.0, rotation: 0 },
-      onChange: () => {},
-      inputs: ['spline'],
-      outputs: ['spline']
-    }
+    position: { x: 50, y: 280 },
+    data: { ...makeNodeData('foundation', 'Foundation'), onChange: () => {} },
   },
   {
     id: 'fl-1',
     type: 'buildingNode',
-    position: { x: 400, y: 350 },
-    data: {
-      label: 'Floors System',
-      type: 'floors',
-      params: { 
-        count: 5, 
-        height: 3.2, 
-        winWidth: 1.2, 
-        winHeight: 1.8, 
-        winSpacing: 2.5, 
-        doorWidth: 1.8, 
-        doorHeight: 2.4, 
-        doorOffset: 0, 
-        doorSide: 'front', 
-        showWindow: true,
-        windowType: 'modern',
-        doorType: 'modern',
-        material: 'bricks',
-        hasBalcony: true,
-        hasRibs: true,
-        plinthHeight: 0.8
-      },
-      onChange: () => {},
-      inputs: ['spline'],
-      outputs: ['mesh', 'window', 'float']
-    }
+    position: { x: 380, y: 350 },
+    data: { ...makeNodeData('floors', 'Floors System'), onChange: () => {} },
   },
   {
-    id: 'col-1',
+    id: 'r-1',
     type: 'buildingNode',
-    position: { x: 400, y: 600 },
-    data: {
-      label: 'Column Generator',
-      type: 'columns',
-      params: { radius: 0.3, height: 4.0, spacing: 3.0, useCorners: true, material: 'concrete' },
-      onChange: () => {},
-      inputs: ['spline'],
-      outputs: ['mesh']
-    }
+    position: { x: 380, y: 50 },
+    data: { ...makeNodeData('roof', 'Roof System'), onChange: () => {} },
+  },
+  {
+    id: 'off-1',
+    type: 'buildingNode',
+    position: { x: 380, y: -200 },
+    data: { ...makeNodeData('offset_spline', 'Offset Spline'), onChange: () => {} },
   },
   {
     id: 'pl-1',
     type: 'buildingNode',
-    position: { x: 400, y: 750 },
-    data: {
-      label: 'Plinth Generator',
-      type: 'plinth',
-      params: { height: 0.8, material: 'concrete' },
-      onChange: () => {},
-      inputs: ['spline'],
-      outputs: ['mesh']
-    }
+    position: { x: 380, y: 750 },
+    data: { ...makeNodeData('plinth', 'Plinth Generator'), onChange: () => {} },
   },
   {
     id: 'st-1',
     type: 'buildingNode',
     position: { x: 700, y: 550 },
-    data: {
-      label: 'Stairs Generator',
-      type: 'stairs',
-      params: { count: 4, stepHeight: 0.2, stepDepth: 0.3, width: 2.5 },
-      onChange: () => {},
-      inputs: ['spline'],
-      outputs: ['mesh']
-    }
+    data: { ...makeNodeData('stairs', 'Stairs Generator'), onChange: () => {} },
   },
-  {
-    id: 'r-1',
-    type: 'buildingNode',
-    position: { x: 400, y: 50 },
-    data: {
-      label: 'Roof System',
-      type: 'roof',
-      params: { roofType: 'pitched', height: 3, overhang: 0.5, color: '#8e2b2b' },
-      onChange: () => {},
-      inputs: ['spline', 'float'],
-      outputs: ['mesh']
-    }
-  }
 ];
 
 const initialEdges: Edge[] = [
-  { id: 'e1', source: 'f-1', target: 'fl-1', sourceHandle: 'spline', targetHandle: 'spline' },
-  { id: 'e2', source: 'f-1', target: 'r-1', sourceHandle: 'spline', targetHandle: 'spline' },
-  { id: 'e3', source: 'fl-1', target: 'r-1', sourceHandle: 'float', targetHandle: 'float' },
-  { id: 'e4', source: 'f-1', target: 'st-1', sourceHandle: 'spline', targetHandle: 'spline' },
-  { id: 'e5', source: 'f-1', target: 'pl-1', sourceHandle: 'spline', targetHandle: 'spline' }
+  { id: 'e1', source: 'f-1',  target: 'fl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+  { id: 'e2', source: 'f-1',  target: 'r-1',  sourceHandle: 'spline', targetHandle: 'spline' },
+  { id: 'e3', source: 'fl-1', target: 'r-1',  sourceHandle: 'float',  targetHandle: 'float'  },
+  { id: 'e4', source: 'f-1',  target: 'st-1', sourceHandle: 'spline', targetHandle: 'spline' },
+  { id: 'e5', source: 'f-1',  target: 'pl-1', sourceHandle: 'spline', targetHandle: 'spline' },
 ];
 
-const nodeTypes = {
-  buildingNode: CustomNode,
-};
+const nodeTypes = { buildingNode: CustomNode };
 
+// ── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const viewportRef = useRef<{ exportGLTF: () => void } | null>(null);
 
-  const updateNodeParams = useCallback((nodeId: string, params: any) => {
+  // ── Param Update ────────────────────────────────────────────────────────────
+  const updateNodeParams = useCallback((nodeId: string, params: Record<string, any>) => {
     setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === nodeId) {
-          return { ...node, data: { ...node.data, params } };
-        }
-        return node;
-      })
+      nds.map((node) =>
+        node.id === nodeId ? { ...node, data: { ...node.data, params } } : node
+      )
     );
   }, [setNodes]);
 
-  useEffect(() => {
-    const handleDeleteNode = (e: any) => {
-      const nodeId = e.detail;
-      setNodes((nds) => nds.filter((n) => n.id !== nodeId));
-      setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
-    };
-
-    window.addEventListener('delete-node', handleDeleteNode);
-    return () => window.removeEventListener('delete-node', handleDeleteNode);
-  }, [setNodes, setEdges]);
-
+  // ── Attach onChange to all nodes on mount / update ─────────────────────────
   useEffect(() => {
     setNodes((nds) =>
-      nds.map((node) => {
-        if (node.data.type === 'foundation') {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              onChange: updateNodeParams,
-              inputs: [],
-              outputs: ['spline'] // Foundation outputs shape
-            },
-          };
-        } else if (node.data.type === 'floors') {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              onChange: updateNodeParams,
-              inputs: ['spline'],
-              outputs: ['mesh', 'window', 'float'], // Added 'float' for height
-              params: {
-                winWidth: 1.2,
-                winHeight: 1.8,
-                winSpacing: 2.5,
-                doorWidth: 1.8,
-                doorHeight: 2.4,
-                doorOffset: 0,
-                doorSide: 'front',
-                hasBalcony: true,
-                ...node.data.params,
-              }
-            },
-          };
-        } else if (node.data.type === 'roof') {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              onChange: updateNodeParams,
-              inputs: ['spline'],
-              outputs: ['mesh'],
-              params: {
-                roofType: 'pitched',
-                height: 3,
-                overhang: 0.5,
-                color: '#8e2b2b',
-                ...node.data.params
-              }
-            }
-          };
-        }
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            onChange: updateNodeParams,
-          },
-        };
-      })
+      nds.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          onChange: updateNodeParams,
+          inputs:  NODE_PINS[node.data.type]?.inputs  ?? node.data.inputs,
+          outputs: NODE_PINS[node.data.type]?.outputs ?? node.data.outputs,
+        },
+      }))
     );
   }, [updateNodeParams, setNodes]);
 
-  const onConnect = useCallback((params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
+  // ── Delete Node ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const nodeId = (e as CustomEvent).detail;
+      setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+      setEdges((eds) => eds.filter((ed) => ed.source !== nodeId && ed.target !== nodeId));
+    };
+    window.addEventListener('delete-node', handler);
+    return () => window.removeEventListener('delete-node', handler);
+  }, [setNodes, setEdges]);
 
-  const addNode = (type: NodeType) => {
+  // ── Connect ─────────────────────────────────────────────────────────────────
+  const onConnect = useCallback(
+    (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
+    [setEdges]
+  );
+
+  // ── Add Node ────────────────────────────────────────────────────────────────
+  const addNode = useCallback((type: NodeType) => {
+    const LABELS: Record<NodeType, string> = {
+      foundation:       'Foundation',
+      floors:           'Floors System',
+      roof:             'Roof System',
+      columns:          'Column Generator',
+      stairs:           'Stairs Generator',
+      plinth:           'Plinth Generator',
+      offset_spline:    'Offset Spline',
+      transform_spline: 'Transform Spline',
+    };
     const id = `${type}-${Date.now()}`;
-    
-    let inputs: PinType[] = [];
-    let outputs: PinType[] = [];
-    let params: any = {};
-    let label = '';
-
-    if (type === 'foundation') {
-      inputs = [];
-      outputs = ['spline'];
-      params = { 
-        width: 14, depth: 10,
-        foundationShape: 'rectangle',
-        twistBase: 0, twistMid: 0, twistTop: 0,
-        taper: 1, shearX: 0, shearY: 0, jitter: 0
-      };
-      label = 'Foundation';
-    } else if (type === 'floors') {
-      inputs = ['spline'];
-      outputs = ['mesh', 'window', 'float'];
-      params = { 
-        count: 5, 
-        height: 3.2, 
-        winWidth: 1.2, 
-        winHeight: 1.8, 
-        winSpacing: 2.5,
-        doorWidth: 1.8,
-        doorHeight: 2.4,
-        doorOffset: 0,
-        doorSide: 'front',
-        showWindow: true 
-      };
-      label = 'Floors System';
-    } else if (type === 'roof') {
-      inputs = ['spline', 'float'];
-      outputs = ['mesh'];
-      params = { 
-        roofType: 'pitched', 
-        height: 3, 
-        overhang: 0.5, 
-        color: '#8e2b2b' 
-      };
-      label = 'Roof System';
-    }
-
     const newNode: Node<NodeData> = {
       id,
       type: 'buildingNode',
-      position: { x: 100, y: 100 },
+      position: { x: 200 + Math.random() * 200, y: 200 + Math.random() * 200 },
       data: {
-        label,
+        label:   LABELS[type],
         type,
-        params,
+        params:  { ...DEFAULT_PARAMS[type] },
+        inputs:  NODE_PINS[type].inputs,
+        outputs: NODE_PINS[type].outputs,
         onChange: updateNodeParams,
-        inputs,
-        outputs,
       },
     };
     setNodes((nds) => nds.concat(newNode));
-  };
+  }, [setNodes, updateNodeParams]);
 
-  const isValidConnection = (connection: Connection) => {
-    return connection.source !== connection.target;
-  };
+  // ── Save / Load ─────────────────────────────────────────────────────────────
+  const handleSave = useCallback(() => {
+    const data = JSON.stringify({ version: '1.0', nodes, edges }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'building.hengine';
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [nodes, edges]);
+
+  const handleLoad = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.hengine,.json';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const parsed = JSON.parse(ev.target?.result as string);
+          if (parsed.nodes && parsed.edges) {
+            // Re-attach onChange
+            const rehydrated = parsed.nodes.map((n: Node<NodeData>) => ({
+              ...n,
+              data: {
+                ...n.data,
+                onChange: updateNodeParams,
+                inputs:  NODE_PINS[n.data.type]?.inputs  ?? n.data.inputs,
+                outputs: NODE_PINS[n.data.type]?.outputs ?? n.data.outputs,
+              },
+            }));
+            setNodes(rehydrated);
+            setEdges(parsed.edges);
+          }
+        } catch {
+          alert('Invalid .hengine file');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }, [setNodes, setEdges, updateNodeParams]);
+
+  // ── Export GLTF ─────────────────────────────────────────────────────────────
+  const handleExport = useCallback(() => {
+    viewportRef.current?.exportGLTF();
+  }, []);
+
+  // ── Connection Validation ───────────────────────────────────────────────────
+  const isValidConnection = useCallback((connection: Connection) => {
+    if (connection.source === connection.target) return false;
+    // Check pin type compatibility
+    const srcNode = nodes.find((n) => n.id === connection.source);
+    const tgtNode = nodes.find((n) => n.id === connection.target);
+    if (!srcNode || !tgtNode) return false;
+    const srcHandle = connection.sourceHandle as string;
+    const tgtHandle = connection.targetHandle as string;
+    // Types must match
+    return srcHandle === tgtHandle;
+  }, [nodes]);
 
   return (
     <div className="app-container">
+      {/* ── Node Editor ── */}
       <div className="editor-pane">
         <Sidebar onAddNode={addNode} />
 
@@ -327,27 +232,56 @@ export default function App() {
           nodeTypes={nodeTypes}
           isValidConnection={isValidConnection}
           defaultEdgeOptions={{
-            style: { strokeWidth: 3, stroke: 'rgba(255,255,255,0.3)' },
+            style: { strokeWidth: 2.5, stroke: 'rgba(255,255,255,0.25)' },
             animated: true,
           }}
           deleteKeyCode={['Backspace', 'Delete']}
           fitView
         >
-          <Background color="#1a1a20" gap={20} />
+          <Background color="#242428" gap={20} size={1} />
           <Controls />
         </ReactFlow>
       </div>
 
-      <div className="preview-pane" style={{ width: '600px' }}>
-        <Viewport nodes={nodes} edges={edges} />
+      {/* ── 3D Viewport ── */}
+      <div className="preview-pane">
+        <Viewport nodes={nodes} edges={edges} ref={viewportRef} />
 
-        <div style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 10 }}>
-          <div className="glass-panel" style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <button className="glass-card" style={{ padding: '8px 15px', border: 'none', color: '#fff', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Play size={14} /> COOK GRAPH
+        {/* Bottom Toolbar */}
+        <div className="viewport-toolbar">
+          <div className="glass-panel" style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              id="btn-cook-graph"
+              className="toolbar-btn toolbar-btn--primary"
+              title="Cook Graph"
+              onClick={() => {/* auto-cook is already reactive */}}
+            >
+              <Play size={13} /> COOK
             </button>
-            <button className="glass-card" style={{ padding: '8px 15px', border: 'none', color: '#fff', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Download size={14} /> EXPORT
+            <div className="toolbar-divider" />
+            <button
+              id="btn-export-gltf"
+              className="toolbar-btn"
+              title="Export GLTF"
+              onClick={handleExport}
+            >
+              <Download size={13} /> EXPORT .GLB
+            </button>
+            <button
+              id="btn-save-project"
+              className="toolbar-btn"
+              title="Save Project"
+              onClick={handleSave}
+            >
+              <Save size={13} /> SAVE
+            </button>
+            <button
+              id="btn-load-project"
+              className="toolbar-btn"
+              title="Load Project"
+              onClick={handleLoad}
+            >
+              <FolderOpen size={13} /> LOAD
             </button>
           </div>
         </div>
