@@ -441,4 +441,97 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
       { id: 'e5', source: 'f-1', target: 'st-1', sourceHandle: 'spline', targetHandle: 'spline' },
     ],
   },
+
+  // ── 12. Ancient Pantheon ──
+  {
+    id: 'ancient-pantheon',
+    name: 'Ancient Pantheon',
+    description: 'A classic temple featuring colonnades, grand plinths, and offset walls using advanced graph nodes.',
+    category: 'custom',
+    icon: '🏛️',
+    preview: '🏛️',
+    nodes: [
+      // Foundation - reasonable temple footprint
+      makeNode('f-1', 'foundation', 'Foundation', 50, 250, {
+        width: 14, depth: 22, foundationShape: 'rectangle',
+      }),
+      // Columns run along OUTER perimeter of the foundation
+      makeNode('col-1', 'columns', 'Outer Colonnade', 350, 250, {
+        radius: 0.35, height: 5.5, spacing: 2.8, useCorners: true, material: 'concrete', zOffset: 1.2,
+      }),
+      // Inner chamber walls are inset 1.8m from the outer edge
+      makeNode('off-1', 'offset_spline', 'Inner Chamber', 650, 100, {
+        offset: -1.8,
+      }),
+      makeNode('fl-1', 'floors', 'Inner Walls', 950, 100, {
+        count: 1, height: 5.5, winWidth: 0, winHeight: 0, winSpacing: 20,
+        doorWidth: 3.5, doorHeight: 4.5, doorSide: 'front',
+        windowType: 'classic', doorType: 'classic', material: 'concrete',
+        hasBalcony: false, hasRibs: false, plinthHeight: 1.2,
+      }),
+      // Gable roof over the whole footprint
+      makeNode('r-1', 'roof', 'Temple Roof', 350, 50, {
+        roofType: 'gable', height: 3.5, overhang: 0.6, color: '#c8a97a',
+      }),
+      // Raised stepped platform (krepidoma)
+      makeNode('pl-1', 'plinth', 'Krepidoma', 50, 550, {
+        height: 1.2, material: 'concrete',
+      }),
+      // Grand front staircase
+      makeNode('st-1', 'stairs', 'Grand Stairs', 50, 700, {
+        count: 6, stepHeight: 0.2, stepDepth: 0.4, width: 6.0, side: 'front',
+      }),
+    ],
+    edges: [
+      // columns receive outer foundation spline
+      { id: 'e1', source: 'f-1', target: 'col-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      // roof receives outer foundation spline
+      { id: 'e2', source: 'f-1', target: 'r-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      // plinth receives outer foundation spline
+      { id: 'e3', source: 'f-1', target: 'pl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      // stairs receive outer foundation spline
+      { id: 'e4', source: 'f-1', target: 'st-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      // inner chamber offset chain
+      { id: 'e5', source: 'f-1', target: 'off-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e6', source: 'off-1', target: 'fl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      // floors feed total height to roof
+      { id: 'e7', source: 'fl-1', target: 'r-1', sourceHandle: 'float', targetHandle: 'float' },
+    ],
+  },
+
+  // ── 13. Forest Eco-Resort ──
+  {
+    id: 'forest-resort',
+    name: 'Forest Eco-Resort',
+    description: 'A U-shape luxury resort demonstrating scattering algorithms for surrounding vegetation and procedural primitives.',
+    category: 'residential',
+    icon: '🌲',
+    preview: '🌲',
+    nodes: [
+      makeNode('f-1', 'foundation', 'Foundation', 50, 250, {
+        width: 30, depth: 30, foundationShape: 'U-shape',
+      }),
+      makeNode('fl-1', 'floors', 'Floors System', 350, 200, {
+        count: 3, height: 3.5, winWidth: 2.0, winHeight: 2.5, winSpacing: 3.0,
+        doorWidth: 3.0, doorHeight: 2.5, doorSide: 'frontback',
+        windowType: 'modern', doorType: 'double', material: 'wood',
+        hasBalcony: true, hasRibs: true, plinthHeight: 0.5,
+      }),
+      makeNode('r-1', 'roof', 'Roof System', 350, 350, {
+        roofType: 'flat', height: 0.5, overhang: 0.8, color: '#333333',
+      }),
+      makeNode('sc-1', 'scatter_points', 'Forest Generation', 350, 500, {
+        count: 150, radius: 45.0, seed: 1234, meshType: 'tree',
+      }),
+      makeNode('cyl-1', 'primitive_cylinder', 'Water Tower Primitive', 50, 550, {
+        radius: 2.5, height: 12.0, radialSegments: 16,
+      }),
+    ],
+    edges: [
+      { id: 'e1', source: 'f-1', target: 'fl-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e2', source: 'f-1', target: 'r-1', sourceHandle: 'spline', targetHandle: 'spline' },
+      { id: 'e3', source: 'fl-1', target: 'r-1', sourceHandle: 'float', targetHandle: 'float' },
+      { id: 'e4', source: 'f-1', target: 'sc-1', sourceHandle: 'spline', targetHandle: 'spline' },
+    ],
+  },
 ];

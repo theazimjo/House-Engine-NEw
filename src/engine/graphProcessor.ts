@@ -153,8 +153,9 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
       case 'columns': {
         const splineData = inputs.find(i => i.handle === 'spline')?.data;
         if (!splineData || !Array.isArray(splineData.points)) break;
-        const { radius = 0.3, height = 4.0, spacing = 3.0, useCorners = true, material = 'concrete' } = node.data.params;
-        const zOffset = splineData.zOffset || 0;
+        const { radius = 0.3, height = 4.0, spacing = 3.0, useCorners = true, material = 'concrete', zOffset = 0 } = node.data.params;
+        const baseZOffset = splineData.zOffset || 0;
+        const totalZOffset = baseZOffset + zOffset;
 
         const columnMeshes: any[] = [];
         const pts = splineData.points;
@@ -162,7 +163,7 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
         const addColumn = (p: [number, number]) => {
           columnMeshes.push({
             type: 'column',
-            position: [p[0], zOffset, p[1]],
+            position: [p[0], totalZOffset, p[1]],
             radius,
             height,
             material
@@ -444,6 +445,52 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
         break;
       }
 
+      // ── Offset Spline ────────────────────────────────────────────────────────
+      case 'offset_spline': {
+        const splineData = inputs.find(i => i.handle === 'spline')?.data;
+        if (!splineData || !Array.isArray(splineData.points)) break;
+        const offset = node.data.params.offset || 0;
+        
+        const pts = splineData.points;
+        const len = pts.length;
+        const newPts: [number, number][] = [];
+        
+        for (let i = 0; i < len; i++) {
+          const prev = pts[(i - 1 + len) % len];
+          const curr = pts[i];
+          const next = pts[(i + 1) % len];
+          
+          const dx1 = curr[0] - prev[0];
+          const dy1 = curr[1] - prev[1];
+          const len1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+          const nx1 = dy1 / len1;  
+          const ny1 = -dx1 / len1;
+          
+          const dx2 = next[0] - curr[0];
+          const dy2 = next[1] - curr[1];
+          const len2 = Math.sqrt(dx2*dx2 + dy2*dy2);
+          const nx2 = dy2 / len2;
+          const ny2 = -dx2 / len2;
+          
+          let nx = nx1 + nx2;
+          let ny = ny1 + ny2;
+          const nLen = Math.sqrt(nx*nx + ny*ny);
+          
+          if (nLen < 0.0001) {
+            newPts.push([curr[0] + nx1 * offset, curr[1] + ny1 * offset]);
+          } else {
+            nx /= nLen;
+            ny /= nLen;
+            const dot = nx * nx1 + ny * ny1; 
+            const length = offset / dot;
+            newPts.push([curr[0] + nx * length, curr[1] + ny * length]);
+          }
+        }
+        
+        output = { ...splineData, points: newPts };
+        break;
+      }
+
       // ── Mirror Spline ────────────────────────────────────────────────────────
       case 'mirror_spline': {
         const splineData = inputs.find(i => i.handle === 'spline')?.data;
@@ -456,7 +503,6 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
           else              return [p[0], -p[1] + offset * 2];
         });
 
-        // Merge original + mirrored (reversed so winding stays consistent)
         const merged = [...splineData.points, ...mirrored.reverse()];
         output = { ...splineData, points: merged };
         break;
