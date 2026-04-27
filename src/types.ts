@@ -40,6 +40,14 @@ export type NodeType =
   // ── City Generation ──
   | 'road_grid'         // Street grid (asphalt + sidewalks + markings)
   | 'city_block'        // City block: multiple buildings on a plot
+  // ── Interior ──
+  | 'room'              // Room with walls, floor, ceiling
+  | 'interior_wall'     // Partition wall with doorway
+  | 'staircase'         // Stairs (straight, L-shape, spiral)
+  | 'furniture'         // Table, chair, bed, shelf, sofa, desk
+  | 'kitchen_unit'      // Counter, sink, stove, cabinets
+  | 'bathroom_unit'     // Bathtub, toilet, sink, shower
+  | 'light_fixture'     // Chandelier, ceiling, wall sconce, floor lamp
   // Modifiers
   | 'offset_spline'
   | 'transform_spline'
@@ -240,6 +248,81 @@ export const DEFAULT_PARAMS: Record<NodeType, Record<string, any>> = {
     material: 'concrete',
     roofType: 'flat',
   },
+  // ── Interior ──
+  room: {
+    width: 5.0,          // Room width (m)
+    depth: 4.0,          // Room depth (m)
+    height: 2.8,         // Ceiling height (m)
+    wallThickness: 0.15, // Wall thickness (m)
+    floorMaterial: 'wood_floor',
+    wallMaterial: 'drywall',
+    ceilingMaterial: 'drywall',
+    hasBaseboard: true,
+    baseboardHeight: 0.1,
+    hasCeiling: true,
+    doorways: [],        // [{wall:'north'|'south'|'east'|'west', offset:0, width:0.9, height:2.1}]
+    windows: [],         // [{wall:'north', offset:0, width:1.2, height:1.4, sillHeight:0.9}]
+  },
+  interior_wall: {
+    length: 4.0,
+    height: 2.8,
+    thickness: 0.12,
+    material: 'drywall',
+    hasDoorway: true,
+    doorOffset: 1.0,     // offset from wall start
+    doorWidth: 0.9,
+    doorHeight: 2.1,
+    doorMaterial: 'wood_floor',
+  },
+  staircase: {
+    width: 1.0,
+    riseHeight: 2.8,     // total vertical rise
+    stairType: 'straight', // 'straight' | 'L-shape' | 'spiral'
+    stepCount: 14,
+    stepDepth: 0.28,
+    stepHeight: 0.2,
+    material: 'wood_floor',
+    railingMaterial: 'metal',
+    hasRailing: true,
+    railingHeight: 0.9,
+  },
+  furniture: {
+    furnitureType: 'sofa',  // 'sofa'|'table'|'chair'|'bed'|'shelf'|'desk'|'wardrobe'|'tv_stand'
+    width: 2.0,
+    depth: 0.9,
+    height: 0.85,
+    material: 'wood_floor',
+    fabricColor: '#444444',
+    legStyle: 'modern',    // 'modern'|'classic'|'none'
+  },
+  kitchen_unit: {
+    unitType: 'counter',   // 'counter'|'sink'|'stove'|'fridge'|'cabinet_upper'|'island'
+    width: 0.6,
+    depth: 0.6,
+    height: 0.9,
+    counterMaterial: 'marble_floor',
+    cabinetMaterial: 'wood_floor',
+    cabinetColor: '#f0f0f0',
+    hasHandles: true,
+  },
+  bathroom_unit: {
+    unitType: 'toilet',    // 'toilet'|'bathtub'|'shower'|'sink'|'mirror'
+    width: 0.4,
+    depth: 0.65,
+    height: 0.4,
+    material: 'ceramic_tile',
+    color: '#ffffff',
+    chromeColor: '#cccccc',
+  },
+  light_fixture: {
+    fixtureType: 'ceiling', // 'ceiling'|'chandelier'|'wall_sconce'|'floor_lamp'|'pendant'|'spot'
+    size: 0.4,
+    height: 0.15,
+    color: '#ffffff',
+    intensity: 1.0,
+    emissive: true,
+    material: 'glass',
+  },
   offset_spline: {
     amount: -1.0,
   },
@@ -310,6 +393,14 @@ export const NODE_PINS: Record<NodeType, { inputs: PinType[]; outputs: PinType[]
   // ── City Generation ──
   road_grid:         { inputs: [],                           outputs: ['mesh'] },
   city_block:        { inputs: [],                           outputs: ['mesh'] },
+  // ── Interior ──
+  room:              { inputs: [],                           outputs: ['mesh'] },
+  interior_wall:     { inputs: [],                           outputs: ['mesh'] },
+  staircase:         { inputs: [],                           outputs: ['mesh'] },
+  furniture:         { inputs: [],                           outputs: ['mesh'] },
+  kitchen_unit:      { inputs: [],                           outputs: ['mesh'] },
+  bathroom_unit:     { inputs: [],                           outputs: ['mesh'] },
+  light_fixture:     { inputs: [],                           outputs: ['mesh'] },
   offset_spline:     { inputs: ['spline'],                   outputs: ['spline'] },
   smooth_spline:     { inputs: ['spline'],                   outputs: ['spline'] },
   transform_spline:  { inputs: ['spline'],                   outputs: ['spline'] },

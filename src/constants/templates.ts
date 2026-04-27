@@ -1909,4 +1909,191 @@ export const BUILDING_TEMPLATES: BuildingTemplate[] = [
       { id: 'e4', source: 'f-dome', target: 'sp-1',    sourceHandle: 'spline', targetHandle: 'spline' },
     ],
   },
+
+  // ── 40. Modern Apartment Interior ──────────────────────────────────────────────
+  {
+    id: 'modern-apartment',
+    name: 'Modern Apartment Interior',
+    description: 'Open-plan modern apartment: living room with sofa & TV stand, dining area, kitchen counter with sink, bedroom, bathroom with bathtub & toilet, pendant lighting.',
+    category: 'interior',
+    icon: '🏠',
+    preview: '🏠',
+    nodes: [
+      // Living Room
+      makeNode('r-living', 'room', 'Living Room', 50, 100, {
+        width: 6, depth: 5, height: 2.8,
+        floorMaterial: 'wood_floor', wallMaterial: 'wallpaper_light', ceilingMaterial: 'drywall',
+        hasBaseboard: true, hasCeiling: true,
+        doorways: [{wall:'east',offset:0,width:1.2,height:2.1}],
+      }),
+      makeNode('f-sofa', 'furniture', 'Sofa', 50, 300, {
+        furnitureType: 'sofa', width: 2.2, depth: 0.9, height: 0.85,
+        material: 'wood_floor', fabricColor: '#4a4a5a', legStyle: 'modern',
+      }),
+      makeNode('f-tv', 'furniture', 'TV Stand', 50, 500, {
+        furnitureType: 'tv_stand', width: 1.4, depth: 0.4, height: 0.5,
+        material: 'wood_floor', fabricColor: '#1a1a1a', legStyle: 'modern',
+      }),
+      makeNode('f-table', 'furniture', 'Coffee Table', 300, 300, {
+        furnitureType: 'table', width: 1.0, depth: 0.6, height: 0.45,
+        material: 'wood_floor', legStyle: 'modern',
+      }),
+      // Dining
+      makeNode('f-dtable', 'furniture', 'Dining Table', 300, 500, {
+        furnitureType: 'table', width: 1.5, depth: 0.9, height: 0.75,
+        material: 'wood_floor', legStyle: 'modern',
+      }),
+      makeNode('f-chair1', 'furniture', 'Chair 1', 550, 500, {
+        furnitureType: 'chair', width: 0.45, depth: 0.45, height: 0.85,
+        material: 'wood_floor', fabricColor: '#5a5a5a', legStyle: 'modern',
+      }),
+      // Kitchen
+      makeNode('r-kitchen', 'room', 'Kitchen', 550, 100, {
+        width: 3.5, depth: 3, height: 2.8,
+        floorMaterial: 'tile_white', wallMaterial: 'drywall', ceilingMaterial: 'drywall',
+        hasBaseboard: true, hasCeiling: true,
+        doorways: [{wall:'west',offset:0,width:1.2,height:2.1}],
+      }),
+      makeNode('k-counter', 'kitchen_unit', 'Counter', 550, 300, {
+        unitType: 'counter', width: 2.4, depth: 0.6, height: 0.9,
+        counterMaterial: 'kitchen_counter', cabinetColor: '#f5f5f0',
+      }),
+      makeNode('k-sink', 'kitchen_unit', 'Sink', 800, 300, {
+        unitType: 'sink', width: 0.6, depth: 0.6, height: 0.9,
+        counterMaterial: 'kitchen_counter', cabinetColor: '#f5f5f0',
+      }),
+      // Bedroom
+      makeNode('r-bed', 'room', 'Bedroom', 50, 700, {
+        width: 4, depth: 4, height: 2.8,
+        floorMaterial: 'carpet', wallMaterial: 'wallpaper_light', ceilingMaterial: 'drywall',
+        hasBaseboard: true, hasCeiling: true,
+        doorways: [{wall:'north',offset:0.5,width:0.9,height:2.1}],
+      }),
+      makeNode('f-bed', 'furniture', 'Bed', 300, 700, {
+        furnitureType: 'bed', width: 1.6, depth: 2.1, height: 0.5,
+        material: 'wood_floor', fabricColor: '#ddd8d0', legStyle: 'modern',
+      }),
+      makeNode('f-ward', 'furniture', 'Wardrobe', 300, 900, {
+        furnitureType: 'wardrobe', width: 1.8, depth: 0.6, height: 2.2,
+        material: 'wood_floor', legStyle: 'none',
+      }),
+      // Bathroom
+      makeNode('r-bath', 'room', 'Bathroom', 550, 700, {
+        width: 2.5, depth: 2.5, height: 2.8,
+        floorMaterial: 'tile_white', wallMaterial: 'bathroom_tile', ceilingMaterial: 'drywall',
+        hasBaseboard: false, hasCeiling: true,
+        doorways: [{wall:'north',offset:0.3,width:0.8,height:2.1}],
+      }),
+      makeNode('b-tub', 'bathroom_unit', 'Bathtub', 550, 900, {
+        unitType: 'bathtub', width: 0.75, depth: 1.7, height: 0.55, color: '#ffffff',
+      }),
+      makeNode('b-toilet', 'bathroom_unit', 'Toilet', 800, 900, {
+        unitType: 'toilet', width: 0.38, depth: 0.65, height: 0.4, color: '#ffffff',
+      }),
+      makeNode('b-sink', 'bathroom_unit', 'Sink', 800, 700, {
+        unitType: 'sink', width: 0.5, depth: 0.45, height: 0.85, color: '#ffffff',
+      }),
+      // Lighting
+      makeNode('l-living', 'light_fixture', 'Pendant Light', 1050, 100, {
+        fixtureType: 'pendant', size: 0.25, height: 0.15, color: '#fff5e0', intensity: 1.2,
+      }),
+      makeNode('l-kitchen', 'light_fixture', 'Kitchen Light', 1050, 300, {
+        fixtureType: 'ceiling', size: 0.3, height: 0.08, color: '#ffffff', intensity: 1.0,
+      }),
+      makeNode('l-bed', 'light_fixture', 'Bedroom Light', 1050, 700, {
+        fixtureType: 'chandelier', size: 0.2, height: 0.15, color: '#ffe8c0', intensity: 0.8,
+      }),
+    ],
+    edges: [],
+  },
+
+  // ── 41. Office Floor Interior ──────────────────────────────────────────────────
+  {
+    id: 'office-floor',
+    name: 'Office Floor Interior',
+    description: 'Corporate office floor: reception area, open workspace with desks, meeting room, kitchen break area, and modern ceiling lights.',
+    category: 'interior',
+    icon: '🏢',
+    preview: '🏢',
+    nodes: [
+      makeNode('r-main', 'room', 'Open Office', 50, 100, {
+        width: 12, depth: 8, height: 3.0,
+        floorMaterial: 'carpet', wallMaterial: 'drywall', ceilingMaterial: 'drywall',
+        hasBaseboard: true, hasCeiling: true,
+      }),
+      makeNode('iw-1', 'interior_wall', 'Meeting Wall', 50, 300, {
+        length: 4, height: 3.0, thickness: 0.12, material: 'drywall',
+        hasDoorway: true, doorOffset: 1, doorWidth: 1.0, doorHeight: 2.1,
+      }),
+      makeNode('f-desk1', 'furniture', 'Desk 1', 300, 100, {
+        furnitureType: 'desk', width: 1.4, depth: 0.7, height: 0.75, material: 'wood_floor', legStyle: 'modern',
+      }),
+      makeNode('f-desk2', 'furniture', 'Desk 2', 300, 300, {
+        furnitureType: 'desk', width: 1.4, depth: 0.7, height: 0.75, material: 'wood_floor', legStyle: 'modern',
+      }),
+      makeNode('f-chair-o', 'furniture', 'Office Chair', 550, 100, {
+        furnitureType: 'chair', width: 0.5, depth: 0.5, height: 1.0, material: 'wood_floor', fabricColor: '#222', legStyle: 'modern',
+      }),
+      makeNode('f-mtable', 'furniture', 'Meeting Table', 550, 300, {
+        furnitureType: 'table', width: 2.4, depth: 1.2, height: 0.75, material: 'wood_floor', legStyle: 'modern',
+      }),
+      makeNode('f-shelf', 'furniture', 'Shelf', 550, 500, {
+        furnitureType: 'shelf', width: 1.2, depth: 0.35, height: 1.8, material: 'wood_floor', legStyle: 'none',
+      }),
+      makeNode('l-1', 'light_fixture', 'Ceiling Panel 1', 800, 100, {
+        fixtureType: 'ceiling', size: 0.6, height: 0.05, color: '#ffffff', intensity: 1.5,
+      }),
+      makeNode('l-2', 'light_fixture', 'Ceiling Panel 2', 800, 300, {
+        fixtureType: 'ceiling', size: 0.6, height: 0.05, color: '#ffffff', intensity: 1.5,
+      }),
+    ],
+    edges: [],
+  },
+
+  // ── 42. Cyberpunk Apartment Interior ───────────────────────────────────────────
+  {
+    id: 'cyberpunk-apartment',
+    name: 'Cyberpunk Apartment Interior',
+    description: 'Neon-lit futuristic apartment: dark walls, holographic accents, carbon fiber furniture, neon pendant lights, emissive bathroom, and a hacker desk setup.',
+    category: 'interior',
+    icon: '🌃',
+    preview: '🌃',
+    nodes: [
+      makeNode('r-main', 'room', 'Main Room', 50, 100, {
+        width: 7, depth: 5, height: 2.8,
+        floorMaterial: 'tile_black', wallMaterial: 'wallpaper_dark', ceilingMaterial: 'drywall',
+        hasBaseboard: false, hasCeiling: true,
+      }),
+      makeNode('f-sofa', 'furniture', 'Cyber Sofa', 50, 300, {
+        furnitureType: 'sofa', width: 2.0, depth: 0.85, height: 0.7,
+        material: 'carbon_fiber', fabricColor: '#1a1a2a', legStyle: 'modern',
+      }),
+      makeNode('f-desk', 'furniture', 'Hacker Desk', 300, 300, {
+        furnitureType: 'desk', width: 1.6, depth: 0.7, height: 0.75,
+        material: 'carbon_fiber', fabricColor: '#0a0a14', legStyle: 'modern',
+      }),
+      makeNode('f-bed', 'furniture', 'Capsule Bed', 300, 500, {
+        furnitureType: 'bed', width: 1.4, depth: 2.0, height: 0.4,
+        material: 'carbon_fiber', fabricColor: '#1a1a2e', legStyle: 'none',
+      }),
+      makeNode('r-bath', 'room', 'Neon Bathroom', 550, 100, {
+        width: 2.5, depth: 2.0, height: 2.8,
+        floorMaterial: 'tile_black', wallMaterial: 'wallpaper_dark', ceilingMaterial: 'drywall',
+        hasBaseboard: false, hasCeiling: true,
+      }),
+      makeNode('b-shower', 'bathroom_unit', 'Shower', 550, 300, {
+        unitType: 'shower', width: 0.9, depth: 0.9, height: 2.2, color: '#e0e0f0',
+      }),
+      makeNode('l-neon1', 'light_fixture', 'Neon Strip 1', 800, 100, {
+        fixtureType: 'pendant', size: 0.15, height: 0.08, color: '#00aaff', intensity: 2.0,
+      }),
+      makeNode('l-neon2', 'light_fixture', 'Neon Strip 2', 800, 300, {
+        fixtureType: 'pendant', size: 0.15, height: 0.08, color: '#ff00aa', intensity: 2.0,
+      }),
+      makeNode('l-ceil', 'light_fixture', 'Ceiling Spot', 800, 500, {
+        fixtureType: 'ceiling', size: 0.2, height: 0.05, color: '#ffffff', intensity: 0.6,
+      }),
+    ],
+    edges: [],
+  },
 ];

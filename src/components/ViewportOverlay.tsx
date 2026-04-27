@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Eye, Grid3x3, Sun, Moon, Sunrise, Camera,
-  ArrowUp, ArrowRight, Box, RotateCcw, Maximize2
+  ArrowUp, ArrowRight, Box, RotateCcw, Maximize2, PersonStanding
 } from 'lucide-react';
 
 interface ViewportOverlayProps {
@@ -15,6 +15,8 @@ interface ViewportOverlayProps {
   currentEnv: string;
   timeOfDay: number;
   onSetTimeOfDay: (time: number) => void;
+  isFirstPerson: boolean;
+  onToggleFirstPerson: () => void;
 }
 
 const CAMERA_PRESETS = [
@@ -36,7 +38,8 @@ const ENV_PRESETS = [
 
 export const ViewportOverlay: React.FC<ViewportOverlayProps> = ({
   onCameraPreset, onToggleWireframe, onToggleGrid, onSetEnvironment,
-  wireframe, gridVisible, currentEnv, timeOfDay, onSetTimeOfDay
+  wireframe, gridVisible, currentEnv, timeOfDay, onSetTimeOfDay,
+  isFirstPerson, onToggleFirstPerson
 }) => {
   const [showEnvPanel, setShowEnvPanel] = useState(false);
 
@@ -81,6 +84,14 @@ export const ViewportOverlay: React.FC<ViewportOverlayProps> = ({
             title="Environment Presets"
           >
             <Sun size={13} />
+          </button>
+          <div className="w-px h-4 bg-[#111]/20 mx-1"></div>
+          <button
+            className={`viewport-ctrl-btn ${isFirstPerson ? 'viewport-ctrl-btn--active text-[#c64321]' : ''}`}
+            onClick={onToggleFirstPerson}
+            title="First Person View (WASD to move, Click to lock mouse)"
+          >
+            <PersonStanding size={13} />
           </button>
         </div>
 

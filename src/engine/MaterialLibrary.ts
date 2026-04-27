@@ -16,7 +16,11 @@ export type MaterialType =
   | 'carbon_fiber' | 'circuit_board' | 'chrome' | 'asphalt'
   | 'wet_concrete' | 'rust_panel'
   // ── Nature ──
-  | 'grass' | 'mossy_stone' | 'dirt' | 'water';
+  | 'grass' | 'mossy_stone' | 'dirt' | 'water'
+  // ── Interior ──
+  | 'wood_floor' | 'tile_white' | 'tile_black' | 'carpet'
+  | 'marble_floor' | 'wallpaper_light' | 'wallpaper_dark' | 'drywall'
+  | 'ceramic_tile' | 'kitchen_counter' | 'bathroom_tile';
 
 class MaterialLibrary {
   private cache: Map<string, THREE.MeshStandardMaterial | THREE.MeshPhysicalMaterial> = new Map();
@@ -133,6 +137,18 @@ class MaterialLibrary {
       mossy_stone:    '#4a5a40',
       dirt:           '#6a4a30',
       water:          '#2040a0',
+      // Interior
+      wood_floor:     '#a07040',
+      tile_white:     '#f0f0f0',
+      tile_black:     '#1a1a1a',
+      carpet:         '#5a4a3a',
+      marble_floor:   '#e8e4dc',
+      wallpaper_light:'#f0ede6',
+      wallpaper_dark: '#3a3832',
+      drywall:        '#f5f3ef',
+      ceramic_tile:   '#e8e8e8',
+      kitchen_counter:'#d0ccc0',
+      bathroom_tile:  '#d8e8f0',
     };
     return colors[type] || '#cccccc';
   }
@@ -189,6 +205,18 @@ class MaterialLibrary {
       mossy_stone:    { roughness: 0.9,  metalness: 0.0 },
       dirt:           { roughness: 0.98, metalness: 0.0 },
       water:          { roughness: 0.05, metalness: 0.1 },
+      // Interior
+      wood_floor:     { roughness: 0.45, metalness: 0.0 },
+      tile_white:     { roughness: 0.3,  metalness: 0.05 },
+      tile_black:     { roughness: 0.25, metalness: 0.08 },
+      carpet:         { roughness: 0.99, metalness: 0.0 },
+      marble_floor:   { roughness: 0.12, metalness: 0.05 },
+      wallpaper_light:{ roughness: 0.92, metalness: 0.0 },
+      wallpaper_dark: { roughness: 0.92, metalness: 0.0 },
+      drywall:        { roughness: 0.95, metalness: 0.0 },
+      ceramic_tile:   { roughness: 0.2,  metalness: 0.05 },
+      kitchen_counter:{ roughness: 0.15, metalness: 0.08 },
+      bathroom_tile:  { roughness: 0.18, metalness: 0.05 },
     };
     return props[type] || { roughness: 0.8, metalness: 0.0 };
   }
@@ -682,6 +710,142 @@ class MaterialLibrary {
       case 'dirt': {
         ctx.fillStyle='#5a3a20'; ctx.fillRect(0,0,size,size);
         for(let i=0;i<30000;i++) { const x=Math.random()*size,y=Math.random()*size,v=Math.random(); ctx.fillStyle=`rgba(${v>0.5?30:0},${v>0.7?15:0},0,0.12)`; ctx.fillRect(x,y,3,3); nCtx.fillStyle=`rgb(${115+v*18},${115+v*18},255)`; nCtx.fillRect(x,y,2,2); }
+        break;
+      }
+
+
+      // ── Interior Textures ──
+      case 'wood_floor': {
+        ctx.fillStyle = '#a07040';
+        ctx.fillRect(0,0,size,size);
+        // Planks
+        const plankH = 64;
+        for (let py = 0; py < size; py += plankH) {
+          const offset = (Math.floor(py / plankH) % 2) * 128;
+          for (let px = 0; px < size; px += 256) {
+            const v = 0.85 + Math.random() * 0.15;
+            ctx.fillStyle = `rgb(${Math.floor(160*v)},${Math.floor(112*v)},${Math.floor(64*v)})`;
+            ctx.fillRect(px + offset, py, 254, plankH - 2);
+            // Wood grain lines
+            for (let g = 0; g < 8; g++) {
+              const gy = py + Math.random() * plankH;
+              ctx.strokeStyle = `rgba(0,0,0,0.06)`;
+              ctx.beginPath(); ctx.moveTo(px + offset, gy); ctx.lineTo(px + offset + 254, gy + (Math.random()-0.5)*4); ctx.stroke();
+            }
+          }
+          // Plank gap
+          ctx.fillStyle = 'rgba(0,0,0,0.15)';
+          ctx.fillRect(0, py + plankH - 2, size, 2);
+          nCtx.fillStyle = 'rgb(128,128,200)';
+          nCtx.fillRect(0, py + plankH - 2, size, 2);
+        }
+        break;
+      }
+      case 'tile_white':
+      case 'tile_black':
+      case 'ceramic_tile':
+      case 'bathroom_tile': {
+        const isBlack = type === 'tile_black';
+        const isBath = type === 'bathroom_tile';
+        const base = isBlack ? '#1a1a1a' : isBath ? '#d8e8f0' : '#f0f0f0';
+        ctx.fillStyle = base;
+        ctx.fillRect(0,0,size,size);
+        const ts = 64;
+        for (let ty = 0; ty < size; ty += ts) {
+          for (let tx = 0; tx < size; tx += ts) {
+            const v = 0.96 + Math.random() * 0.04;
+            const [r,g,b] = isBlack ? [26*v,26*v,26*v] : isBath ? [216*v,232*v,240*v] : [240*v,240*v,240*v];
+            ctx.fillStyle = `rgb(${Math.floor(r)},${Math.floor(g)},${Math.floor(b)})`;
+            ctx.fillRect(tx+1, ty+1, ts-2, ts-2);
+          }
+        }
+        // Grout lines
+        ctx.fillStyle = isBlack ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)';
+        for (let ty = 0; ty < size; ty += ts) {
+          ctx.fillRect(0, ty, size, 1.5);
+          nCtx.fillStyle = 'rgb(128,128,220)';
+          nCtx.fillRect(0, ty, size, 1.5);
+        }
+        for (let tx = 0; tx < size; tx += ts) {
+          ctx.fillRect(tx, 0, 1.5, size);
+          nCtx.fillRect(tx, 0, 1.5, size);
+        }
+        break;
+      }
+      case 'carpet': {
+        ctx.fillStyle = '#5a4a3a';
+        ctx.fillRect(0,0,size,size);
+        for (let i = 0; i < 40000; i++) {
+          const x = Math.random()*size, y = Math.random()*size;
+          const v = 0.8 + Math.random()*0.2;
+          ctx.fillStyle = `rgba(${Math.floor(90*v)},${Math.floor(74*v)},${Math.floor(58*v)},0.4)`;
+          ctx.fillRect(x, y, 1, 2);
+        }
+        break;
+      }
+      case 'marble_floor': {
+        ctx.fillStyle = '#e8e4dc';
+        ctx.fillRect(0,0,size,size);
+        // Veining
+        for (let i = 0; i < 12; i++) {
+          ctx.strokeStyle = `rgba(180,170,155,${0.15 + Math.random()*0.15})`;
+          ctx.lineWidth = 0.5 + Math.random() * 2;
+          ctx.beginPath();
+          let vx = Math.random() * size, vy = Math.random() * size;
+          ctx.moveTo(vx, vy);
+          for (let s = 0; s < 20; s++) {
+            vx += (Math.random()-0.5)*60; vy += (Math.random()-0.5)*60;
+            ctx.lineTo(vx, vy);
+          }
+          ctx.stroke();
+        }
+        // Subtle polish specks
+        for (let i = 0; i < 5000; i++) {
+          const x = Math.random()*size, y = Math.random()*size;
+          ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.04})`;
+          ctx.fillRect(x,y,2,2);
+        }
+        break;
+      }
+      case 'wallpaper_light':
+      case 'wallpaper_dark': {
+        const isDark = type === 'wallpaper_dark';
+        ctx.fillStyle = isDark ? '#3a3832' : '#f0ede6';
+        ctx.fillRect(0,0,size,size);
+        // Subtle pattern
+        const pSize = 32;
+        for (let py = 0; py < size; py += pSize) {
+          for (let px = 0; px < size; px += pSize) {
+            const alt = ((px/pSize + py/pSize) % 2 === 0);
+            if (alt) {
+              ctx.fillStyle = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)';
+              ctx.fillRect(px, py, pSize, pSize);
+            }
+          }
+        }
+        break;
+      }
+      case 'drywall': {
+        ctx.fillStyle = '#f5f3ef';
+        ctx.fillRect(0,0,size,size);
+        for (let i = 0; i < 8000; i++) {
+          const x = Math.random()*size, y = Math.random()*size;
+          ctx.fillStyle = `rgba(0,0,0,${Math.random()*0.03})`;
+          ctx.fillRect(x,y, 1+Math.random()*2, 1+Math.random()*2);
+        }
+        break;
+      }
+      case 'kitchen_counter': {
+        // Granite speckle
+        ctx.fillStyle = '#d0ccc0';
+        ctx.fillRect(0,0,size,size);
+        for (let i = 0; i < 20000; i++) {
+          const x = Math.random()*size, y = Math.random()*size;
+          const v = Math.random();
+          const col = v > 0.5 ? `rgba(0,0,0,${v*0.08})` : `rgba(255,255,255,${v*0.06})`;
+          ctx.fillStyle = col;
+          ctx.fillRect(x,y, 1+Math.random(), 1+Math.random());
+        }
         break;
       }
 

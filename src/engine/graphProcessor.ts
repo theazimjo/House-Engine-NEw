@@ -1265,6 +1265,97 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
         output = parts;
         break;
       }
+
+      // ── Room ──
+      case 'room': {
+        const { width: rW=5, depth: rD=4, height: rH=2.8, wallThickness: rWT=0.15,
+          floorMaterial='wood_floor', wallMaterial='drywall', ceilingMaterial='drywall',
+          hasBaseboard=true, baseboardHeight=0.1, hasCeiling=true,
+          doorways=[] as any[], windows=[] as any[],
+        } = node.data.params;
+        const p: any[] = [];
+        // Floor
+        p.push({ type:'room_floor', position:[0,0,0], width:rW, depth:rD, material:floorMaterial });
+        // Ceiling
+        if (hasCeiling) p.push({ type:'room_ceiling', position:[0,rH,0], width:rW, depth:rD, material:ceilingMaterial });
+        // 4 walls: north(+Z), south(-Z), east(+X), west(-X)
+        const walls = [
+          { wall:'north', pos:[0,rH/2,rD/2], size:[rW,rH,rWT], axis:'x' },
+          { wall:'south', pos:[0,rH/2,-rD/2], size:[rW,rH,rWT], axis:'x' },
+          { wall:'east',  pos:[rW/2,rH/2,0], size:[rWT,rH,rD], axis:'z' },
+          { wall:'west',  pos:[-rW/2,rH/2,0], size:[rWT,rH,rD], axis:'z' },
+        ];
+        walls.forEach(w => {
+          const hasDoor = doorways.find((d:any) => d.wall === w.wall);
+          const hasWin = windows.find((wi:any) => wi.wall === w.wall);
+          p.push({ type:'room_wall', ...w, material:wallMaterial, doorway:hasDoor||null, window:hasWin||null });
+        });
+        if (hasBaseboard) p.push({ type:'room_baseboard', width:rW, depth:rD, height:baseboardHeight, material:'wood_floor' });
+        output = p;
+        break;
+      }
+
+      // ── Interior Wall ──
+      case 'interior_wall': {
+        const { length:iwL=4, height:iwH=2.8, thickness:iwT=0.12, material:iwM='drywall',
+          hasDoorway=true, doorOffset=1, doorWidth=0.9, doorHeight=2.1, doorMaterial='wood_floor',
+        } = node.data.params;
+        output = [{ type:'interior_wall_segment', length:iwL, height:iwH, thickness:iwT,
+          material:iwM, hasDoorway, doorOffset, doorWidth, doorHeight, doorMaterial, position:[0,0,0] }];
+        break;
+      }
+
+      // ── Staircase ──
+      case 'staircase': {
+        const { width:stW=1, riseHeight=2.8, stairType='straight', stepCount=14,
+          stepDepth=0.28, stepHeight=0.2, material:stM='wood_floor',
+          railingMaterial='metal', hasRailing=true, railingHeight=0.9,
+        } = node.data.params;
+        output = [{ type:'staircase_mesh', width:stW, riseHeight, stairType, stepCount,
+          stepDepth, stepHeight, material:stM, railingMaterial, hasRailing, railingHeight, position:[0,0,0] }];
+        break;
+      }
+
+      // ── Furniture ──
+      case 'furniture': {
+        const { furnitureType='sofa', width:fW=2, depth:fD=0.9, height:fH=0.85,
+          material:fM='wood_floor', fabricColor='#444444', legStyle='modern',
+        } = node.data.params;
+        output = [{ type:'furniture_piece', furnitureType, width:fW, depth:fD, height:fH,
+          material:fM, fabricColor, legStyle, position:[0,0,0] }];
+        break;
+      }
+
+      // ── Kitchen Unit ──
+      case 'kitchen_unit': {
+        const { unitType='counter', width:kuW=0.6, depth:kuD=0.6, height:kuH=0.9,
+          counterMaterial='kitchen_counter', cabinetMaterial='wood_floor',
+          cabinetColor='#f0f0f0', hasHandles=true,
+        } = node.data.params;
+        output = [{ type:'kitchen_piece', unitType, width:kuW, depth:kuD, height:kuH,
+          counterMaterial, cabinetMaterial, cabinetColor, hasHandles, position:[0,0,0] }];
+        break;
+      }
+
+      // ── Bathroom Unit ──
+      case 'bathroom_unit': {
+        const { unitType:buType='toilet', width:buW=0.4, depth:buD=0.65, height:buH=0.4,
+          material:buM='ceramic_tile', color:buC='#ffffff', chromeColor='#cccccc',
+        } = node.data.params;
+        output = [{ type:'bathroom_piece', unitType:buType, width:buW, depth:buD, height:buH,
+          material:buM, color:buC, chromeColor, position:[0,0,0] }];
+        break;
+      }
+
+      // ── Light Fixture ──
+      case 'light_fixture': {
+        const { fixtureType='ceiling', size:lfS=0.4, height:lfH=0.15,
+          color:lfC='#ffffff', intensity=1.0, emissive=true, material:lfM='glass',
+        } = node.data.params;
+        output = [{ type:'light_fixture_mesh', fixtureType, size:lfS, height:lfH,
+          color:lfC, intensity, emissive, material:lfM, position:[0,0,0] }];
+        break;
+      }
     }
 
 
@@ -1280,6 +1371,9 @@ export const processGraph = (nodes: Node<NodeData>[], edges: Edge[]): any[] => {
       data.forEach(item => collectRenderables(item));
     } else if (typeof data === 'object') {
       if (data.type || data.roof) {
+        if (data.type?.startsWith('room') || data.type?.startsWith('furniture') || data.type?.startsWith('kitchen') || data.type?.startsWith('bathroom')) {
+          console.log('Collected interior renderable:', data.type);
+        }
         allOutputs.push(data);
       }
     }

@@ -18,6 +18,7 @@ const CATEGORY_CONFIG: Record<string, { label: string; icon: React.ReactNode; co
   industrial:  { label: 'Industrial',  icon: <Factory size={12} />,   color: '#f59e0b' },
   custom:      { label: 'Custom',      icon: <Shapes size={12} />,    color: '#a855f7' },
   game:        { label: 'Game',        icon: <Gamepad2 size={12} />,  color: '#ef4444' },
+  interior:    { label: 'Interior',    icon: <Building2 size={12} />, color: '#06b6d4' },
 };
 
 export const Hub: React.FC = () => {

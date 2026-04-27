@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, forwardRef, useImperativeHandle, useState, useCallback } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Environment, ContactShadows, Grid, GizmoHelper, GizmoViewport, Stats } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Environment, ContactShadows, Grid, GizmoHelper, GizmoViewport, Stats, PointerLockControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter.js';
@@ -44,13 +44,83 @@ const CameraController = forwardRef<any, { preset: string | null; onDone: () => 
 );
 CameraController.displayName = 'CameraController';
 
+// ── First Person Controller ──────────────────────────────────────────────────
+const FirstPersonController = () => {
+  const { camera } = useThree();
+  const controlsRef = useRef<any>(null);
+  const velocity = useRef(new THREE.Vector3());
+  const direction = useRef(new THREE.Vector3());
+  const moveState = useRef({ forward: false, backward: false, left: false, right: false });
+
+  React.useEffect(() => {
+    // Set initial position for FP (human height)
+    camera.position.set(0, 1.7, 10);
+    camera.rotation.set(0, 0, 0);
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      switch (e.code) {
+        case 'KeyW': case 'ArrowUp': moveState.current.forward = true; break;
+        case 'KeyS': case 'ArrowDown': moveState.current.backward = true; break;
+        case 'KeyA': case 'ArrowLeft': moveState.current.left = true; break;
+        case 'KeyD': case 'ArrowRight': moveState.current.right = true; break;
+      }
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      switch (e.code) {
+        case 'KeyW': case 'ArrowUp': moveState.current.forward = false; break;
+        case 'KeyS': case 'ArrowDown': moveState.current.backward = false; break;
+        case 'KeyA': case 'ArrowLeft': moveState.current.left = false; break;
+        case 'KeyD': case 'ArrowRight': moveState.current.right = false; break;
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+    
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keyup', onKeyUp);
+    };
+  }, [camera]);
+  useFrame((_, delta) => {
+    if (!controlsRef.current?.isLocked) return;
+
+    // Movement physics
+    const speed = 15.0;
+    const accel = 60.0;
+    const friction = 10.0;
+
+    velocity.current.x -= velocity.current.x * friction * delta;
+    velocity.current.z -= velocity.current.z * friction * delta;
+
+    direction.current.z = Number(moveState.current.forward) - Number(moveState.current.backward);
+    direction.current.x = Number(moveState.current.right) - Number(moveState.current.left);
+    direction.current.normalize();
+
+    if (moveState.current.forward || moveState.current.backward) velocity.current.z -= direction.current.z * accel * delta;
+    if (moveState.current.left || moveState.current.right) velocity.current.x -= direction.current.x * accel * delta;
+
+    controlsRef.current.moveRight(-velocity.current.x * delta);
+    controlsRef.current.moveForward(-velocity.current.z * delta);
+    
+    // Head bobbing and human height (1.7m)
+    const isMoving = Math.abs(velocity.current.x) > 0.1 || Math.abs(velocity.current.z) > 0.1;
+    if (isMoving) {
+      const time = performance.now() * 0.008;
+      camera.position.y = 1.7 + Math.sin(time) * 0.05;
+    } else {
+      camera.position.y = THREE.MathUtils.lerp(camera.position.y, 1.7, 0.1);
+    }
+  });
+
+  return <PointerLockControls ref={controlsRef} />;
+};
+
 // ── Building Renderer ────────────────────────────────────────────────────────
 export const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { wireframe?: boolean }) => {
   // Stringify node data (ignoring positions) and edges to prevent re-renders when simply dragging nodes
   const nodesDataStr = useMemo(() => JSON.stringify(nodes.map(n => ({ id: n.id, data: n.data, type: n.type }))), [nodes]);
   const edgesStr = useMemo(() => JSON.stringify(edges.map(e => ({ source: e.source, target: e.target, sourceHandle: e.sourceHandle, targetHandle: e.targetHandle }))), [edges]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const processedBuilding = useMemo(() => processGraph(nodes, edges), [nodesDataStr, edgesStr]);
 
   const renderedElements = useMemo(() => {
@@ -686,28 +756,40 @@ export const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { 
           const winColsX = Math.max(1, Math.floor(cbW / 3.5));
           const winColsZ = Math.max(1, Math.floor(cbD / 3.5));
 
-          // Window helper
-          const makeWindows = (faceLen: number, cols: number, faceDir: 'x' | 'z', faceOffset: number) =>
-            Array.from({ length: windowRows }, (_, r) =>
-              Array.from({ length: cols }, (_, c) => {
-                const wx = faceDir === 'x' ? (-faceLen / 2 + (c + 0.5) * (faceLen / cols)) : faceOffset;
-                const wz = faceDir === 'z' ? (-faceLen / 2 + (c + 0.5) * (faceLen / cols)) : faceOffset;
-                const wy = (r + 1) * cbFH - cbFH * 0.45;
-                return (
-                  <mesh key={`win-${r}-${c}`} position={[wx, wy, wz]} castShadow>
-                    <boxGeometry args={faceDir === 'x' ? [winW, winH, 0.08] : [0.08, winH, winW]} />
-                    <meshPhysicalMaterial
-                      color={cbSt === 'cyberpunk' ? '#002244' : '#aaddff'}
-                      metalness={0.95} roughness={0.05}
-                      transmission={0.5} transparent opacity={0.8}
-                      emissive={cbSt === 'cyberpunk' ? new THREE.Color('#001133') : new THREE.Color('#000')}
-                      emissiveIntensity={cbSt === 'cyberpunk' ? 0.8 : 0}
-                      wireframe={wireframe}
-                    />
-                  </mesh>
-                );
-              })
-            );
+          // Fast Instanced Window rendering
+          const windowCount = (winColsX * 2 + winColsZ * 2) * windowRows;
+          const dummy = new THREE.Object3D();
+          
+          const windowMatrices = React.useMemo(() => {
+             if (wireframe || windowCount === 0) return new Float32Array(0);
+             const matrices = new Float32Array(windowCount * 16);
+             let i = 0;
+             const addFace = (faceLen: number, cols: number, faceDir: 'x' | 'z', faceOffset: number) => {
+               for (let r = 0; r < windowRows; r++) {
+                 for (let c = 0; c < cols; c++) {
+                   const wx = faceDir === 'x' ? (-faceLen / 2 + (c + 0.5) * (faceLen / cols)) : faceOffset;
+                   const wz = faceDir === 'z' ? (-faceLen / 2 + (c + 0.5) * (faceLen / cols)) : faceOffset;
+                   const wy = (r + 1) * cbFH - cbFH * 0.45;
+                   
+                   dummy.position.set(wx, wy, wz);
+                   // Scale dummy to form the window box
+                   dummy.scale.set(
+                     faceDir === 'x' ? winW : 0.08,
+                     winH,
+                     faceDir === 'x' ? 0.08 : winW
+                   );
+                   dummy.updateMatrix();
+                   dummy.matrix.toArray(matrices, i * 16);
+                   i++;
+                 }
+               }
+             };
+             addFace(cbW, winColsX, 'x', cbD / 2 + 0.05);
+             addFace(cbW, winColsX, 'x', -cbD / 2 - 0.05);
+             addFace(cbD, winColsZ, 'z', cbW / 2 + 0.05);
+             addFace(cbD, winColsZ, 'z', -cbW / 2 - 0.05);
+             return matrices;
+          }, [cbW, cbD, cbFH, windowRows, winColsX, winColsZ, winW, winH, wireframe]);
 
           const roofH = cbRT === 'gable' ? cbW * 0.4 : cbRT === 'pitched' ? cbW * 0.25 : 0.4;
 
@@ -718,17 +800,20 @@ export const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { 
                 <boxGeometry args={[cbW, cbTH, cbD]} />
               </mesh>
 
-              {/* Window grids on all 4 faces */}
-              {!wireframe && (
-                <group>
-                  {makeWindows(cbW, winColsX, 'x', cbD / 2 + 0.05).flat()}
-                  {makeWindows(cbW, winColsX, 'x', -cbD / 2 - 0.05).flat()}
-                  {makeWindows(cbD, winColsZ, 'z', cbW / 2 + 0.05).flat()}
-                  {makeWindows(cbD, winColsZ, 'z', -cbW / 2 - 0.05).flat()}
-                </group>
+              {/* Fast Instanced Windows */}
+              {!wireframe && windowCount > 0 && (
+                <instancedMesh args={[undefined, undefined, windowCount]} castShadow>
+                  <boxGeometry args={[1, 1, 1]} />
+                  <meshPhysicalMaterial 
+                     color={cbSt === 'cyberpunk' ? '#002244' : '#aaddff'}
+                     metalness={0.95} roughness={0.05}
+                     transmission={0.5} transparent opacity={0.8}
+                     emissive={cbSt === 'cyberpunk' ? new THREE.Color('#001133') : new THREE.Color('#000')}
+                     emissiveIntensity={cbSt === 'cyberpunk' ? 0.8 : 0}
+                  />
+                  <instancedBufferAttribute attach="instanceMatrix" args={[windowMatrices, 16]} />
+                </instancedMesh>
               )}
-
-              {/* Roof */}
               {cbRT === 'flat' && (
                 <mesh position={[0, cbTH + 0.2, 0]} material={roofMat} castShadow>
                   <boxGeometry args={[cbW + 0.4, 0.4, cbD + 0.4]} />
@@ -760,6 +845,176 @@ export const BuildingRenderer = ({ nodes, edges, wireframe }: ViewportProps & { 
               )}
             </group>
           );
+        }
+        // ── Room Floor ──
+        if (part.type === 'room_floor') {
+          const m = wireframe ? new THREE.MeshStandardMaterial({wireframe:true,color:'#888'}) : materialLib.getMaterial(part.material||'wood_floor');
+          return (<mesh key={`rf-${idx}`} position={part.position} rotation={[-Math.PI/2,0,0]} material={m} receiveShadow>
+            <planeGeometry args={[part.width, part.depth]} /></mesh>);
+        }
+        // ── Room Ceiling ──
+        if (part.type === 'room_ceiling') {
+          const m = wireframe ? new THREE.MeshStandardMaterial({wireframe:true,color:'#888'}) : materialLib.getMaterial(part.material||'drywall');
+          return (<mesh key={`rc-${idx}`} position={part.position} rotation={[Math.PI/2,0,0]} material={m} receiveShadow>
+            <planeGeometry args={[part.width, part.depth]} /></mesh>);
+        }
+        // ── Room Wall ──
+        if (part.type === 'room_wall') {
+          const m = wireframe ? new THREE.MeshStandardMaterial({wireframe:true,color:'#888'}) : materialLib.getMaterial(part.material||'drywall');
+          const {pos,size,doorway,window:win} = part;
+          if (!doorway && !win) {
+            return (<mesh key={`rw-${idx}`} position={pos} material={m} castShadow receiveShadow>
+              <boxGeometry args={size} /></mesh>);
+          }
+          // Wall with doorway cutout — render as 3 segments (left, above, right)
+          const wW=size[0], wH=size[1], wT=size[2];
+          const dw = doorway?.width||0.9, dh = doorway?.height||2.1, dOff = doorway?.offset||0;
+          return (<group key={`rw-${idx}`} position={pos}>
+            {doorway && (<>
+              <mesh position={[(-wW/2+dOff/2+dw/4)/1,0,0]} material={m} castShadow><boxGeometry args={[(wW-dw)/2,wH,wT]}/></mesh>
+              <mesh position={[(wW/2-dOff/2-dw/4)/1,0,0]} material={m} castShadow><boxGeometry args={[(wW-dw)/2,wH,wT]}/></mesh>
+              <mesh position={[0,(wH/2-(wH-dh)/4),0]} material={m} castShadow><boxGeometry args={[dw,(wH-dh)/2,wT]}/></mesh>
+            </>)}
+            {!doorway && (<mesh material={m} castShadow><boxGeometry args={size}/></mesh>)}
+          </group>);
+        }
+        // ── Room Baseboard ──
+        if (part.type === 'room_baseboard') {
+          const m = wireframe ? new THREE.MeshStandardMaterial({wireframe:true,color:'#888'}) : materialLib.getMaterial(part.material||'wood_floor');
+          const bh=part.height||0.1, w=part.width, d=part.depth;
+          return (<group key={`rb-${idx}`}>
+            <mesh position={[0,bh/2,d/2]} material={m}><boxGeometry args={[w,bh,0.02]}/></mesh>
+            <mesh position={[0,bh/2,-d/2]} material={m}><boxGeometry args={[w,bh,0.02]}/></mesh>
+            <mesh position={[w/2,bh/2,0]} material={m}><boxGeometry args={[0.02,bh,d]}/></mesh>
+            <mesh position={[-w/2,bh/2,0]} material={m}><boxGeometry args={[0.02,bh,d]}/></mesh>
+          </group>);
+        }
+        // ── Interior Wall Segment ──
+        if (part.type === 'interior_wall_segment') {
+          const m = wireframe ? new THREE.MeshStandardMaterial({wireframe:true,color:'#888'}) : materialLib.getMaterial(part.material||'drywall');
+          const {length:iwL,height:iwH,thickness:iwT,hasDoorway,doorOffset,doorWidth,doorHeight} = part;
+          if (!hasDoorway) {
+            return (<mesh key={`iw-${idx}`} position={[0,iwH/2,0]} material={m} castShadow receiveShadow>
+              <boxGeometry args={[iwL,iwH,iwT]}/></mesh>);
+          }
+          const leftW = doorOffset, rightW = iwL - doorOffset - doorWidth;
+          return (<group key={`iw-${idx}`}>
+            <mesh position={[-iwL/2+leftW/2,iwH/2,0]} material={m} castShadow><boxGeometry args={[leftW,iwH,iwT]}/></mesh>
+            <mesh position={[iwL/2-rightW/2,iwH/2,0]} material={m} castShadow><boxGeometry args={[rightW,iwH,iwT]}/></mesh>
+            <mesh position={[-iwL/2+doorOffset+doorWidth/2,doorHeight+(iwH-doorHeight)/2,0]} material={m} castShadow>
+              <boxGeometry args={[doorWidth,iwH-doorHeight,iwT]}/></mesh>
+          </group>);
+        }
+        // ── Staircase ──
+        if (part.type === 'staircase_mesh') {
+          const {width:stW,stepCount,stepDepth,stepHeight,material:stM,hasRailing,railingHeight,railingMaterial} = part;
+          const m = wireframe ? new THREE.MeshStandardMaterial({wireframe:true,color:'#888'}) : materialLib.getMaterial(stM||'wood_floor');
+          const rm = wireframe ? new THREE.MeshStandardMaterial({wireframe:true,color:'#666'}) : materialLib.getMaterial(railingMaterial||'metal');
+          return (<group key={`st-${idx}`} position={part.position}>
+            {Array.from({length:stepCount},(_,i) => (
+              <mesh key={i} position={[0,i*stepHeight+stepHeight/2,i*stepDepth+stepDepth/2]} material={m} castShadow receiveShadow>
+                <boxGeometry args={[stW,stepHeight,stepDepth]}/></mesh>
+            ))}
+            {hasRailing && (<>
+              <mesh position={[stW/2+0.02,stepCount*stepHeight/2+railingHeight/2,stepCount*stepDepth/2]} material={rm} castShadow>
+                <boxGeometry args={[0.04,stepCount*stepHeight+railingHeight,0.04]}/></mesh>
+              <mesh position={[-stW/2-0.02,stepCount*stepHeight/2+railingHeight/2,stepCount*stepDepth/2]} material={rm} castShadow>
+                <boxGeometry args={[0.04,stepCount*stepHeight+railingHeight,0.04]}/></mesh>
+            </>)}
+          </group>);
+        }
+        // ── Furniture ──
+        if (part.type === 'furniture_piece') {
+          const {furnitureType:ft,width:fw,depth:fd,height:fh,material:fm,fabricColor,legStyle} = part;
+          const woodM = wireframe ? new THREE.MeshStandardMaterial({wireframe:true,color:'#888'}) : materialLib.getMaterial(fm||'wood_floor');
+          const fabM = new THREE.MeshStandardMaterial({color:fabricColor||'#444',roughness:0.9,wireframe});
+          const legH = legStyle==='none'?0:ft==='bed'?0.2:0.15;
+          const renderLegs = (w:number,d:number,h:number) => legStyle==='none'?null:(<>
+            <mesh position={[w/2-0.05,h/2,-d/2+0.05]} material={woodM}><boxGeometry args={[0.05,h,0.05]}/></mesh>
+            <mesh position={[-w/2+0.05,h/2,-d/2+0.05]} material={woodM}><boxGeometry args={[0.05,h,0.05]}/></mesh>
+            <mesh position={[w/2-0.05,h/2,d/2-0.05]} material={woodM}><boxGeometry args={[0.05,h,0.05]}/></mesh>
+            <mesh position={[-w/2+0.05,h/2,d/2-0.05]} material={woodM}><boxGeometry args={[0.05,h,0.05]}/></mesh>
+          </>);
+          if (ft==='sofa') return (<group key={`fur-${idx}`} position={part.position}>
+            {renderLegs(fw,fd,legH)}
+            <mesh position={[0,legH+0.15,0]} material={fabM} castShadow><boxGeometry args={[fw,0.3,fd]}/></mesh>
+            <mesh position={[0,legH+0.45,-fd/2+0.1]} material={fabM} castShadow><boxGeometry args={[fw,0.6,0.2]}/></mesh>
+            <mesh position={[fw/2-0.1,legH+0.35,0]} material={fabM} castShadow><boxGeometry args={[0.15,0.4,fd]}/></mesh>
+            <mesh position={[-fw/2+0.1,legH+0.35,0]} material={fabM} castShadow><boxGeometry args={[0.15,0.4,fd]}/></mesh>
+          </group>);
+          if (ft==='table') return (<group key={`fur-${idx}`} position={part.position}>
+            {renderLegs(fw,fd,fh-0.04)}
+            <mesh position={[0,fh-0.02,0]} material={woodM} castShadow><boxGeometry args={[fw,0.04,fd]}/></mesh>
+          </group>);
+          if (ft==='chair') return (<group key={`fur-${idx}`} position={part.position}>
+            {renderLegs(fw,fd,fh*0.55)}
+            <mesh position={[0,fh*0.55,0]} material={fabM} castShadow><boxGeometry args={[fw,0.06,fd]}/></mesh>
+            <mesh position={[0,fh*0.78,-fd/2+0.03]} material={woodM} castShadow><boxGeometry args={[fw,fh*0.5,0.04]}/></mesh>
+          </group>);
+          if (ft==='bed') return (<group key={`fur-${idx}`} position={part.position}>
+            {renderLegs(fw,fd,legH)}
+            <mesh position={[0,legH+0.1,0]} material={woodM} castShadow><boxGeometry args={[fw,0.2,fd]}/></mesh>
+            <mesh position={[0,legH+0.25,0]} material={fabM} castShadow><boxGeometry args={[fw-0.1,0.1,fd-0.1]}/></mesh>
+            <mesh position={[0,legH+0.35,-fd/2+0.05]} material={woodM} castShadow><boxGeometry args={[fw,0.5,0.08]}/></mesh>
+          </group>);
+          // desk, shelf, wardrobe, tv_stand — generic box
+          return (<group key={`fur-${idx}`} position={part.position}>
+            {renderLegs(fw,fd,legH)}
+            <mesh position={[0,legH+fh/2,0]} material={woodM} castShadow><boxGeometry args={[fw,fh-legH,fd]}/></mesh>
+          </group>);
+        }
+        // ── Kitchen Unit ──
+        if (part.type === 'kitchen_piece') {
+          const {unitType:kt,width:kw,depth:kd,height:kh,counterMaterial,cabinetMaterial,cabinetColor,hasHandles} = part;
+          const cabM = wireframe ? new THREE.MeshStandardMaterial({wireframe:true,color:'#888'}) : new THREE.MeshStandardMaterial({color:cabinetColor,roughness:0.6});
+          const topM = wireframe ? new THREE.MeshStandardMaterial({wireframe:true,color:'#888'}) : materialLib.getMaterial(counterMaterial||'kitchen_counter');
+          return (<group key={`kit-${idx}`} position={part.position}>
+            <mesh position={[0,kh/2,0]} material={cabM} castShadow><boxGeometry args={[kw,kh,kd]}/></mesh>
+            <mesh position={[0,kh+0.02,0]} material={topM} castShadow><boxGeometry args={[kw+0.02,0.04,kd+0.02]}/></mesh>
+            {hasHandles && (<mesh position={[0,kh*0.6,kd/2+0.015]} castShadow>
+              <boxGeometry args={[kw*0.3,0.02,0.02]}/><meshStandardMaterial color="#888" metalness={0.9} roughness={0.2} wireframe={wireframe}/></mesh>)}
+          </group>);
+        }
+        // ── Bathroom Unit ──
+        if (part.type === 'bathroom_piece') {
+          const {unitType:bt,width:bw,depth:bd,height:bh,color:bc,chromeColor} = part;
+          const cM = new THREE.MeshStandardMaterial({color:bc||'#fff',roughness:0.15,wireframe});
+          const chrM = new THREE.MeshStandardMaterial({color:chromeColor||'#ccc',metalness:0.95,roughness:0.05,wireframe});
+          if (bt==='bathtub') return (<group key={`bath-${idx}`} position={part.position}>
+            <mesh position={[0,bh/2,0]} material={cM} castShadow><boxGeometry args={[bw,bh,bd]}/></mesh>
+            <mesh position={[bw*0.3,bh+0.05,0]} material={chrM}><cylinderGeometry args={[0.02,0.02,0.15,8]}/></mesh>
+          </group>);
+          if (bt==='toilet') return (<group key={`bath-${idx}`} position={part.position}>
+            <mesh position={[0,bh*0.4,0]} material={cM} castShadow><boxGeometry args={[bw,bh*0.8,bd]}/></mesh>
+            <mesh position={[0,bh*0.85,-bd*0.15]} material={cM} castShadow><boxGeometry args={[bw*0.9,bh*0.1,bd*0.7]}/></mesh>
+            <mesh position={[0,bh*1.1,-bd*0.35]} material={cM} castShadow><boxGeometry args={[bw*0.7,bh*0.6,0.08]}/></mesh>
+          </group>);
+          if (bt==='sink') return (<group key={`bath-${idx}`} position={part.position}>
+            <mesh position={[0,bh*0.8,0]} material={cM} castShadow><boxGeometry args={[bw,0.1,bd]}/></mesh>
+            <mesh position={[0,bh*0.4,0]} material={chrM}><cylinderGeometry args={[0.02,0.02,bh*0.8,8]}/></mesh>
+            <mesh position={[0,bh+0.12,0]} material={chrM}><cylinderGeometry args={[0.015,0.015,0.2,8]}/></mesh>
+          </group>);
+          return (<mesh key={`bath-${idx}`} position={part.position} material={cM} castShadow><boxGeometry args={[bw,bh,bd]}/></mesh>);
+        }
+        // ── Light Fixture ──
+        if (part.type === 'light_fixture_mesh') {
+          const {fixtureType:lft,size:ls,height:lh,color:lc,intensity:li,emissive:le} = part;
+          const lM = new THREE.MeshStandardMaterial({color:lc, emissive: le ? new THREE.Color(lc) : undefined,
+            emissiveIntensity: le ? li*1.5 : 0, roughness:0.3, transparent:true, opacity:0.9, wireframe});
+          if (lft==='chandelier') return (<group key={`lf-${idx}`} position={part.position}>
+            <mesh material={lM}><sphereGeometry args={[ls,16,16]}/></mesh>
+            {le && <pointLight color={lc} intensity={li*2} distance={12}/>}
+          </group>);
+          if (lft==='pendant') return (<group key={`lf-${idx}`} position={part.position}>
+            <mesh position={[0,0.3,0]}><cylinderGeometry args={[0.005,0.005,0.6,4]}/><meshStandardMaterial color="#333" wireframe={wireframe}/></mesh>
+            <mesh material={lM}><coneGeometry args={[ls,lh,16]}/></mesh>
+            {le && <pointLight color={lc} intensity={li*1.5} distance={8}/>}
+          </group>);
+          // Default: ceiling disc
+          return (<group key={`lf-${idx}`} position={part.position}>
+            <mesh material={lM}><cylinderGeometry args={[ls,ls,lh,16]}/></mesh>
+            {le && <pointLight color={lc} intensity={li} distance={8}/>}
+          </group>);
         }
 
         // ── Castle Wall Segment ──
@@ -1172,6 +1427,7 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
   const [envPreset, setEnvPreset] = useState<string>('city');
   const [timeOfDay, setTimeOfDay] = useState<number>(14);
   const [cameraPreset, setCameraPreset] = useState<string | null>(null);
+  const [isFirstPerson, setIsFirstPerson] = useState(false);
 
   useImperativeHandle(ref, () => ({
     exportGLTF: () => {
@@ -1238,12 +1494,19 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
         currentEnv={envPreset}
         timeOfDay={timeOfDay}
         onSetTimeOfDay={setTimeOfDay}
+        isFirstPerson={isFirstPerson}
+        onToggleFirstPerson={() => setIsFirstPerson(prev => !prev)}
       />
 
       <Canvas shadows dpr={[1, 2]}>
         <Stats />
-        <PerspectiveCamera makeDefault position={[25, 25, 25]} fov={45} far={2000} />
-        <CameraController preset={cameraPreset} onDone={() => setCameraPreset(null)} />
+        <PerspectiveCamera makeDefault position={[25, 25, 25]} fov={isFirstPerson ? 75 : 45} far={2000} />
+        
+        {isFirstPerson ? (
+          <FirstPersonController />
+        ) : (
+          <CameraController preset={cameraPreset} onDone={() => setCameraPreset(null)} />
+        )}
 
         {/* ── Dynamic Lighting ── */}
         <ambientLight intensity={ambientIntensity} color="#ffeedd" />
@@ -1293,10 +1556,12 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ nodes, edge
           />
         )}
 
-        {/* Gizmo Helper (Axis Widget) */}
-        <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
-          <GizmoViewport labelColor="white" axisHeadScale={0.8} />
-        </GizmoHelper>
+        {/* Gizmo Helper (Axis Widget) - Only show in orbit mode */}
+        {!isFirstPerson && gridVisible && (
+          <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
+            <GizmoViewport labelColor="white" axisHeadScale={0.8} />
+          </GizmoHelper>
+        )}
 
         <Environment preset={envPreset as any} />
         <ContactShadows position={[0, 0, 0]} opacity={0.7} scale={80} blur={2.5} far={20} frames={1} resolution={1024} />
